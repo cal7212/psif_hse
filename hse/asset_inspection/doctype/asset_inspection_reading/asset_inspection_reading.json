@@ -1,0 +1,117 @@
+{
+ "creation": "2026-09-30 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "check_item",
+  "criteria",
+  "is_critical",
+  "numeric",
+  "min_value",
+  "max_value",
+  "uom",
+  "column_break_r",
+  "reading_value",
+  "result",
+  "finding",
+  "photo"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "check_item",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Check Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "criteria",
+   "fieldtype": "Small Text",
+   "label": "Criteria",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "is_critical",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Critical",
+   "read_only": 1
+  },
+  {
+   "fieldname": "numeric",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Numeric",
+   "read_only": 1
+  },
+  {
+   "depends_on": "numeric",
+   "fieldname": "min_value",
+   "fieldtype": "Float",
+   "label": "Min Value",
+   "read_only": 1
+  },
+  {
+   "depends_on": "numeric",
+   "fieldname": "max_value",
+   "fieldtype": "Float",
+   "label": "Max Value",
+   "read_only": 1
+  },
+  {
+   "depends_on": "numeric",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_r",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "depends_on": "numeric",
+   "fieldname": "reading_value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Reading"
+  },
+  {
+   "columns": 1,
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail\nN/A"
+  },
+  {
+   "columns": 3,
+   "fieldname": "finding",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Finding / Notes",
+   "mandatory_depends_on": "eval:doc.result=='Fail'"
+  },
+  {
+   "fieldname": "photo",
+   "fieldtype": "Attach Image",
+   "label": "Photo"
+  }
+ ],
+ "istable": 1,
+ "modified": "2026-09-30 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Asset Inspection",
+ "name": "Asset Inspection Reading",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
