@@ -45,7 +45,7 @@ def get_custom_fields():
 		"Non Conformance": [
 			{
 				"fieldname": "asset_inspection_section",
-				"label": "Asset Inspection",
+				"label": "Inspection Follow-up",
 				"fieldtype": "Section Break",
 				"insert_after": "status",
 				"collapsible": 0,

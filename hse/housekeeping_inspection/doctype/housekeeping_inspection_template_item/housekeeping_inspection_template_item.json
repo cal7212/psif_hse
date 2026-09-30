@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "creation": "2026-09-30 17:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "category",
+  "check_item",
+  "criteria",
+  "column_break_c",
+  "is_critical",
+  "reference"
+ ],
+ "fields": [
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "\nWalking-Working Surfaces\nAisles and Exits\nFire Protection\nElectrical\nMaterial Storage\nChemicals and Flammables\nWaste and Sanitation\nTools and Equipment\nGeneral",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "check_item",
+   "fieldtype": "Data",
+   "label": "Check Item",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 4
+  },
+  {
+   "fieldname": "criteria",
+   "fieldtype": "Small Text",
+   "label": "Acceptance Criteria"
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "is_critical",
+   "fieldtype": "Check",
+   "label": "Critical",
+   "default": "0",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Failure is an immediate hazard (e.g. blocked exit, extinguisher or electrical panel)."
+  },
+  {
+   "fieldname": "reference",
+   "fieldtype": "Data",
+   "label": "Reference",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "e.g. OSHA 1910.37(a)(3)"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-30 17:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Housekeeping Inspection",
+ "name": "Housekeeping Inspection Template Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

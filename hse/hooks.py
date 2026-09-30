@@ -269,9 +269,22 @@ doctype_js = {
 
 doc_events = {
 	"Non Conformance": {
-		"validate": "hse.asset_inspection.events.validate",
-		"on_update": "hse.asset_inspection.events.on_update",
+		"validate": [
+			"hse.asset_inspection.events.validate",
+			"hse.housekeeping_inspection.events.validate",
+		],
+		"on_update": [
+			"hse.asset_inspection.events.on_update",
+			"hse.housekeeping_inspection.events.on_update",
+		],
 	},
+}
+
+# Housekeeping Inspection: daily Due/Overdue refresh and inspector ToDos
+scheduler_events = {
+	"daily": [
+		"hse.housekeeping_inspection.tasks.update_schedules",
+	],
 }
 
 # Adds "Inspections" to the Connections tab on Asset Maintenance, Asset and Asset Maintenance Log
@@ -279,14 +292,21 @@ override_doctype_dashboards = {
 	"Asset Maintenance": "hse.asset_inspection.dashboards.asset_maintenance",
 	"Asset": "hse.asset_inspection.dashboards.asset",
 	"Asset Maintenance Log": "hse.asset_inspection.dashboards.asset_maintenance_log",
+	"Location": "hse.housekeeping_inspection.dashboards.location",
 }
 
 # Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log /
 # Non Conformance are created (idempotently) on install and every migrate.
 #
 # If hse/hooks.py has NO after_install / after_migrate yet, use:
-after_install = "hse.asset_inspection.install.after_install"
-after_migrate = "hse.asset_inspection.install.after_migrate"
+after_install = [
+	"hse.asset_inspection.install.after_install",
+	"hse.housekeeping_inspection.install.after_install",
+]
+after_migrate = [
+	"hse.asset_inspection.install.after_migrate",
+	"hse.housekeeping_inspection.install.after_migrate",
+]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):
 #   after_migrate = ["hse.setup.your_existing_hook", "hse.asset_inspection.install.after_migrate"]
