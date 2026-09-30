@@ -252,4 +252,40 @@ require_type_annotated_api_methods = True
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
+# ---------------------------------------------------------------------------
+# Asset Inspection module - MERGE these into hse/hooks.py (do not replace it).
+# If a key already exists in your hooks.py, add these entries to it.
+# ---------------------------------------------------------------------------
+
+# Requires ERPNext (Asset, Asset Maintenance, Non Conformance)
+required_apps = ["erpnext"]  # merge if you already list required apps
+
+# Form scripts for standard ERPNext DocTypes
+doctype_js = {
+	"Asset": "public/js/asset.js",
+	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
+	"Non Conformance": "public/js/non_conformance.js",
+}
+
+doc_events = {
+	"Non Conformance": {
+		"validate": "hse.asset_inspection.events.validate",
+		"on_update": "hse.asset_inspection.events.on_update",
+	},
+}
+
+# Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log /
+# Non Conformance are created (idempotently) on install and every migrate.
+#
+# If hse/hooks.py has NO after_install / after_migrate yet, use:
+after_install = "hse.asset_inspection.install.after_install"
+after_migrate = "hse.asset_inspection.install.after_migrate"
+#
+# If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):
+#   after_migrate = ["hse.setup.your_existing_hook", "hse.asset_inspection.install.after_migrate"]
+# or call this from inside your existing function:
+#   from hse.asset_inspection.install import make_custom_fields
+#   make_custom_fields()
+
+
 
