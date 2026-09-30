@@ -274,6 +274,13 @@ doc_events = {
 	},
 }
 
+# Adds "Inspections" to the Connections tab on Asset Maintenance, Asset and Asset Maintenance Log
+override_doctype_dashboards = {
+	"Asset Maintenance": "hse.asset_inspection.dashboards.asset_maintenance",
+	"Asset": "hse.asset_inspection.dashboards.asset",
+	"Asset Maintenance Log": "hse.asset_inspection.dashboards.asset_maintenance_log",
+}
+
 # Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log /
 # Non Conformance are created (idempotently) on install and every migrate.
 #

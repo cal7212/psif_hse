@@ -8,7 +8,7 @@ frappe.ui.form.on("Asset Maintenance Log", {
 			}, __("View"));
 		}
 
-		if (frm.doc.docstatus === 0 && frm.doc.maintenance_status !== "Completed") {
+		if (frm.doc.docstatus === 0 && !["Completed", "Cancelled"].includes(frm.doc.maintenance_status)) {
 			frm.add_custom_button(__("Asset Inspection"), () => {
 				frappe.model.open_mapped_doc({
 					method: "hse.asset_inspection.doctype.asset_inspection.asset_inspection.make_from_maintenance_log",
