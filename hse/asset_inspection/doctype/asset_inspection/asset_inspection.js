@@ -5,6 +5,10 @@ const AI_METHOD = "hse.asset_inspection.doctype.asset_inspection.asset_inspectio
 
 frappe.ui.form.on("Asset Inspection", {
 	setup(frm) {
+		// Cancelling an inspection must NOT offer to cancel the submitted
+		// Maintenance Log or other records that link back to it.
+		frm.ignore_doctypes_on_cancel_all = ["Asset Maintenance Log", "Non Conformance", "Asset Inspection"];
+
 		// Show templates for this asset's category plus general (no category) templates
 		frm.set_query("template", () => {
 			const q = { filters: [["disabled", "=", 0]] };

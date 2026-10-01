@@ -59,9 +59,6 @@ class AssetInspection(Document):
 		template: DF.Link | None
 	# end: auto-generated types
 
-	# Allow cancelling even though NC / Maintenance Log link back here
-	ignore_linked_doctypes = ("Non Conformance", "Asset Maintenance Log", "Asset Inspection")
-
 	# ------------------------------------------------------------------ validate
 	def validate(self):
 		self.validate_template()
@@ -155,7 +152,15 @@ class AssetInspection(Document):
 		update_asset_safety_status(self.asset)
 
 	def on_cancel(self):
+		# Must be set on the instance (not the class): Frappe reads it via doc.get()
+		# when checking back-links after on_cancel. Lets an inspection be cancelled
+		# even though its Maintenance Log / Non Conformance link back to it.
+		self.ignore_linked_doctypes = ("Non Conformance", "Asset Maintenance Log", "Asset Inspection")
 		self.db_set("status", "Pending")
+		if self.asset_maintenance_log and frappe.db.get_value(
+			"Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection"
+		) == self.name:
+			frappe.db.set_value("Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection", None)
 		if self.non_conformance:
 			nc = frappe.get_doc("Non Conformance", self.non_conformance)
 			if nc.status == "Open":
