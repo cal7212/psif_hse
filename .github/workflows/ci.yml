@@ -91,13 +91,16 @@ jobs:
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
-          # hse requires ERPNext; HRMS provides Vehicle / Vehicle Log used by the Asset Inspection module
+          # hse requires ERPNext; HRMS provides Vehicle / Vehicle Log used by the Asset Inspection module.
+          # Payments provides Payment Gateway, which ERPNext test-record generation links to.
+          bench get-app payments --branch "$FRAPPE_BRANCH"
           bench get-app erpnext --branch "$FRAPPE_BRANCH"
           bench get-app hrms --branch "$FRAPPE_BRANCH"
           bench get-app hse $GITHUB_WORKSPACE
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
           bench --site test_site install-app erpnext
+          bench --site test_site install-app payments
           bench --site test_site install-app hrms
           bench --site test_site install-app hse
           bench build
