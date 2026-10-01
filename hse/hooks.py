@@ -264,7 +264,7 @@ required_apps = ["erpnext"]  # merge if you already list required apps
 doctype_js = {
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
-	"Non Conformance": "public/js/non_conformance.js",
+	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_hpu.js"],
 }
 
 doc_events = {
@@ -272,10 +272,12 @@ doc_events = {
 		"validate": [
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
+			"hse.hpu_build.events.validate",
 		],
 		"on_update": [
 			"hse.asset_inspection.events.on_update",
 			"hse.housekeeping_inspection.events.on_update",
+			"hse.hpu_build.events.on_update",
 		],
 	},
 }
@@ -303,11 +305,13 @@ after_install = [
 	"hse.asset_inspection.install.after_install",
 	"hse.housekeeping_inspection.install.after_install",
 	"hse.hse.sds_setup.after_install",
+	"hse.hpu_build.install.after_install",
 ]
 after_migrate = [
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
 	"hse.hse.sds_setup.after_migrate",
+	"hse.hpu_build.install.after_migrate",
 ]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):
@@ -315,6 +319,3 @@ after_migrate = [
 # or call this from inside your existing function:
 #   from hse.asset_inspection.install import make_custom_fields
 #   make_custom_fields()
-
-
-
