@@ -88,8 +88,11 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 
 	def setUp(self):
 		if frappe.db.exists("HPU Unit", WO):
-			for n in frappe.get_all("HPU Build Inspection", {"hpu_unit": WO, "docstatus": 1}, pluck="name"):
-				frappe.get_doc("HPU Build Inspection", n).cancel()
+			# Remove records left by earlier tests directly; cancelling would trip the
+			# "resolved by this re-inspection" guard.
+			names = frappe.get_all("HPU Build Inspection", {"hpu_unit": WO}, pluck="name")
+			if names:
+				frappe.db.delete("HPU Build Inspection Reading", {"parent": ("in", names)})
 			frappe.db.delete("HPU Build Inspection", {"hpu_unit": WO})
 			frappe.db.delete("Non Conformance", {"hpu_unit": WO})
 			frappe.delete_doc("HPU Unit", WO, force=1)
