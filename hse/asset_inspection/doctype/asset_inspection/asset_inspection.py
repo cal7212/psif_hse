@@ -244,11 +244,11 @@ class AssetInspection(Document):
 		nc.insert()
 
 		self.db_set("non_conformance", nc.name)
+		nc_link = frappe.get_desk_link("Non Conformance", nc.name)
 		frappe.msgprint(
-			_("Non Conformance {0} created{1}.").format(
-				frappe.get_desk_link("Non Conformance", nc.name),
-				_(" and asset placed Out of Service") if critical else "",
-			),
+			_("Non Conformance {0} created and asset placed Out of Service.").format(nc_link)
+			if critical
+			else _("Non Conformance {0} created.").format(nc_link),
 			indicator="red",
 			alert=True,
 		)
@@ -336,7 +336,7 @@ def _fill_new_inspection(target, template=None):
 
 
 @frappe.whitelist()
-def make_from_maintenance_log(source_name: str, target_doc=None):
+def make_from_maintenance_log(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.naming_series = "AINSP-.YYYY.-"
 		target.asset = source.asset_name  # Asset Maintenance Log.asset_name is the Asset link
@@ -362,7 +362,7 @@ def make_from_maintenance_log(source_name: str, target_doc=None):
 
 
 @frappe.whitelist()
-def make_reinspection(source_name: str, target_doc=None):
+def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.is_reinspection = 1
 		target.reinspection_of = source.name

@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 
 OUT_OF_SERVICE = "Out of Service"
 IN_SERVICE = "In Service"
@@ -28,6 +29,6 @@ def assert_asset_in_service(asset: str):
 	pre-shift check, work order) to block Out of Service assets."""
 	if frappe.db.get_value("Asset", asset, "safety_status") == OUT_OF_SERVICE:
 		frappe.throw(
-			f"{asset} is Out of Service pending corrective action.",
-			title="Asset Out of Service",
+			_("{0} is Out of Service pending corrective action.").format(asset),
+			title=_("Asset Out of Service"),
 		)

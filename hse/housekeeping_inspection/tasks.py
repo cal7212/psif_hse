@@ -41,4 +41,4 @@ def update_schedules():
 				),
 			}
 		).insert(ignore_permissions=True)
-	frappe.db.commit()
+	# No manual commit: Frappe commits when a scheduled job finishes.
