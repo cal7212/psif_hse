@@ -25,7 +25,10 @@ def asset(data):
 	data.setdefault("non_standard_fieldnames", {})
 	data["non_standard_fieldnames"]["Asset Inspection"] = "asset"
 	data["non_standard_fieldnames"]["Non Conformance"] = "asset"
-	return _add_group(data, _("Inspections"), ["Asset Inspection", "Non Conformance"])
+	data["non_standard_fieldnames"]["Vehicle"] = "asset"
+	data["non_standard_fieldnames"]["Vehicle Log"] = "asset"
+	_add_group(data, _("Inspections"), ["Asset Inspection", "Non Conformance"])
+	return _add_group(data, _("Vehicle"), ["Vehicle", "Vehicle Log"])
 
 
 def asset_maintenance_log(data):

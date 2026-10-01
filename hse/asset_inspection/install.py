@@ -42,6 +42,32 @@ def get_custom_fields():
 				"no_copy": 1,
 			},
 		],
+		# Vehicles: tie HR Vehicle / Vehicle Log (odometer, fuel) to the Asset
+		"Vehicle": [
+			{
+				"fieldname": "asset",
+				"label": "Asset",
+				"fieldtype": "Link",
+				"options": "Asset",
+				"insert_after": "model",
+				"unique": 1,
+				"in_list_view": 1,
+				"in_standard_filter": 1,
+				"description": "Fixed asset used for pre-trip inspections. Fuel and mileage logs show on the Asset.",
+			},
+		],
+		"Vehicle Log": [
+			{
+				"fieldname": "asset",
+				"label": "Asset",
+				"fieldtype": "Link",
+				"options": "Asset",
+				"insert_after": "make",
+				"fetch_from": "license_plate.asset",
+				"read_only": 1,
+				"in_standard_filter": 1,
+			},
+		],
 		"Non Conformance": [
 			{
 				"fieldname": "asset_inspection_section",
