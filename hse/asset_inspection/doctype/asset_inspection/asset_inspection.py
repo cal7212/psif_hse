@@ -124,10 +124,11 @@ class AssetInspection(Document):
 			self.append("items", row)
 
 	def evaluate_numeric_readings(self):
+		# Float fields default to 0, so a 0 reading is treated as "not entered".
+		# A genuine zero reading should be marked Fail by the inspector.
 		for row in self.items:
-			if row.numeric and row.reading_value is not None and cstr(row.reading_value) != "":
-				if row.result != NA:
-					row.result = evaluate_numeric(row.reading_value, row.min_value, row.max_value)
+			if row.numeric and row.result != NA and flt(row.reading_value) != 0:
+				row.result = evaluate_numeric(row.reading_value, row.min_value, row.max_value)
 
 	# ------------------------------------------------------------------ submit
 	def before_submit(self):
@@ -137,8 +138,8 @@ class AssetInspection(Document):
 				errors.append(_("Row {0}: Result is required for '{1}'.").format(row.idx, row.check_item))
 			elif row.result == FAIL and not cstr(row.finding).strip():
 				errors.append(_("Row {0}: Finding is required for failed item '{1}'.").format(row.idx, row.check_item))
-			if row.numeric and row.result != NA and not cstr(row.reading_value).strip():
-				errors.append(_("Row {0}: Reading is required for '{1}'.").format(row.idx, row.check_item))
+			if row.numeric and row.result == PASS and flt(row.reading_value) == 0:
+				errors.append(_("Row {0}: Enter the reading for '{1}'.").format(row.idx, row.check_item))
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 
@@ -304,6 +305,7 @@ def _fill_new_inspection(target, template=None):
 @frappe.whitelist()
 def make_from_maintenance_log(source_name: str, target_doc=None):
 	def postprocess(source, target):
+		target.naming_series = "AINSP-.YYYY.-"
 		target.asset = source.asset_name  # Asset Maintenance Log.asset_name is the Asset link
 		template = None
 		if source.task:
@@ -318,7 +320,7 @@ def make_from_maintenance_log(source_name: str, target_doc=None):
 				"doctype": "Asset Inspection",
 				"validation": {"docstatus": ["=", 0]},
 				"field_map": {"name": "asset_maintenance_log"},
-				"field_no_map": ["asset_name", "description"],
+				"field_no_map": ["asset_name", "description", "naming_series"],
 			}
 		},
 		target_doc,
