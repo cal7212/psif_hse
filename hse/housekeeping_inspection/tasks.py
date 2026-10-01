@@ -7,10 +7,11 @@ from hse.housekeeping_inspection.utils import schedule_status_for
 
 def update_schedules():
 	"""Daily: refresh Due/Overdue status on every area and give the assigned
-	inspector a ToDo when an inspection comes due (one open ToDo per area)."""
+	inspector a ToDo when an inspection comes due (one open ToDo per area).
+	As Needed areas (e.g. job trailers) have no due date and are skipped."""
 	areas = frappe.get_all(
 		"Housekeeping Area",
-		filters={"disabled": 0},
+		filters={"disabled": 0, "periodicity": ["!=", "As Needed"]},
 		fields=["name", "next_due_date", "schedule_status", "inspector_user", "periodicity"],
 	)
 	for area in areas:

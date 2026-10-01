@@ -8,10 +8,15 @@ HAZARD_OPEN = "Hazard Open"
 
 PERIOD_DAYS = {"Daily": 1, "Weekly": 7}
 PERIOD_MONTHS = {"Monthly": 1, "Quarterly": 3}
+AS_NEEDED = "As Needed"
+NOT_SCHEDULED = "Not Scheduled"
+AWAITING_RETURN = "Awaiting Return"
 
 
 def next_due(from_date, periodicity: str):
-	"""Next due date one period after from_date."""
+	"""Next due date one period after from_date (None for As Needed areas)."""
+	if periodicity == AS_NEEDED:
+		return None
 	from_date = getdate(from_date)
 	if periodicity in PERIOD_DAYS:
 		return add_days(from_date, PERIOD_DAYS[periodicity])
@@ -20,7 +25,9 @@ def next_due(from_date, periodicity: str):
 	frappe.throw(_("Unsupported periodicity: {0}").format(periodicity))
 
 
-def schedule_status_for(next_due_date, on_date=None) -> str:
+def schedule_status_for(next_due_date, on_date=None, periodicity=None) -> str:
+	if periodicity == AS_NEEDED:
+		return NOT_SCHEDULED
 	if not next_due_date:
 		return "Current"
 	on_date = getdate(on_date or today())
@@ -58,13 +65,22 @@ def update_area_housekeeping_status(area: str) -> str | None:
 	return new_status
 
 
+def trip_status(reason: str | None, current: str | None = None) -> str:
+	"""Schedule status of an As Needed area after an inspection with this reason."""
+	if reason == "Pre-Departure":
+		return AWAITING_RETURN
+	if reason == "Post-Return":
+		return NOT_SCHEDULED
+	return current if current == AWAITING_RETURN else NOT_SCHEDULED
+
+
 def refresh_area_last_inspection(area: str):
 	"""Point the area at its most recent submitted routine (non re-) inspection.
 	Used after cancel so the area does not keep a cancelled inspection."""
 	last = frappe.get_all(
 		"Housekeeping Inspection",
 		filters={"housekeeping_area": area, "docstatus": 1, "is_reinspection": 0},
-		fields=["name", "inspection_date", "score"],
+		fields=["name", "inspection_date", "score", "inspection_reason"],
 		order_by="inspection_date desc",
 		limit=1,
 	)
@@ -76,6 +92,8 @@ def refresh_area_last_inspection(area: str):
 		}
 	else:
 		values = {"last_inspection": None, "last_inspection_date": None, "last_score": 0}
+	if frappe.db.get_value("Housekeeping Area", area, "periodicity") == AS_NEEDED:
+		values["schedule_status"] = trip_status(last[0].inspection_reason if last else None)
 	frappe.db.set_value("Housekeeping Area", area, values)
 
 

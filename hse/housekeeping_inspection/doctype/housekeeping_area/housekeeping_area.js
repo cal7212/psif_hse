@@ -6,16 +6,30 @@ const HK_METHOD = "hse.housekeeping_inspection.doctype.housekeeping_inspection.h
 frappe.ui.form.on("Housekeeping Area", {
 	setup(frm) {
 		frm.set_query("template", () => ({ filters: { disabled: 0 } }));
+		frm.set_query("post_return_template", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("location", () => ({ filters: { is_group: 0 } }));
+	},
+
+	periodicity(frm) {
+		if (frm.doc.periodicity === "As Needed") frm.set_value("next_due_date", null);
 	},
 
 	refresh(frm) {
 		if (frm.is_new()) return;
 
+		const as_needed = frm.doc.periodicity === "As Needed";
 		if (!frm.doc.disabled) {
-			frm.add_custom_button(__("Housekeeping Inspection"), () => {
-				frappe.model.open_mapped_doc({ method: `${HK_METHOD}.make_from_area`, frm });
-			}, __("Create"));
+			const create = (reason) => frappe.model.open_mapped_doc({
+				method: `${HK_METHOD}.make_from_area`,
+				frm,
+				args: reason ? { reason } : undefined,
+			});
+			if (as_needed) {
+				frm.add_custom_button(__("Pre-Departure Inspection"), () => create("Pre-Departure"), __("Create"));
+				frm.add_custom_button(__("Post-Return Inspection"), () => create("Post-Return"), __("Create"));
+			} else {
+				frm.add_custom_button(__("Housekeeping Inspection"), () => create(), __("Create"));
+			}
 			frm.page.set_inner_btn_group_as_primary(__("Create"));
 		}
 		if (frm.doc.last_inspection) {
@@ -32,6 +46,11 @@ frappe.ui.form.on("Housekeeping Area", {
 			frm.dashboard.set_headline_alert(
 				__("A critical housekeeping hazard is open in this area. See the Non Conformances on the Connections tab."),
 				"red"
+			);
+		} else if (as_needed && frm.doc.schedule_status === "Awaiting Return") {
+			frm.dashboard.set_headline_alert(
+				__("Out on a job. Do the Post-Return inspection when it comes back."),
+				"blue"
 			);
 		} else if (frm.doc.schedule_status === "Overdue") {
 			frm.dashboard.set_headline_alert(

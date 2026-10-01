@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "naming_series:",
- "creation": "2026-09-30 17:00:00.000000",
+ "creation": "2026-10-01 15:00:00.000000",
  "custom": 0,
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -15,6 +15,8 @@
   "column_break_a",
   "template",
   "quality_procedure",
+  "inspection_reason",
+  "trip_reference",
   "inspection_date",
   "inspected_by",
   "inspector_name",
@@ -113,6 +115,23 @@
    "options": "Quality Procedure",
    "fetch_from": "template.quality_procedure",
    "read_only": 1
+  },
+  {
+   "fieldname": "inspection_reason",
+   "fieldtype": "Select",
+   "label": "Reason",
+   "options": "Routine\nPre-Departure\nPost-Return",
+   "default": "Routine",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "trip_reference",
+   "fieldtype": "Data",
+   "label": "Job / Trip Reference",
+   "depends_on": "eval:doc.inspection_reason!='Routine'",
+   "description": "Job number, customer or destination for this trip."
   },
   {
    "fieldname": "inspection_date",
@@ -268,7 +287,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-30 17:00:00.000000",
+ "modified": "2026-10-01 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Housekeeping Inspection",
  "name": "Housekeeping Inspection",
@@ -287,7 +306,8 @@
    "write": 1,
    "submit": 1,
    "cancel": 1,
-   "amend": 1
+   "amend": 1,
+   "delete": 1
   },
   {
    "email": 1,
@@ -301,7 +321,8 @@
    "write": 1,
    "submit": 1,
    "cancel": 1,
-   "amend": 1
+   "amend": 1,
+   "delete": 1
   },
   {
    "email": 1,
@@ -315,7 +336,8 @@
    "write": 1,
    "submit": 1,
    "cancel": 1,
-   "amend": 1
+   "amend": 1,
+   "delete": 1
   },
   {
    "email": 1,

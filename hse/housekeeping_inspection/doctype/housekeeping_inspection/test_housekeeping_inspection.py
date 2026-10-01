@@ -4,7 +4,7 @@
 from frappe.tests import IntegrationTestCase, UnitTestCase
 
 from hse.housekeeping_inspection.doctype.housekeeping_inspection.housekeeping_inspection import summarize
-from hse.housekeeping_inspection.utils import next_due, schedule_status_for
+from hse.housekeeping_inspection.utils import next_due, schedule_status_for, trip_status
 
 
 def row(result, critical=0, corrected=0):
@@ -47,6 +47,16 @@ class UnitTestHousekeepingInspection(UnitTestCase):
 		self.assertEqual(schedule_status_for("2026-09-29", "2026-09-30"), "Overdue")
 		self.assertEqual(schedule_status_for("2026-09-30", "2026-09-30"), "Due")
 		self.assertEqual(schedule_status_for("2026-10-01", "2026-09-30"), "Current")
+
+	def test_as_needed_has_no_due_date(self):
+		self.assertIsNone(next_due("2026-09-30", "As Needed"))
+		self.assertEqual(schedule_status_for(None, periodicity="As Needed"), "Not Scheduled")
+
+	def test_trip_status(self):
+		self.assertEqual(trip_status("Pre-Departure", "Not Scheduled"), "Awaiting Return")
+		self.assertEqual(trip_status("Post-Return", "Awaiting Return"), "Not Scheduled")
+		self.assertEqual(trip_status("Routine", "Awaiting Return"), "Awaiting Return")
+		self.assertEqual(trip_status("Routine", "Not Scheduled"), "Not Scheduled")
 
 
 class IntegrationTestHousekeepingInspection(IntegrationTestCase):

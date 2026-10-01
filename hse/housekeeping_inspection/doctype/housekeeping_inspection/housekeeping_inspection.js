@@ -5,6 +5,8 @@ const HKI_METHOD = "hse.housekeeping_inspection.doctype.housekeeping_inspection.
 
 frappe.ui.form.on("Housekeeping Inspection", {
 	setup(frm) {
+		// Cancelling must not offer to cancel the Non Conformance or Area that link back here
+		frm.ignore_doctypes_on_cancel_all = ["Non Conformance", "Housekeeping Area", "Housekeeping Inspection"];
 		frm.set_query("housekeeping_area", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("template", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("reinspection_of", () => ({
@@ -66,10 +68,22 @@ frappe.ui.form.on("Housekeeping Inspection", {
 	},
 
 	housekeeping_area(frm) {
-		if (!frm.doc.housekeeping_area) return;
-		frappe.db.get_value("Housekeeping Area", frm.doc.housekeeping_area, "template").then((r) => {
-			const t = r.message && r.message.template;
-			if (t && t !== frm.doc.template) frm.set_value("template", t);
+		frm.trigger("set_area_template");
+	},
+
+	inspection_reason(frm) {
+		if (frm.doc.inspection_reason === "Routine") frm.set_value("trip_reference", null);
+		frm.trigger("set_area_template");
+	},
+
+	set_area_template(frm) {
+		if (!frm.doc.housekeeping_area || frm.doc.docstatus !== 0) return;
+		frappe.call({
+			method: `${HKI_METHOD}.get_area_template`,
+			args: { area: frm.doc.housekeeping_area, reason: frm.doc.inspection_reason },
+			callback: (r) => {
+				if (r.message && r.message !== frm.doc.template) frm.set_value("template", r.message);
+			},
 		});
 	},
 

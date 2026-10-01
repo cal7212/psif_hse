@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "field:area_name",
- "creation": "2026-09-30 17:00:00.000000",
+ "creation": "2026-10-01 15:00:00.000000",
  "custom": 0,
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -17,6 +17,7 @@
   "section_schedule",
   "template",
   "periodicity",
+  "post_return_template",
   "inspector",
   "inspector_name",
   "inspector_user",
@@ -101,10 +102,19 @@
    "fieldname": "periodicity",
    "fieldtype": "Select",
    "label": "Periodicity",
-   "options": "Daily\nWeekly\nMonthly\nQuarterly",
+   "options": "Daily\nWeekly\nMonthly\nQuarterly\nAs Needed",
    "default": "Weekly",
    "reqd": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "As Needed: no due date. Inspect before departure and after return (e.g. job trailers)."
+  },
+  {
+   "fieldname": "post_return_template",
+   "fieldtype": "Link",
+   "label": "Post-Return Template",
+   "options": "Housekeeping Inspection Template",
+   "depends_on": "eval:doc.periodicity=='As Needed'",
+   "description": "Used for Post-Return inspections. Leave blank to use the Inspection Template."
   },
   {
    "fieldname": "inspector",
@@ -138,13 +148,14 @@
    "fieldtype": "Date",
    "label": "Next Due Date",
    "in_list_view": 1,
+   "depends_on": "eval:doc.periodicity!='As Needed'",
    "description": "Set automatically after each routine inspection. Set it by hand to start or reset the schedule."
   },
   {
    "fieldname": "schedule_status",
    "fieldtype": "Select",
    "label": "Schedule Status",
-   "options": "Current\nDue\nOverdue",
+   "options": "Current\nDue\nOverdue\nNot Scheduled\nAwaiting Return",
    "read_only": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
@@ -195,7 +206,7 @@
   }
  ],
  "links": [],
- "modified": "2026-09-30 17:00:00.000000",
+ "modified": "2026-10-01 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Housekeeping Inspection",
  "name": "Housekeeping Area",

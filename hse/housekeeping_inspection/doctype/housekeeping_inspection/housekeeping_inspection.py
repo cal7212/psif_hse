@@ -8,10 +8,13 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cstr, escape_html, flt, getdate
 
 from hse.housekeeping_inspection.utils import (
+	AS_NEEDED,
+	AWAITING_RETURN,
 	close_area_todos,
 	next_due,
 	refresh_area_last_inspection,
 	schedule_status_for,
+	trip_status,
 	update_area_housekeeping_status,
 )
 
@@ -81,6 +84,7 @@ class HousekeepingInspection(Document):
 		housekeeping_area: DF.Link
 		inspected_by: DF.Link
 		inspection_date: DF.Datetime
+		inspection_reason: DF.Literal["Routine", "Pre-Departure", "Post-Return"]
 		inspector_name: DF.Data | None
 		is_reinspection: DF.Check
 		items: DF.Table[HousekeepingInspectionItem]
@@ -98,14 +102,13 @@ class HousekeepingInspection(Document):
 		signature: DF.Signature | None
 		status: DF.Literal["Pending", "Accepted", "Rejected"]
 		template: DF.Link
+		trip_reference: DF.Data | None
 	# end: auto-generated types
-
-	# Allow cancelling even though the Non Conformance / Area link back here
-	ignore_linked_doctypes = ("Non Conformance", "Housekeeping Area", "Housekeeping Inspection")
 
 	# ------------------------------------------------------------------ validate
 	def validate(self):
 		self.validate_template()
+		self.validate_reason()
 		self.validate_reinspection()
 		if not self.items:
 			self.set_items_from_template()
@@ -120,6 +123,18 @@ class HousekeepingInspection(Document):
 		if not self.quality_procedure:
 			self.quality_procedure = template.quality_procedure
 		self.passing_score = template.passing_score
+
+	def validate_reason(self):
+		self.inspection_reason = self.inspection_reason or "Routine"
+		if self.inspection_reason == "Routine":
+			self.trip_reference = None
+			return
+		if frappe.db.get_value("Housekeeping Area", self.housekeeping_area, "periodicity") != AS_NEEDED:
+			frappe.throw(
+				_("{0} inspections are only for As Needed areas (such as job trailers).").format(
+					_(self.inspection_reason)
+				)
+			)
 
 	def validate_reinspection(self):
 		if not self.is_reinspection:
@@ -189,6 +204,9 @@ class HousekeepingInspection(Document):
 		update_area_housekeeping_status(self.housekeeping_area)
 
 	def on_cancel(self):
+		# Set on the instance (not the class): Frappe reads it via doc.get() when
+		# checking back-links, so the Area / Non Conformance links don't block cancel.
+		self.ignore_linked_doctypes = ("Non Conformance", "Housekeeping Area", "Housekeeping Inspection")
 		self.db_set("status", "Pending")
 		if self.non_conformance:
 			nc = frappe.get_doc("Non Conformance", self.non_conformance)
@@ -221,7 +239,22 @@ class HousekeepingInspection(Document):
 			"last_score": self.score,
 		}
 		# Only move the schedule forward, never back (e.g. a late-entered older inspection)
-		if not area.last_inspection_date or inspected_on >= getdate(area.last_inspection_date):
+		is_latest = not area.last_inspection_date or inspected_on >= getdate(area.last_inspection_date)
+		if area.periodicity == AS_NEEDED:
+			if not is_latest:
+				return
+			if self.inspection_reason == "Post-Return" and area.schedule_status != AWAITING_RETURN:
+				frappe.msgprint(
+					_("No Pre-Departure inspection was open for {0}. Post-Return recorded anyway.").format(
+						frappe.bold(area.name)
+					),
+					indicator="orange",
+				)
+			values["schedule_status"] = trip_status(self.inspection_reason, area.schedule_status)
+			frappe.db.set_value("Housekeeping Area", area.name, values)
+			close_area_todos(area.name)
+			return
+		if is_latest:
 			values["next_due_date"] = next_due(inspected_on, area.periodicity)
 			values["schedule_status"] = schedule_status_for(values["next_due_date"])
 		else:
@@ -324,6 +357,19 @@ def get_template_instructions(template: str) -> str:
 	return doc.instructions or ""
 
 
+def _template_for_area(area, reason=None):
+	if reason == "Post-Return" and area.get("post_return_template"):
+		return area.post_return_template
+	return area.template
+
+
+@frappe.whitelist()
+def get_area_template(area: str, reason: str | None = None) -> str | None:
+	doc = frappe.get_doc("Housekeeping Area", area)
+	doc.check_permission("read")
+	return _template_for_area(doc, reason)
+
+
 def _fill_new_inspection(target, template=None):
 	if template:
 		target.template = template
@@ -342,7 +388,13 @@ def _fill_new_inspection(target, template=None):
 def make_from_area(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.housekeeping_area = source.name
-		_fill_new_inspection(target, source.template)
+		reason = (frappe.flags.args or {}).get("reason")
+		if source.periodicity == AS_NEEDED:
+			reason = reason or ("Post-Return" if source.schedule_status == AWAITING_RETURN else "Pre-Departure")
+			target.inspection_reason = reason
+		else:
+			target.inspection_reason = "Routine"
+		_fill_new_inspection(target, _template_for_area(source, target.inspection_reason))
 
 	return get_mapped_doc(
 		"Housekeeping Area",
@@ -352,7 +404,7 @@ def make_from_area(source_name: str, target_doc: str | dict | None = None):
 				"doctype": "Housekeeping Inspection",
 				"validation": {"disabled": ["=", 0]},
 				"field_map": {"location": "location", "department": "department", "area_owner": "area_owner", "company": "company"},
-				"field_no_map": ["template", "inspector", "inspector_name"],
+				"field_no_map": ["template", "inspector", "inspector_name", "naming_series"],
 			}
 		},
 		target_doc,
