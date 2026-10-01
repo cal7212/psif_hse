@@ -13,7 +13,18 @@ class HousekeepingInspectionTemplateItem(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		category: DF.Literal["", "Walking-Working Surfaces", "Aisles and Exits", "Fire Protection", "Electrical", "Material Storage", "Chemicals and Flammables", "Waste and Sanitation", "Tools and Equipment", "General"]
+		category: DF.Literal[
+			"",
+			"Walking-Working Surfaces",
+			"Aisles and Exits",
+			"Fire Protection",
+			"Electrical",
+			"Material Storage",
+			"Chemicals and Flammables",
+			"Waste and Sanitation",
+			"Tools and Equipment",
+			"General",
+		]
 		check_item: DF.Data
 		criteria: DF.SmallText | None
 		is_critical: DF.Check

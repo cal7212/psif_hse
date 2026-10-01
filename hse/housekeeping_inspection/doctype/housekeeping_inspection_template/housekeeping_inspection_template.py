@@ -16,7 +16,9 @@ class HousekeepingInspectionTemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from hse.housekeeping_inspection.doctype.housekeeping_inspection_template_item.housekeeping_inspection_template_item import HousekeepingInspectionTemplateItem
+		from hse.housekeeping_inspection.doctype.housekeeping_inspection_template_item.housekeeping_inspection_template_item import (
+			HousekeepingInspectionTemplateItem,
+		)
 
 		disabled: DF.Check
 		instructions: DF.TextEditor | None

@@ -19,9 +19,7 @@ def update_asset_safety_status(asset: str) -> str:
 	if frappe.db.get_value("Asset", asset, "safety_status") != new_status:
 		# Asset is usually submitted; db.set_value bypasses submit locks.
 		frappe.db.set_value("Asset", asset, "safety_status", new_status)
-		frappe.get_doc("Asset", asset).add_comment(
-			"Info", f"Safety Status set to {new_status}"
-		)
+		frappe.get_doc("Asset", asset).add_comment("Info", f"Safety Status set to {new_status}")
 	return new_status
 
 

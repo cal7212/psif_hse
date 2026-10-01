@@ -35,7 +35,10 @@ def summarize(rows, passing_score=0):
 	Critical = open critical failure, Medium = open non-critical failure,
 	Low = only the score was below passing.
 	"""
-	get = lambda r, k: (r.get(k) if isinstance(r, dict) else getattr(r, k, None))
+
+	def get(r, k):
+		return r.get(k) if isinstance(r, dict) else getattr(r, k, None)
+
 	checked = [r for r in rows if get(r, "result") in (PASS, FAIL)]
 	failed = [r for r in checked if get(r, "result") == FAIL]
 	corrected = [r for r in failed if get(r, "corrected_on_spot")]
@@ -74,7 +77,9 @@ class HousekeepingInspection(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from hse.housekeeping_inspection.doctype.housekeeping_inspection_item.housekeeping_inspection_item import HousekeepingInspectionItem
+		from hse.housekeeping_inspection.doctype.housekeeping_inspection_item.housekeeping_inspection_item import (
+			HousekeepingInspectionItem,
+		)
 
 		amended_from: DF.Link | None
 		area_owner: DF.Link | None
@@ -154,7 +159,9 @@ class HousekeepingInspection(Document):
 			frappe.throw(_("Re-inspection Of must be a submitted, Rejected inspection."))
 		if orig.housekeeping_area != self.housekeeping_area:
 			frappe.throw(
-				_("Re-inspection must be for the same area ({0}).").format(frappe.bold(orig.housekeeping_area))
+				_("Re-inspection must be for the same area ({0}).").format(
+					frappe.bold(orig.housekeeping_area)
+				)
 			)
 
 	def set_items_from_template(self):
@@ -185,9 +192,15 @@ class HousekeepingInspection(Document):
 				errors.append(_("Row {0}: Result is required for '{1}'.").format(row.idx, row.check_item))
 			elif row.result == FAIL:
 				if not cstr(row.finding).strip():
-					errors.append(_("Row {0}: Finding is required for failed item '{1}'.").format(row.idx, row.check_item))
+					errors.append(
+						_("Row {0}: Finding is required for failed item '{1}'.").format(
+							row.idx, row.check_item
+						)
+					)
 				if require_photo and not row.photo:
-					errors.append(_("Row {0}: Photo is required for failed item '{1}'.").format(row.idx, row.check_item))
+					errors.append(
+						_("Row {0}: Photo is required for failed item '{1}'.").format(row.idx, row.check_item)
+					)
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 
@@ -213,16 +226,22 @@ class HousekeepingInspection(Document):
 			if nc.status == "Open":
 				nc.status = "Cancelled"
 				nc.flags.ignore_permissions = True
-				nc.add_comment("Info", _("Cancelled because Housekeeping Inspection {0} was cancelled.").format(self.name))
+				nc.add_comment(
+					"Info",
+					_("Cancelled because Housekeeping Inspection {0} was cancelled.").format(self.name),
+				)
 				nc.save()
 		if self.is_reinspection and self.reinspection_of:
 			orig_nc = frappe.db.get_value("Housekeeping Inspection", self.reinspection_of, "non_conformance")
-			if orig_nc and frappe.db.get_value("Non Conformance", orig_nc, "housekeeping_reinspection") == self.name:
+			if (
+				orig_nc
+				and frappe.db.get_value("Non Conformance", orig_nc, "housekeeping_reinspection") == self.name
+			):
 				if frappe.db.get_value("Non Conformance", orig_nc, "status") == "Resolved":
 					frappe.throw(
-						_("Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling.").format(
-							frappe.bold(orig_nc)
-						)
+						_(
+							"Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling."
+						).format(frappe.bold(orig_nc))
 					)
 				frappe.db.set_value("Non Conformance", orig_nc, "housekeeping_reinspection", None)
 		if not self.is_reinspection:
@@ -266,38 +285,85 @@ class HousekeepingInspection(Document):
 	def create_non_conformance(self, s):
 		failed = [r for r in self.items if r.result == FAIL]
 		rows = "".join(
-			"<tr><td>" + escape_html(cstr(r.category)) + "</td><td>" + escape_html(cstr(r.check_item))
-			+ "</td><td>" + (_("Yes") if r.is_critical else _("No"))
-			+ "</td><td>" + (_("Yes") if r.corrected_on_spot else _("No"))
-			+ "</td><td>" + escape_html(cstr(r.finding)) + "</td></tr>"
+			"<tr><td>"
+			+ escape_html(cstr(r.category))
+			+ "</td><td>"
+			+ escape_html(cstr(r.check_item))
+			+ "</td><td>"
+			+ (_("Yes") if r.is_critical else _("No"))
+			+ "</td><td>"
+			+ (_("Yes") if r.corrected_on_spot else _("No"))
+			+ "</td><td>"
+			+ escape_html(cstr(r.finding))
+			+ "</td></tr>"
 			for r in failed
 		)
 		details = (
-			"<p>" + _("Area") + ": <b>" + escape_html(self.housekeeping_area) + "</b>"
-			+ ((" (" + escape_html(cstr(self.location)) + ")") if self.location else "") + "<br>"
-			+ _("Inspection") + ": <b>" + self.name + "</b> &ndash; " + cstr(self.inspection_date) + "<br>"
-			+ _("Inspected By") + ": " + escape_html(cstr(self.inspector_name or self.inspected_by)) + "<br>"
-			+ _("Score") + ": " + cstr(s.score) + "% (" + _("passing") + " " + cstr(flt(self.passing_score)) + "%)</p>"
-			+ "<table class='table table-bordered'><thead><tr><th>" + _("Category") + "</th><th>" + _("Check Item")
-			+ "</th><th>" + _("Critical") + "</th><th>" + _("Corrected on Spot") + "</th><th>" + _("Finding")
-			+ "</th></tr></thead><tbody>" + rows + "</tbody></table>"
+			"<p>"
+			+ _("Area")
+			+ ": <b>"
+			+ escape_html(self.housekeeping_area)
+			+ "</b>"
+			+ ((" (" + escape_html(cstr(self.location)) + ")") if self.location else "")
+			+ "<br>"
+			+ _("Inspection")
+			+ ": <b>"
+			+ self.name
+			+ "</b> &ndash; "
+			+ cstr(self.inspection_date)
+			+ "<br>"
+			+ _("Inspected By")
+			+ ": "
+			+ escape_html(cstr(self.inspector_name or self.inspected_by))
+			+ "<br>"
+			+ _("Score")
+			+ ": "
+			+ cstr(s.score)
+			+ "% ("
+			+ _("passing")
+			+ " "
+			+ cstr(flt(self.passing_score))
+			+ "%)</p>"
+			+ "<table class='table table-bordered'><thead><tr><th>"
+			+ _("Category")
+			+ "</th><th>"
+			+ _("Check Item")
+			+ "</th><th>"
+			+ _("Critical")
+			+ "</th><th>"
+			+ _("Corrected on Spot")
+			+ "</th><th>"
+			+ _("Finding")
+			+ "</th></tr></thead><tbody>"
+			+ rows
+			+ "</tbody></table>"
 		)
 		if s.severity == "Low":
-			details += "<p>" + _("All failures were corrected on the spot, but the score was below passing. Address the root cause (staffing, storage capacity, cleaning schedule).") + "</p>"
+			details += (
+				"<p>"
+				+ _(
+					"All failures were corrected on the spot, but the score was below passing. Address the root cause (staffing, storage capacity, cleaning schedule)."
+				)
+				+ "</p>"
+			)
 		if self.remarks:
 			details += "<p>" + _("Remarks") + ": " + escape_html(self.remarks) + "</p>"
 
-		nc = frappe.get_doc({
-			"doctype": "Non Conformance",
-			"subject": "Housekeeping - " + self.housekeeping_area + " (" + self.name + ")",
-			"procedure": self.quality_procedure,
-			"status": "Open",
-			"details": details,
-			"housekeeping_area": self.housekeeping_area,
-			"housekeeping_inspection": self.name,
-			"severity": s.severity,
-			"interim_control": _("Hazard barricaded or controlled pending correction.") if s.severity == "Critical" else None,
-		})
+		nc = frappe.get_doc(
+			{
+				"doctype": "Non Conformance",
+				"subject": "Housekeeping - " + self.housekeeping_area + " (" + self.name + ")",
+				"procedure": self.quality_procedure,
+				"status": "Open",
+				"details": details,
+				"housekeeping_area": self.housekeeping_area,
+				"housekeeping_inspection": self.name,
+				"severity": s.severity,
+				"interim_control": _("Hazard barricaded or controlled pending correction.")
+				if s.severity == "Critical"
+				else None,
+			}
+		)
 		nc.flags.ignore_permissions = True
 		nc.insert()
 		self.db_set("non_conformance", nc.name)
@@ -319,13 +385,16 @@ class HousekeepingInspection(Document):
 			return
 		from frappe.desk.form.assign_to import add as assign
 
-		assign({
-			"assign_to": [user],
-			"doctype": "Non Conformance",
-			"name": nc.name,
-			"description": _("Correct housekeeping findings in {0}").format(self.housekeeping_area),
-			"priority": "High" if nc.severity == "Critical" else "Medium",
-		}, ignore_permissions=True)
+		assign(
+			{
+				"assign_to": [user],
+				"doctype": "Non Conformance",
+				"name": nc.name,
+				"description": _("Correct housekeeping findings in {0}").format(self.housekeeping_area),
+				"priority": "High" if nc.severity == "Critical" else "Medium",
+			},
+			ignore_permissions=True,
+		)
 
 	def link_reinspection_to_original_nc(self):
 		if not (self.is_reinspection and self.reinspection_of):
@@ -334,9 +403,9 @@ class HousekeepingInspection(Document):
 		if orig_nc:
 			frappe.db.set_value("Non Conformance", orig_nc, "housekeeping_reinspection", self.name)
 			frappe.msgprint(
-				_("Re-inspection linked to {0}. Complete verification and resolve it to close the finding.").format(
-					frappe.get_desk_link("Non Conformance", orig_nc)
-				),
+				_(
+					"Re-inspection linked to {0}. Complete verification and resolve it to close the finding."
+				).format(frappe.get_desk_link("Non Conformance", orig_nc)),
 				indicator="green",
 				alert=True,
 			)
@@ -390,7 +459,9 @@ def make_from_area(source_name: str, target_doc: str | dict | None = None):
 		target.housekeeping_area = source.name
 		reason = (frappe.flags.args or {}).get("reason")
 		if source.periodicity == AS_NEEDED:
-			reason = reason or ("Post-Return" if source.schedule_status == AWAITING_RETURN else "Pre-Departure")
+			reason = reason or (
+				"Post-Return" if source.schedule_status == AWAITING_RETURN else "Pre-Departure"
+			)
 			target.inspection_reason = reason
 		else:
 			target.inspection_reason = "Routine"
@@ -403,7 +474,12 @@ def make_from_area(source_name: str, target_doc: str | dict | None = None):
 			"Housekeeping Area": {
 				"doctype": "Housekeeping Inspection",
 				"validation": {"disabled": ["=", 0]},
-				"field_map": {"location": "location", "department": "department", "area_owner": "area_owner", "company": "company"},
+				"field_map": {
+					"location": "location",
+					"department": "department",
+					"area_owner": "area_owner",
+					"company": "company",
+				},
 				"field_no_map": ["template", "inspector", "inspector_name", "naming_series"],
 			}
 		},
@@ -428,9 +504,21 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 				"doctype": "Housekeeping Inspection",
 				"validation": {"docstatus": ["=", 1], "status": ["=", "Rejected"]},
 				"field_no_map": [
-					"status", "non_conformance", "signature", "remarks", "inspection_date", "score",
-					"items_checked", "items_failed", "corrected_on_spot_count", "open_findings",
-					"inspected_by", "inspector_name", "is_reinspection", "reinspection_of", "amended_from",
+					"status",
+					"non_conformance",
+					"signature",
+					"remarks",
+					"inspection_date",
+					"score",
+					"items_checked",
+					"items_failed",
+					"corrected_on_spot_count",
+					"open_findings",
+					"inspected_by",
+					"inspector_name",
+					"is_reinspection",
+					"reinspection_of",
+					"amended_from",
 				],
 			}
 		},

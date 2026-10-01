@@ -55,9 +55,9 @@ class SDS(Document):
 			self.discontinued_date = None
 			if self.superseded_by:
 				frappe.throw(
-					_("This SDS was superseded by {0}. Open that version instead of reactivating this one.").format(
-						frappe.bold(self.superseded_by)
-					)
+					_(
+						"This SDS was superseded by {0}. Open that version instead of reactivating this one."
+					).format(frappe.bold(self.superseded_by))
 				)
 
 	def update_use_summary(self):
@@ -67,7 +67,9 @@ class SDS(Document):
 
 	def update_review_date(self):
 		self.next_review_date = (
-			add_years(getdate(self.last_reviewed_on), REVIEW_INTERVAL_YEARS) if self.last_reviewed_on else None
+			add_years(getdate(self.last_reviewed_on), REVIEW_INTERVAL_YEARS)
+			if self.last_reviewed_on
+			else None
 		)
 
 	def validate_supersedes(self):
@@ -98,9 +100,9 @@ class SDS(Document):
 		)
 		if dupes:
 			frappe.msgprint(
-				_("Another active SDS exists for this product and manufacturer: {0}. Consider using New Version or marking one Superseded.").format(
-					", ".join(get_link_to_form("SDS", d) for d in dupes)
-				),
+				_(
+					"Another active SDS exists for this product and manufacturer: {0}. Consider using New Version or marking one Superseded."
+				).format(", ".join(get_link_to_form("SDS", d) for d in dupes)),
 				indicator="orange",
 				alert=True,
 			)
@@ -126,9 +128,9 @@ class SDS(Document):
 	def on_trash(self):
 		if self.locations or self.superseded_by or self.supersedes:
 			frappe.throw(
-				_("This SDS has a use or version history and must be kept for {0} years. Set its status to Discontinued or Superseded instead of deleting it.").format(
-					RETENTION_YEARS
-				),
+				_(
+					"This SDS has a use or version history and must be kept for {0} years. Set its status to Discontinued or Superseded instead of deleting it."
+				).format(RETENTION_YEARS),
 				title=_("Retention Required"),
 			)
 

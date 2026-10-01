@@ -7,7 +7,11 @@ frappe.ui.form.on("Asset Inspection", {
 	setup(frm) {
 		// Cancelling an inspection must NOT offer to cancel the submitted
 		// Maintenance Log or other records that link back to it.
-		frm.ignore_doctypes_on_cancel_all = ["Asset Maintenance Log", "Non Conformance", "Asset Inspection"];
+		frm.ignore_doctypes_on_cancel_all = [
+			"Asset Maintenance Log",
+			"Non Conformance",
+			"Asset Inspection",
+		];
 
 		// Show templates for this asset's category plus general (no category) templates
 		frm.set_query("template", () => {
@@ -24,7 +28,12 @@ frappe.ui.form.on("Asset Inspection", {
 			filters: { asset_name: frm.doc.asset, docstatus: 0 },
 		}));
 		frm.set_query("reinspection_of", () => ({
-			filters: { asset: frm.doc.asset, docstatus: 1, status: "Rejected", name: ["!=", frm.doc.name] },
+			filters: {
+				asset: frm.doc.asset,
+				docstatus: 1,
+				status: "Rejected",
+				name: ["!=", frm.doc.name],
+			},
 		}));
 	},
 
@@ -33,14 +42,25 @@ frappe.ui.form.on("Asset Inspection", {
 		frm.trigger("render_instructions");
 
 		if (frm.doc.docstatus === 1 && frm.doc.status === "Rejected") {
-			frm.add_custom_button(__("Re-inspection"), () => {
-				frappe.model.open_mapped_doc({ method: `${AI_METHOD}.make_reinspection`, frm });
-			}, __("Create"));
+			frm.add_custom_button(
+				__("Re-inspection"),
+				() => {
+					frappe.model.open_mapped_doc({
+						method: `${AI_METHOD}.make_reinspection`,
+						frm,
+					});
+				},
+				__("Create")
+			);
 		}
 		if (frm.doc.non_conformance) {
-			frm.add_custom_button(__("Non Conformance"), () => {
-				frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
-			}, __("View"));
+			frm.add_custom_button(
+				__("Non Conformance"),
+				() => {
+					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+				},
+				__("View")
+			);
 		}
 		if (frm.doc.docstatus === 0 && frm.doc.template) {
 			frm.add_custom_button(__("Mark All Pass"), () => {
@@ -69,7 +89,9 @@ frappe.ui.form.on("Asset Inspection", {
 			args: { template: frm.doc.template },
 			callback: (r) => {
 				if (r.message) {
-					wrapper.html(`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`);
+					wrapper.html(
+						`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`
+					);
 				}
 			},
 		});
@@ -77,10 +99,12 @@ frappe.ui.form.on("Asset Inspection", {
 
 	asset(frm) {
 		if (frm.doc.template && frm.doc.asset_category) {
-			frappe.db.get_value("Asset Inspection Template", frm.doc.template, "asset_category").then((r) => {
-				const cat = r.message && r.message.asset_category;
-				if (cat && cat !== frm.doc.asset_category) frm.set_value("template", null);
-			});
+			frappe.db
+				.get_value("Asset Inspection Template", frm.doc.template, "asset_category")
+				.then((r) => {
+					const cat = r.message && r.message.asset_category;
+					if (cat && cat !== frm.doc.asset_category) frm.set_value("template", null);
+				});
 		}
 	},
 
@@ -111,9 +135,16 @@ frappe.ui.form.on("Asset Inspection Reading", {
 	reading_value(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		if (!row.numeric || row.result === "N/A") return;
-		if (row.reading_value === null || row.reading_value === undefined || row.reading_value === "") return;
+		if (
+			row.reading_value === null ||
+			row.reading_value === undefined ||
+			row.reading_value === ""
+		)
+			return;
 		const v = flt(row.reading_value);
-		const ok = (!row.min_value || v >= flt(row.min_value)) && (!row.max_value || v <= flt(row.max_value));
+		const ok =
+			(!row.min_value || v >= flt(row.min_value)) &&
+			(!row.max_value || v <= flt(row.max_value));
 		frappe.model.set_value(cdt, cdn, "result", ok ? "Pass" : "Fail");
 	},
 
@@ -121,7 +152,10 @@ frappe.ui.form.on("Asset Inspection Reading", {
 		const row = locals[cdt][cdn];
 		if (row.result === "Fail" && row.is_critical) {
 			frappe.show_alert({
-				message: __("Critical item failed: {0}. The asset will be placed Out of Service on submit.", [row.check_item]),
+				message: __(
+					"Critical item failed: {0}. The asset will be placed Out of Service on submit.",
+					[row.check_item]
+				),
 				indicator: "red",
 			});
 		}

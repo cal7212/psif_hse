@@ -13,7 +13,11 @@ GHS_PICTOGRAMS = [
 	("Corrosion", "GHS05", "Skin corrosion/burns, eye damage, corrosive to metals"),
 	("Skull and Crossbones", "GHS06", "Acute toxicity (fatal or toxic)"),
 	("Exclamation Mark", "GHS07", "Irritant, skin sensitizer, acute toxicity (harmful), narcotic effects"),
-	("Health Hazard", "GHS08", "Carcinogen, mutagen, reproductive toxicity, respiratory sensitizer, target organ toxicity, aspiration"),
+	(
+		"Health Hazard",
+		"GHS08",
+		"Carcinogen, mutagen, reproductive toxicity, respiratory sensitizer, target organ toxicity, aspiration",
+	),
 	("Environment", "GHS09", "Aquatic toxicity (non-mandatory under OSHA)"),
 ]
 
@@ -51,7 +55,9 @@ def ensure_sds_permissions():
 	for role, ptypes in SDS_PERMS.items():
 		if not frappe.db.exists("Role", role):
 			continue
-		if not frappe.db.exists("Custom DocPerm", {"parent": "SDS", "role": role, "permlevel": 0, "if_owner": 0}):
+		if not frappe.db.exists(
+			"Custom DocPerm", {"parent": "SDS", "role": role, "permlevel": 0, "if_owner": 0}
+		):
 			add_permission("SDS", role, 0)
 		for ptype in ptypes:
 			update_permission_property("SDS", role, 0, ptype, 1, validate=False)

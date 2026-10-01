@@ -23,30 +23,156 @@ PROCEDURE_STEPS = [
 ]
 
 PRE_ITEMS = [
-	("Material Storage", "Tools and equipment secured for travel", "Strapped, binned or locked in place; nothing can shift or fall in transit.", 1, ""),
-	("Material Storage", "Materials and stock stacked and restrained", "Stacks stable, blocked or tied down; heavy items low.", 1, "OSHA 1910.176(b)"),
-	("Walking-Working Surfaces", "Floor and aisle clear", "No loose parts, cords, hoses or debris on the floor; clear path to the door.", 0, "OSHA 1910.22(a)"),
-	("Walking-Working Surfaces", "Floor dry and free of oil or fluid", "No spills or slick spots.", 0, "OSHA 1910.22(a)"),
-	("Aisles and Exits", "Door and steps clear and working", "Door opens fully and latches; steps and grab handles clear.", 0, ""),
-	("Fire Protection", "Fire extinguisher present, charged and secured", "Mounted in its bracket, gauge in green, tag current.", 1, "OSHA 1910.157(c)(1)"),
-	("Fire Protection", "First aid kit present and stocked", "Kit on board and not depleted.", 0, "OSHA 1910.151(b)"),
-	("Chemicals and Flammables", "Chemicals and fuel capped, labeled and stowed", "Approved containers, lids tight, GHS labels, secured upright.", 1, "OSHA 1910.1200(f)(6)"),
-	("Chemicals and Flammables", "Spill kit on board", "Absorbent and bags available for the chemicals carried.", 0, ""),
-	("Electrical", "Cords and leads coiled and stowed", "No damaged cords; nothing stowed against electrical panels or batteries.", 0, ""),
-	("General", "Job-specific tools, PPE and SDS on board", "Items on the job list are loaded; SDS available for chemicals carried.", 0, "OSHA 1910.1200(g)(8)"),
+	(
+		"Material Storage",
+		"Tools and equipment secured for travel",
+		"Strapped, binned or locked in place; nothing can shift or fall in transit.",
+		1,
+		"",
+	),
+	(
+		"Material Storage",
+		"Materials and stock stacked and restrained",
+		"Stacks stable, blocked or tied down; heavy items low.",
+		1,
+		"OSHA 1910.176(b)",
+	),
+	(
+		"Walking-Working Surfaces",
+		"Floor and aisle clear",
+		"No loose parts, cords, hoses or debris on the floor; clear path to the door.",
+		0,
+		"OSHA 1910.22(a)",
+	),
+	(
+		"Walking-Working Surfaces",
+		"Floor dry and free of oil or fluid",
+		"No spills or slick spots.",
+		0,
+		"OSHA 1910.22(a)",
+	),
+	(
+		"Aisles and Exits",
+		"Door and steps clear and working",
+		"Door opens fully and latches; steps and grab handles clear.",
+		0,
+		"",
+	),
+	(
+		"Fire Protection",
+		"Fire extinguisher present, charged and secured",
+		"Mounted in its bracket, gauge in green, tag current.",
+		1,
+		"OSHA 1910.157(c)(1)",
+	),
+	(
+		"Fire Protection",
+		"First aid kit present and stocked",
+		"Kit on board and not depleted.",
+		0,
+		"OSHA 1910.151(b)",
+	),
+	(
+		"Chemicals and Flammables",
+		"Chemicals and fuel capped, labeled and stowed",
+		"Approved containers, lids tight, GHS labels, secured upright.",
+		1,
+		"OSHA 1910.1200(f)(6)",
+	),
+	(
+		"Chemicals and Flammables",
+		"Spill kit on board",
+		"Absorbent and bags available for the chemicals carried.",
+		0,
+		"",
+	),
+	(
+		"Electrical",
+		"Cords and leads coiled and stowed",
+		"No damaged cords; nothing stowed against electrical panels or batteries.",
+		0,
+		"",
+	),
+	(
+		"General",
+		"Job-specific tools, PPE and SDS on board",
+		"Items on the job list are loaded; SDS available for chemicals carried.",
+		0,
+		"OSHA 1910.1200(g)(8)",
+	),
 ]
 
 POST_ITEMS = [
-	("Waste and Sanitation", "Trash and job debris removed", "No packaging, scrap or food waste left in the trailer.", 0, "OSHA 1910.141(a)(4)"),
-	("Walking-Working Surfaces", "Spills and leaks cleaned up", "No oil, hydraulic fluid or chemical residue on the floor or shelves.", 1, "OSHA 1910.22(a)"),
-	("Waste and Sanitation", "Oily rags removed or in a self-closing metal can", "No loose oily rags left on board.", 1, "NFPA 1 (Fire Code)"),
-	("Chemicals and Flammables", "Chemical and fuel containers capped and stowed", "Partially used containers closed, labeled and secured.", 1, "OSHA 1910.1200(f)(6)"),
-	("Material Storage", "Tools and equipment returned to their places", "Shelves and bins orderly; nothing left loose.", 0, "OSHA 1910.176(c)"),
-	("Walking-Working Surfaces", "Floor and aisle clear", "Clear path to the door; no trip hazards.", 0, "OSHA 1910.22(a)"),
-	("Tools and Equipment", "Damaged tools or equipment tagged and reported", "Damaged items tagged out and noted in Findings.", 0, ""),
-	("Fire Protection", "Fire extinguisher still charged and in its bracket", "Not used or discharged; report it if it was.", 1, "OSHA 1910.157(c)(1)"),
-	("Fire Protection", "First aid and spill kit restocked", "Items used on the job replaced or requested.", 0, "OSHA 1910.151(b)"),
-	("General", "Trailer interior damage noted", "New damage to walls, floor, shelving or door recorded with a photo.", 0, ""),
+	(
+		"Waste and Sanitation",
+		"Trash and job debris removed",
+		"No packaging, scrap or food waste left in the trailer.",
+		0,
+		"OSHA 1910.141(a)(4)",
+	),
+	(
+		"Walking-Working Surfaces",
+		"Spills and leaks cleaned up",
+		"No oil, hydraulic fluid or chemical residue on the floor or shelves.",
+		1,
+		"OSHA 1910.22(a)",
+	),
+	(
+		"Waste and Sanitation",
+		"Oily rags removed or in a self-closing metal can",
+		"No loose oily rags left on board.",
+		1,
+		"NFPA 1 (Fire Code)",
+	),
+	(
+		"Chemicals and Flammables",
+		"Chemical and fuel containers capped and stowed",
+		"Partially used containers closed, labeled and secured.",
+		1,
+		"OSHA 1910.1200(f)(6)",
+	),
+	(
+		"Material Storage",
+		"Tools and equipment returned to their places",
+		"Shelves and bins orderly; nothing left loose.",
+		0,
+		"OSHA 1910.176(c)",
+	),
+	(
+		"Walking-Working Surfaces",
+		"Floor and aisle clear",
+		"Clear path to the door; no trip hazards.",
+		0,
+		"OSHA 1910.22(a)",
+	),
+	(
+		"Tools and Equipment",
+		"Damaged tools or equipment tagged and reported",
+		"Damaged items tagged out and noted in Findings.",
+		0,
+		"",
+	),
+	(
+		"Fire Protection",
+		"Fire extinguisher still charged and in its bracket",
+		"Not used or discharged; report it if it was.",
+		1,
+		"OSHA 1910.157(c)(1)",
+	),
+	(
+		"Fire Protection",
+		"First aid and spill kit restocked",
+		"Items used on the job replaced or requested.",
+		0,
+		"OSHA 1910.151(b)",
+	),
+	(
+		"General",
+		"Trailer interior damage noted",
+		"New damage to walls, floor, shelving or door recorded with a photo.",
+		0,
+		"",
+	),
 ]
 
 INSTRUCTIONS = (
@@ -59,25 +185,29 @@ INSTRUCTIONS = (
 def _template(name, items):
 	if frappe.db.exists("Housekeeping Inspection Template", name):
 		return name
-	frappe.get_doc({
-		"doctype": "Housekeeping Inspection Template",
-		"template_name": name,
-		"quality_procedure": PROCEDURE,
-		"passing_score": 90,
-		"instructions": INSTRUCTIONS,
-		"items": [
-			{"category": c, "check_item": i, "criteria": cr, "is_critical": k, "reference": r}
-			for c, i, cr, k, r in items
-		],
-	}).insert()
+	frappe.get_doc(
+		{
+			"doctype": "Housekeeping Inspection Template",
+			"template_name": name,
+			"quality_procedure": PROCEDURE,
+			"passing_score": 90,
+			"instructions": INSTRUCTIONS,
+			"items": [
+				{"category": c, "check_item": i, "criteria": cr, "is_critical": k, "reference": r}
+				for c, i, cr, k, r in items
+			],
+		}
+	).insert()
 	return name
 
 
 def create_trailer_templates():
 	if not frappe.db.exists("Quality Procedure", PROCEDURE):
-		frappe.get_doc({
-			"doctype": "Quality Procedure",
-			"quality_procedure_name": PROCEDURE,
-			"processes": [{"process_description": step} for step in PROCEDURE_STEPS],
-		}).insert()
+		frappe.get_doc(
+			{
+				"doctype": "Quality Procedure",
+				"quality_procedure_name": PROCEDURE,
+				"processes": [{"process_description": step} for step in PROCEDURE_STEPS],
+			}
+		).insert()
 	return _template(PRE, PRE_ITEMS), _template(POST, POST_ITEMS)
