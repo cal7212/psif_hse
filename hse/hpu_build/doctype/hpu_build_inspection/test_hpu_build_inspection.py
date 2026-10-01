@@ -120,6 +120,8 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 		for row in doc.items:
 			if row.numeric:
 				row.reading_value = reading
+				# Out-of-limit readings auto-fail on save, and a failed line needs a finding.
+				row.finding = "Reading recorded by test"
 			else:
 				row.result = (results or {}).get(row.check_item, PASS)
 				if row.result == FAIL:
