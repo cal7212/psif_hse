@@ -68,12 +68,31 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 					}
 				).insert()
 		cls.company = frappe.db.get_value("Company", {}, "name")
-		cls.employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
+		cls.employee = frappe.db.get_value("Employee", {"status": "Active", "company": cls.company}, "name")
+		if not cls.employee:
+			cls.employee = (
+				frappe.get_doc(
+					{
+						"doctype": "Employee",
+						"first_name": "_Test HPU Inspector",
+						"gender": frappe.db.get_value("Gender", {}, "name"),
+						"date_of_birth": "1990-01-01",
+						"date_of_joining": "2020-01-01",
+						"company": cls.company,
+						"status": "Active",
+					}
+				)
+				.insert()
+				.name
+			)
 
 	def setUp(self):
 		if frappe.db.exists("HPU Unit", WO):
-			for n in frappe.get_all("HPU Build Inspection", {"hpu_unit": WO, "docstatus": 1}, pluck="name"):
-				frappe.get_doc("HPU Build Inspection", n).cancel()
+			# Remove records left by earlier tests directly; cancelling would trip the
+			# "resolved by this re-inspection" guard.
+			names = frappe.get_all("HPU Build Inspection", {"hpu_unit": WO}, pluck="name")
+			if names:
+				frappe.db.delete("HPU Build Inspection Reading", {"parent": ("in", names)})
 			frappe.db.delete("HPU Build Inspection", {"hpu_unit": WO})
 			frappe.db.delete("Non Conformance", {"hpu_unit": WO})
 			frappe.delete_doc("HPU Unit", WO, force=1)
@@ -104,6 +123,8 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 		for row in doc.items:
 			if row.numeric:
 				row.reading_value = reading
+				# Out-of-limit readings auto-fail on save, and a failed line needs a finding.
+				row.finding = "Reading recorded by test"
 			else:
 				row.result = (results or {}).get(row.check_item, PASS)
 				if row.result == FAIL:
