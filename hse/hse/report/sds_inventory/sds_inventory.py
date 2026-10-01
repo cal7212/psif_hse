@@ -14,7 +14,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Location"), "fieldname": "location", "fieldtype": "Link", "options": "Location", "width": 150},
+		{
+			"label": _("Location"),
+			"fieldname": "location",
+			"fieldtype": "Link",
+			"options": "Location",
+			"width": 150,
+		},
 		{"label": _("Storage Detail"), "fieldname": "storage_detail", "fieldtype": "Data", "width": 160},
 		{"label": _("Product"), "fieldname": "product_name", "fieldtype": "Data", "width": 200},
 		{"label": _("SDS"), "fieldname": "sds", "fieldtype": "Link", "options": "SDS", "width": 120},
@@ -40,9 +46,21 @@ def get_data(filters):
 		.left_join(loc)
 		.on((loc.parent == sds.name) & (loc.parenttype == "SDS") & (loc.parentfield == "locations"))
 		.select(
-			loc.location, loc.storage_detail, sds.product_name, sds.name.as_("sds"), sds.manufacturer_name,
-			sds.signal_word, loc.quantity, loc.container_size, loc.uom, loc.start_date, loc.end_date,
-			sds.version_date, sds.status, sds.sds_uploaded, sds.attach_sds,
+			loc.location,
+			loc.storage_detail,
+			sds.product_name,
+			sds.name.as_("sds"),
+			sds.manufacturer_name,
+			sds.signal_word,
+			loc.quantity,
+			loc.container_size,
+			loc.uom,
+			loc.start_date,
+			loc.end_date,
+			sds.version_date,
+			sds.status,
+			sds.sds_uploaded,
+			sds.attach_sds,
 		)
 		.orderby(loc.location)
 		.orderby(sds.product_name)
@@ -62,7 +80,11 @@ def get_data(filters):
 	pictos = {}
 	names = list({r.sds for r in rows})
 	if names:
-		for p in frappe.get_all("SDS Pictogram", filters={"parenttype": "SDS", "parent": ["in", names]}, fields=["parent", "pictogram"]):
+		for p in frappe.get_all(
+			"SDS Pictogram",
+			filters={"parenttype": "SDS", "parent": ["in", names]},
+			fields=["parent", "pictogram"],
+		):
 			pictos.setdefault(p.parent, []).append(p.pictogram)
 
 	for r in rows:

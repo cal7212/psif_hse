@@ -15,7 +15,9 @@ class AssetInspectionTemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from hse.asset_inspection.doctype.asset_inspection_template_item.asset_inspection_template_item import AssetInspectionTemplateItem
+		from hse.asset_inspection.doctype.asset_inspection_template_item.asset_inspection_template_item import (
+			AssetInspectionTemplateItem,
+		)
 
 		asset_category: DF.Link | None
 		disabled: DF.Check

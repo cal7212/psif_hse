@@ -123,7 +123,7 @@ def create_sample_templates(quality_procedure: str = "HPU Build Inspection"):
 		)
 		doc.insert(ignore_permissions=True)
 		created.append(doc.name)
-	frappe.db.commit()
+	# No manual commit: `bench execute` and install hooks commit on completion.
 	return created
 
 

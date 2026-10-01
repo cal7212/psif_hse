@@ -1,12 +1,17 @@
 // Copyright (c) 2026, Calvin Johnston and contributors
 // For license information, please see license.txt
 
-const HKI_METHOD = "hse.housekeeping_inspection.doctype.housekeeping_inspection.housekeeping_inspection";
+const HKI_METHOD =
+	"hse.housekeeping_inspection.doctype.housekeeping_inspection.housekeeping_inspection";
 
 frappe.ui.form.on("Housekeeping Inspection", {
 	setup(frm) {
 		// Cancelling must not offer to cancel the Non Conformance or Area that link back here
-		frm.ignore_doctypes_on_cancel_all = ["Non Conformance", "Housekeeping Area", "Housekeeping Inspection"];
+		frm.ignore_doctypes_on_cancel_all = [
+			"Non Conformance",
+			"Housekeeping Area",
+			"Housekeeping Inspection",
+		];
 		frm.set_query("housekeeping_area", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("template", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("reinspection_of", () => ({
@@ -24,19 +29,31 @@ frappe.ui.form.on("Housekeeping Inspection", {
 		frm.trigger("render_instructions");
 
 		if (frm.doc.docstatus === 1 && frm.doc.status === "Rejected") {
-			frm.add_custom_button(__("Re-inspection"), () => {
-				frappe.model.open_mapped_doc({ method: `${HKI_METHOD}.make_reinspection`, frm });
-			}, __("Create"));
+			frm.add_custom_button(
+				__("Re-inspection"),
+				() => {
+					frappe.model.open_mapped_doc({
+						method: `${HKI_METHOD}.make_reinspection`,
+						frm,
+					});
+				},
+				__("Create")
+			);
 		}
 		if (frm.doc.non_conformance) {
-			frm.add_custom_button(__("Non Conformance"), () => {
-				frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
-			}, __("View"));
+			frm.add_custom_button(
+				__("Non Conformance"),
+				() => {
+					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+				},
+				__("View")
+			);
 		}
 		if (frm.doc.docstatus === 0 && frm.doc.template) {
 			frm.add_custom_button(__("Mark Remaining Pass"), () => {
 				(frm.doc.items || []).forEach((row) => {
-					if (!row.result) frappe.model.set_value(row.doctype, row.name, "result", "Pass");
+					if (!row.result)
+						frappe.model.set_value(row.doctype, row.name, "result", "Pass");
 				});
 			});
 		}
@@ -61,7 +78,9 @@ frappe.ui.form.on("Housekeeping Inspection", {
 			args: { template: frm.doc.template },
 			callback: (r) => {
 				if (r.message) {
-					wrapper.html(`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`);
+					wrapper.html(
+						`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`
+					);
 				}
 			},
 		});
@@ -82,7 +101,8 @@ frappe.ui.form.on("Housekeeping Inspection", {
 			method: `${HKI_METHOD}.get_area_template`,
 			args: { area: frm.doc.housekeeping_area, reason: frm.doc.inspection_reason },
 			callback: (r) => {
-				if (r.message && r.message !== frm.doc.template) frm.set_value("template", r.message);
+				if (r.message && r.message !== frm.doc.template)
+					frm.set_value("template", r.message);
 			},
 		});
 	},

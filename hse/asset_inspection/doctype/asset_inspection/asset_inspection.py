@@ -11,7 +11,13 @@ from hse.asset_inspection.utils import update_asset_safety_status
 
 PASS, FAIL, NA = "Pass", "Fail", "N/A"
 TEMPLATE_ROW_FIELDS = (
-	"check_item", "criteria", "is_critical", "numeric", "min_value", "max_value", "uom",
+	"check_item",
+	"criteria",
+	"is_critical",
+	"numeric",
+	"min_value",
+	"max_value",
+	"uom",
 )
 
 
@@ -35,7 +41,9 @@ class AssetInspection(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from hse.asset_inspection.doctype.asset_inspection_reading.asset_inspection_reading import AssetInspectionReading
+		from hse.asset_inspection.doctype.asset_inspection_reading.asset_inspection_reading import (
+			AssetInspectionReading,
+		)
 
 		amended_from: DF.Link | None
 		asset: DF.Link | None
@@ -77,8 +85,10 @@ class AssetInspection(Document):
 		if template.asset_category and self.asset_category and template.asset_category != self.asset_category:
 			frappe.throw(
 				_("Template {0} is for Asset Category {1}, but asset {2} is {3}.").format(
-					frappe.bold(self.template), frappe.bold(template.asset_category),
-					frappe.bold(self.asset), frappe.bold(self.asset_category),
+					frappe.bold(self.template),
+					frappe.bold(template.asset_category),
+					frappe.bold(self.asset),
+					frappe.bold(self.asset_category),
 				)
 			)
 		if not self.quality_procedure:
@@ -97,7 +107,9 @@ class AssetInspection(Document):
 				)
 			)
 		if log_docstatus == 2:
-			frappe.throw(_("Maintenance Log {0} is cancelled.").format(frappe.bold(self.asset_maintenance_log)))
+			frappe.throw(
+				_("Maintenance Log {0} is cancelled.").format(frappe.bold(self.asset_maintenance_log))
+			)
 
 	def validate_reinspection(self):
 		if not self.is_reinspection:
@@ -134,7 +146,9 @@ class AssetInspection(Document):
 			if not row.result:
 				errors.append(_("Row {0}: Result is required for '{1}'.").format(row.idx, row.check_item))
 			elif row.result == FAIL and not cstr(row.finding).strip():
-				errors.append(_("Row {0}: Finding is required for failed item '{1}'.").format(row.idx, row.check_item))
+				errors.append(
+					_("Row {0}: Finding is required for failed item '{1}'.").format(row.idx, row.check_item)
+				)
 			if row.numeric and row.result == PASS and flt(row.reading_value) == 0:
 				errors.append(_("Row {0}: Enter the reading for '{1}'.").format(row.idx, row.check_item))
 		if errors:
@@ -157,25 +171,29 @@ class AssetInspection(Document):
 		# even though its Maintenance Log / Non Conformance link back to it.
 		self.ignore_linked_doctypes = ("Non Conformance", "Asset Maintenance Log", "Asset Inspection")
 		self.db_set("status", "Pending")
-		if self.asset_maintenance_log and frappe.db.get_value(
-			"Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection"
-		) == self.name:
+		if (
+			self.asset_maintenance_log
+			and frappe.db.get_value("Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection")
+			== self.name
+		):
 			frappe.db.set_value("Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection", None)
 		if self.non_conformance:
 			nc = frappe.get_doc("Non Conformance", self.non_conformance)
 			if nc.status == "Open":
 				nc.status = "Cancelled"
 				nc.flags.ignore_permissions = True
-				nc.add_comment("Info", _("Cancelled because Asset Inspection {0} was cancelled.").format(self.name))
+				nc.add_comment(
+					"Info", _("Cancelled because Asset Inspection {0} was cancelled.").format(self.name)
+				)
 				nc.save()
 		if self.is_reinspection and self.reinspection_of:
 			orig_nc = frappe.db.get_value("Asset Inspection", self.reinspection_of, "non_conformance")
 			if orig_nc and frappe.db.get_value("Non Conformance", orig_nc, "reinspection") == self.name:
 				if frappe.db.get_value("Non Conformance", orig_nc, "status") == "Resolved":
 					frappe.throw(
-						_("Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling.").format(
-							frappe.bold(orig_nc)
-						)
+						_(
+							"Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling."
+						).format(frappe.bold(orig_nc))
 					)
 				frappe.db.set_value("Non Conformance", orig_nc, "reinspection", None)
 		update_asset_safety_status(self.asset)
@@ -207,33 +225,39 @@ class AssetInspection(Document):
 		if self.remarks:
 			details += f"<p>{_('Remarks')}: {escape_html(self.remarks)}</p>"
 
-		nc = frappe.get_doc({
-			"doctype": "Non Conformance",
-			"subject": f"Inspection failure - {self.asset_name or self.asset} ({self.name})",
-			"procedure": self.quality_procedure,
-			"status": "Open",
-			"details": details,
-			"asset": self.asset,
-			"asset_inspection": self.name,
-			"severity": "Critical" if critical else "Medium",
-			"interim_control": _("Asset tagged Out of Service pending corrective action.") if critical else None,
-		})
+		nc = frappe.get_doc(
+			{
+				"doctype": "Non Conformance",
+				"subject": f"Inspection failure - {self.asset_name or self.asset} ({self.name})",
+				"procedure": self.quality_procedure,
+				"status": "Open",
+				"details": details,
+				"asset": self.asset,
+				"asset_inspection": self.name,
+				"severity": "Critical" if critical else "Medium",
+				"interim_control": _("Asset tagged Out of Service pending corrective action.")
+				if critical
+				else None,
+			}
+		)
 		nc.flags.ignore_permissions = True
 		nc.insert()
 
 		self.db_set("non_conformance", nc.name)
+		nc_link = frappe.get_desk_link("Non Conformance", nc.name)
 		frappe.msgprint(
-			_("Non Conformance {0} created{1}.").format(
-				frappe.get_desk_link("Non Conformance", nc.name),
-				_(" and asset placed Out of Service") if critical else "",
-			),
+			_("Non Conformance {0} created and asset placed Out of Service.").format(nc_link)
+			if critical
+			else _("Non Conformance {0} created.").format(nc_link),
 			indicator="red",
 			alert=True,
 		)
 
 	def link_to_maintenance_log(self):
 		if self.asset_maintenance_log:
-			frappe.db.set_value("Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection", self.name)
+			frappe.db.set_value(
+				"Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection", self.name
+			)
 
 	def complete_maintenance_log(self):
 		if not self.asset_maintenance_log:
@@ -244,7 +268,11 @@ class AssetInspection(Document):
 			return
 
 		log.maintenance_status = "Completed"
-		log.completion_date = getdate(self.inspection_date) if getdate(self.inspection_date) <= getdate(nowdate()) else nowdate()
+		log.completion_date = (
+			getdate(self.inspection_date)
+			if getdate(self.inspection_date) <= getdate(nowdate())
+			else nowdate()
+		)
 		log.asset_inspection = self.name
 		note = _("Completed by Asset Inspection {0} (Accepted).").format(self.name)
 		log.actions_performed = f"{log.actions_performed}<br>{note}" if log.actions_performed else note
@@ -253,9 +281,9 @@ class AssetInspection(Document):
 		if log.get("has_certificate") and not log.get("certificate_attachement"):
 			log.save()
 			frappe.msgprint(
-				_("Maintenance Log {0} marked Completed but not submitted: attach the required certificate and submit it.").format(
-					frappe.get_desk_link("Asset Maintenance Log", log.name)
-				),
+				_(
+					"Maintenance Log {0} marked Completed but not submitted: attach the required certificate and submit it."
+				).format(frappe.get_desk_link("Asset Maintenance Log", log.name)),
 				indicator="orange",
 			)
 		else:
@@ -268,9 +296,9 @@ class AssetInspection(Document):
 		if orig_nc:
 			frappe.db.set_value("Non Conformance", orig_nc, "reinspection", self.name)
 			frappe.msgprint(
-				_("Re-inspection linked to {0}. Complete verification and resolve it to return the asset to service.").format(
-					frappe.get_desk_link("Non Conformance", orig_nc)
-				),
+				_(
+					"Re-inspection linked to {0}. Complete verification and resolve it to return the asset to service."
+				).format(frappe.get_desk_link("Non Conformance", orig_nc)),
 				indicator="green",
 				alert=True,
 			)
@@ -308,7 +336,7 @@ def _fill_new_inspection(target, template=None):
 
 
 @frappe.whitelist()
-def make_from_maintenance_log(source_name: str, target_doc=None):
+def make_from_maintenance_log(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.naming_series = "AINSP-.YYYY.-"
 		target.asset = source.asset_name  # Asset Maintenance Log.asset_name is the Asset link
@@ -334,7 +362,7 @@ def make_from_maintenance_log(source_name: str, target_doc=None):
 
 
 @frappe.whitelist()
-def make_reinspection(source_name: str, target_doc=None):
+def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.is_reinspection = 1
 		target.reinspection_of = source.name
@@ -349,8 +377,16 @@ def make_reinspection(source_name: str, target_doc=None):
 				"doctype": "Asset Inspection",
 				"validation": {"docstatus": ["=", 1], "status": ["=", "Rejected"]},
 				"field_no_map": [
-					"status", "non_conformance", "signature", "remarks", "inspection_date",
-					"inspected_by", "inspector_name", "is_reinspection", "reinspection_of", "amended_from",
+					"status",
+					"non_conformance",
+					"signature",
+					"remarks",
+					"inspection_date",
+					"inspected_by",
+					"inspector_name",
+					"is_reinspection",
+					"reinspection_of",
+					"amended_from",
 				],
 			}
 		},
