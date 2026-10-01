@@ -25,9 +25,7 @@ class HPUUnit(Document):
 			"HPU Unit", {"serial_no": self.serial_no, "name": ("!=", self.name)}, "name"
 		)
 		if other:
-			frappe.throw(
-				_("Serial No {0} is already used by HPU Unit {1}").format(self.serial_no, other)
-			)
+			frappe.throw(_("Serial No {0} is already used by HPU Unit {1}").format(self.serial_no, other))
 
 	def validate_status_change(self):
 		# QC status is driven by HPU Build Inspection / Non Conformance (next phase).

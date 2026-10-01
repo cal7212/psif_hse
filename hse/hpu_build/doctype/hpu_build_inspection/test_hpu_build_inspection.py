@@ -34,16 +34,39 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
 		for name, seq, final in STAGES:
 			if not frappe.db.exists("HPU Build Stage", name):
-				frappe.get_doc({"doctype": "HPU Build Stage", "stage_name": name, "sequence": seq,
-					"is_required": 1, "hold_point": 1, "is_final_release": final}).insert()
+				frappe.get_doc(
+					{
+						"doctype": "HPU Build Stage",
+						"stage_name": name,
+						"sequence": seq,
+						"is_required": 1,
+						"hold_point": 1,
+						"is_final_release": final,
+					}
+				).insert()
 			tname = f"{name} Template"
 			if not frappe.db.exists("HPU Build Inspection Template", tname):
 				items = [{"check_item": "Visual", "criteria": "OK"}]
 				if name == "_T Test":
-					items.append({"check_item": "Relief setting", "numeric": 1, "unit_spec_field": "relief_setting_psi",
-						"tolerance_minus_pct": 3, "tolerance_plus_pct": 3, "is_critical": 1})
-				frappe.get_doc({"doctype": "HPU Build Inspection Template", "template_name": tname, "stage": name,
-					"quality_procedure": PROC, "items": items}).insert()
+					items.append(
+						{
+							"check_item": "Relief setting",
+							"numeric": 1,
+							"unit_spec_field": "relief_setting_psi",
+							"tolerance_minus_pct": 3,
+							"tolerance_plus_pct": 3,
+							"is_critical": 1,
+						}
+					)
+				frappe.get_doc(
+					{
+						"doctype": "HPU Build Inspection Template",
+						"template_name": tname,
+						"stage": name,
+						"quality_procedure": PROC,
+						"items": items,
+					}
+				).insert()
 		cls.company = frappe.db.get_value("Company", {}, "name")
 		cls.employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
 
@@ -54,13 +77,29 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 			frappe.db.delete("HPU Build Inspection", {"hpu_unit": WO})
 			frappe.db.delete("Non Conformance", {"hpu_unit": WO})
 			frappe.delete_doc("HPU Unit", WO, force=1)
-		frappe.get_doc({"doctype": "HPU Unit", "trulinx_work_order": WO, "model": "HPU-30-460-3",
-			"company": self.company, "relief_setting_psi": 3000}).insert()
+		frappe.get_doc(
+			{
+				"doctype": "HPU Unit",
+				"trulinx_work_order": WO,
+				"model": "HPU-30-460-3",
+				"company": self.company,
+				"relief_setting_psi": 3000,
+			}
+		).insert()
 
 	def make(self, stage, results=None, reading=None, submit=True, **kw):
-		doc = frappe.get_doc({"doctype": "HPU Build Inspection", "hpu_unit": WO, "stage": stage,
-			"template": f"{stage} Template", "inspected_by": self.employee, "gauge_id": "G-1",
-			"gauge_cal_due": "2099-12-31", **kw})
+		doc = frappe.get_doc(
+			{
+				"doctype": "HPU Build Inspection",
+				"hpu_unit": WO,
+				"stage": stage,
+				"template": f"{stage} Template",
+				"inspected_by": self.employee,
+				"gauge_id": "G-1",
+				"gauge_cal_due": "2099-12-31",
+				**kw,
+			}
+		)
 		doc.insert()
 		for row in doc.items:
 			if row.numeric:
@@ -104,8 +143,14 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 		self.assertEqual(re.status, "Accepted")
 		nc = frappe.get_doc("Non Conformance", bad.non_conformance)
 		self.assertEqual(nc.hpu_reinspection, re.name)
-		nc.update({"status": "Resolved", "corrective_action": "Reset relief valve",
-			"verified_by": self.employee, "verification_date": frappe.utils.nowdate()})
+		nc.update(
+			{
+				"status": "Resolved",
+				"corrective_action": "Reset relief valve",
+				"verified_by": self.employee,
+				"verification_date": frappe.utils.nowdate(),
+			}
+		)
 		nc.save()
 		self.assertEqual(self.status(), "Ready for Release")
 		self.make("_T Release")

@@ -6,7 +6,11 @@ const HPU_UTILS = "hse.hpu_build.utils";
 
 frappe.ui.form.on("HPU Build Inspection", {
 	setup(frm) {
-		frm.ignore_doctypes_on_cancel_all = ["Non Conformance", "HPU Build Inspection", "HPU Unit"];
+		frm.ignore_doctypes_on_cancel_all = [
+			"Non Conformance",
+			"HPU Build Inspection",
+			"HPU Unit",
+		];
 
 		frm.set_query("hpu_unit", () => ({
 			filters: { status: ["not in", ["Shipped", "Cancelled"]] },
@@ -17,8 +21,11 @@ frappe.ui.form.on("HPU Build Inspection", {
 		}));
 		frm.set_query("reinspection_of", () => ({
 			filters: {
-				hpu_unit: frm.doc.hpu_unit, stage: frm.doc.stage,
-				docstatus: 1, status: "Rejected", name: ["!=", frm.doc.name],
+				hpu_unit: frm.doc.hpu_unit,
+				stage: frm.doc.stage,
+				docstatus: 1,
+				status: "Rejected",
+				name: ["!=", frm.doc.name],
 			},
 		}));
 	},
@@ -36,19 +43,34 @@ frappe.ui.form.on("HPU Build Inspection", {
 		frm.trigger("render_instructions");
 
 		if (frm.doc.docstatus === 1 && frm.doc.status === "Rejected") {
-			frm.add_custom_button(__("Re-inspection"), () => {
-				frappe.model.open_mapped_doc({ method: `${HBI_METHOD}.make_reinspection`, frm });
-			}, __("Create"));
+			frm.add_custom_button(
+				__("Re-inspection"),
+				() => {
+					frappe.model.open_mapped_doc({
+						method: `${HBI_METHOD}.make_reinspection`,
+						frm,
+					});
+				},
+				__("Create")
+			);
 		}
 		if (frm.doc.non_conformance) {
-			frm.add_custom_button(__("Non Conformance"), () => {
-				frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
-			}, __("View"));
+			frm.add_custom_button(
+				__("Non Conformance"),
+				() => {
+					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+				},
+				__("View")
+			);
 		}
 		if (frm.doc.hpu_unit) {
-			frm.add_custom_button(__("HPU Unit"), () => {
-				frappe.set_route("Form", "HPU Unit", frm.doc.hpu_unit);
-			}, __("View"));
+			frm.add_custom_button(
+				__("HPU Unit"),
+				() => {
+					frappe.set_route("Form", "HPU Unit", frm.doc.hpu_unit);
+				},
+				__("View")
+			);
 		}
 		if (frm.doc.docstatus === 0 && frm.doc.template) {
 			frm.add_custom_button(__("Mark All Pass"), () => {
@@ -79,7 +101,9 @@ frappe.ui.form.on("HPU Build Inspection", {
 			args: { template: frm.doc.template },
 			callback: (r) => {
 				if (r.message) {
-					wrapper.html(`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`);
+					wrapper.html(
+						`<div class="alert alert-info" style="margin-bottom:10px">${r.message}</div>`
+					);
 				}
 			},
 		});
@@ -105,7 +129,9 @@ frappe.ui.form.on("HPU Build Inspection", {
 			frappe.call({
 				method: `${HPU_UTILS}.get_default_template`,
 				args: { stage: frm.doc.stage, model: (r.message && r.message.model) || "" },
-				callback: (t) => { if (t.message) frm.set_value("template", t.message); },
+				callback: (t) => {
+					if (t.message) frm.set_value("template", t.message);
+				},
 			});
 		});
 	},
@@ -138,9 +164,16 @@ frappe.ui.form.on("HPU Build Inspection Reading", {
 	reading_value(frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		if (!row.numeric || row.result === "N/A") return;
-		if (row.reading_value === null || row.reading_value === undefined || row.reading_value === "") return;
+		if (
+			row.reading_value === null ||
+			row.reading_value === undefined ||
+			row.reading_value === ""
+		)
+			return;
 		const v = flt(row.reading_value);
-		const ok = (!row.min_value || v >= flt(row.min_value)) && (!row.max_value || v <= flt(row.max_value));
+		const ok =
+			(!row.min_value || v >= flt(row.min_value)) &&
+			(!row.max_value || v <= flt(row.max_value));
 		frappe.model.set_value(cdt, cdn, "result", ok ? "Pass" : "Fail");
 	},
 
@@ -148,7 +181,10 @@ frappe.ui.form.on("HPU Build Inspection Reading", {
 		const row = locals[cdt][cdn];
 		if (row.result === "Fail" && row.is_critical) {
 			frappe.show_alert({
-				message: __("Critical item failed: {0}. A Critical Non Conformance will be raised on submit.", [row.check_item]),
+				message: __(
+					"Critical item failed: {0}. A Critical Non Conformance will be raised on submit.",
+					[row.check_item]
+				),
 				indicator: "red",
 			});
 		}

@@ -66,8 +66,10 @@ def upsert_hpu_units(units: list | str, company: str | None = None, dry_run: boo
 	if len(units) > MAX_BATCH:
 		frappe.throw(_("Send at most {0} units per call").format(MAX_BATCH))
 
-	company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_single_value(
-		"Global Defaults", "default_company"
+	company = (
+		company
+		or frappe.defaults.get_user_default("Company")
+		or frappe.db.get_single_value("Global Defaults", "default_company")
 	)
 	result = {"created": [], "updated": [], "unchanged": [], "errors": []}
 
@@ -150,4 +152,6 @@ def _apply_trulinx_status(doc) -> None:
 		if doc.status == "Released":
 			doc.status = "Shipped"
 		elif doc.status != "Shipped":
-			doc.qc_flag = _("TrulinX shows this unit shipped/invoiced but QC status is {0}.").format(doc.status)
+			doc.qc_flag = _("TrulinX shows this unit shipped/invoiced but QC status is {0}.").format(
+				doc.status
+			)

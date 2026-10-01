@@ -101,16 +101,18 @@ def get_stage_progress(hpu_unit: str) -> list[dict]:
 	out = []
 	for s in get_stages():
 		r = latest.get(s.name)
-		out.append({
-			"stage": s.name,
-			"sequence": s.sequence,
-			"is_required": s.is_required,
-			"is_final_release": s.is_final_release,
-			"inspection": r.name if r else None,
-			"status": (r.status if r.docstatus == 1 else "Draft") if r else "Not Started",
-			"inspection_date": r.inspection_date if r else None,
-			"inspector_name": r.inspector_name if r else None,
-		})
+		out.append(
+			{
+				"stage": s.name,
+				"sequence": s.sequence,
+				"is_required": s.is_required,
+				"is_final_release": s.is_final_release,
+				"inspection": r.name if r else None,
+				"status": (r.status if r.docstatus == 1 else "Draft") if r else "Not Started",
+				"inspection_date": r.inspection_date if r else None,
+				"inspector_name": r.inspector_name if r else None,
+			}
+		)
 	return out
 
 

@@ -86,14 +86,16 @@ def make_default_stages():
 	if frappe.db.count("HPU Build Stage"):
 		return  # never overwrite stages the user has edited
 	for name, seq, req, hold, final in DEFAULT_STAGES:
-		frappe.get_doc({
-			"doctype": "HPU Build Stage",
-			"stage_name": name,
-			"sequence": seq,
-			"is_required": req,
-			"hold_point": hold,
-			"is_final_release": final,
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "HPU Build Stage",
+				"stage_name": name,
+				"sequence": seq,
+				"is_required": req,
+				"hold_point": hold,
+				"is_final_release": final,
+			}
+		).insert(ignore_permissions=True)
 
 
 def create_sample_templates(quality_procedure: str = "HPU Build Inspection"):
@@ -102,10 +104,12 @@ def create_sample_templates(quality_procedure: str = "HPU Build Inspection"):
 	Creates the Quality Procedure (if missing) and one generic template per default stage.
 	Existing templates with the same name are left alone."""
 	if not frappe.db.exists("Quality Procedure", quality_procedure):
-		frappe.get_doc({
-			"doctype": "Quality Procedure",
-			"quality_procedure_name": quality_procedure,
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "Quality Procedure",
+				"quality_procedure_name": quality_procedure,
+			}
+		).insert(ignore_permissions=True)
 
 	data = json.loads((Path(__file__).parent / "sample_templates.json").read_text())
 	created = []
@@ -114,7 +118,9 @@ def create_sample_templates(quality_procedure: str = "HPU Build Inspection"):
 			continue
 		if not frappe.db.exists("HPU Build Stage", t["stage"]):
 			continue
-		doc = frappe.get_doc({"doctype": "HPU Build Inspection Template", "quality_procedure": quality_procedure, **t})
+		doc = frappe.get_doc(
+			{"doctype": "HPU Build Inspection Template", "quality_procedure": quality_procedure, **t}
+		)
 		doc.insert(ignore_permissions=True)
 		created.append(doc.name)
 	frappe.db.commit()

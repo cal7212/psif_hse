@@ -319,6 +319,3 @@ after_migrate = [
 # or call this from inside your existing function:
 #   from hse.asset_inspection.install import make_custom_fields
 #   make_custom_fields()
-
-
-

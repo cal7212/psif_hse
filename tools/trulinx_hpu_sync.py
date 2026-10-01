@@ -36,7 +36,11 @@ def read_rows(path: Path) -> list[dict]:
 	with path.open(newline="", encoding="utf-8-sig") as fh:
 		rows = []
 		for raw in csv.DictReader(fh):
-			row = {COLUMN_RENAMES.get(k.strip(), k.strip().lower()): (v or "").strip() for k, v in raw.items() if k}
+			row = {
+				COLUMN_RENAMES.get(k.strip(), k.strip().lower()): (v or "").strip()
+				for k, v in raw.items()
+				if k
+			}
 			if row.get("work_order"):
 				rows.append(row)
 		return rows
