@@ -1,0 +1,81 @@
+{
+ "allow_rename": 1,
+ "autoname": "field:chem_id",
+ "creation": "2026-09-30 22:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_chem",
+  "naming_series",
+  "chem_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_chem",
+   "fieldtype": "Section Break",
+   "label": "Chem ID"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "YYYY.####."
+  },
+  {
+   "fieldname": "chem_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Chem ID",
+   "reqd": 1,
+   "unique": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-09-30 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Chemical ID",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "chem_id"
+}

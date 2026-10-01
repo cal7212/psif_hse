@@ -1,0 +1,87 @@
+{
+ "autoname": "field:pictogram_name",
+ "creation": "2026-09-30 22:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pictogram_name",
+  "ghs_code",
+  "hazards",
+  "image"
+ ],
+ "fields": [
+  {
+   "fieldname": "pictogram_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Pictogram",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "e.g. GHS02",
+   "fieldname": "ghs_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "GHS Code"
+  },
+  {
+   "fieldname": "hazards",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Hazards Indicated"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  }
+ ],
+ "image_field": "image",
+ "links": [],
+ "modified": "2026-09-30 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "GHS Pictogram",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "pictogram_name"
+}

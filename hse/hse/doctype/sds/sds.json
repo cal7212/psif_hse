@@ -1,0 +1,534 @@
+{
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-09-30 22:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_product",
+  "section_product",
+  "naming_series",
+  "product_name",
+  "product_reference_number",
+  "product_synonyms",
+  "manufacturer_name",
+  "man_part_number",
+  "upc",
+  "physical_state",
+  "purchase_date",
+  "column_break_status",
+  "status",
+  "attach_sds",
+  "version_date",
+  "primary_sds",
+  "sds_uploaded",
+  "title",
+  "section_review",
+  "last_reviewed_on",
+  "reviewed_by",
+  "reviewer_name",
+  "next_review_date",
+  "column_break_versions",
+  "supersedes",
+  "superseded_by",
+  "discontinued_date",
+  "workflow_state",
+  "amended_from",
+  "tab_hazards",
+  "section_hazards",
+  "signal_word",
+  "pictograms",
+  "chem_identifier",
+  "column_break_hazards",
+  "hazard_statements",
+  "ppe_required",
+  "first_aid_summary",
+  "tab_manufacturer",
+  "section_manufacturer",
+  "man_phone",
+  "emergency_phone",
+  "column_break_address",
+  "adress_one",
+  "address_two",
+  "manufacturer_city",
+  "manufacturer_country",
+  "state_province",
+  "manufacturer_zip",
+  "tab_usage",
+  "section_locations",
+  "locations",
+  "section_use_summary",
+  "in_use",
+  "first_used_date",
+  "column_break_retention",
+  "last_used_date",
+  "retention_until",
+  "section_legacy",
+  "storage_location",
+  "start_date",
+  "end_date",
+  "quantity",
+  "volume_weight",
+  "container_uom",
+  "container_type"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_product",
+   "fieldtype": "Tab Break",
+   "label": "Product Info"
+  },
+  {
+   "fieldname": "section_product",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "SDS-.YYYY.-.###.",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "SDS Number",
+   "options": "SDS-.YYYY.-.###.",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Product Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "product_reference_number",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Product Reference Number"
+  },
+  {
+   "fieldname": "product_synonyms",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Product Synonyms"
+  },
+  {
+   "fieldname": "manufacturer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Manufacturer Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "man_part_number",
+   "fieldtype": "Text",
+   "label": "Manufacturer Part Number"
+  },
+  {
+   "description": "Stored as text so leading zeros are kept",
+   "fieldname": "upc",
+   "fieldtype": "Data",
+   "label": "UPC"
+  },
+  {
+   "fieldname": "physical_state",
+   "fieldtype": "Select",
+   "label": "Physical State",
+   "options": "\nAerosol\nGas\nLiquid\nPaste\nSolid"
+  },
+  {
+   "fieldname": "purchase_date",
+   "fieldtype": "Date",
+   "label": "Date of First Purchase"
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nSuperseded\nDiscontinued",
+   "reqd": 1
+  },
+  {
+   "fieldname": "attach_sds",
+   "fieldtype": "Attach",
+   "label": "Attach SDS",
+   "mandatory_depends_on": "eval:doc.status=='Active'"
+  },
+  {
+   "description": "Revision/issue date printed on the SDS",
+   "fieldname": "version_date",
+   "fieldtype": "Date",
+   "label": "SDS Revision Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "primary_sds",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Primary"
+  },
+  {
+   "default": "0",
+   "description": "Check when the SDS is missing, illegible or out of date and a new copy has been requested",
+   "fieldname": "sds_uploaded",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Needs New or Updated SDS"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "in_global_search": 1,
+   "label": "Title",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_review",
+   "fieldtype": "Section Break",
+   "label": "Review and Versions"
+  },
+  {
+   "fieldname": "last_reviewed_on",
+   "fieldtype": "Date",
+   "label": "Last Reviewed On"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "reviewed_by.employee_name",
+   "fieldname": "reviewer_name",
+   "fieldtype": "Data",
+   "label": "Reviewer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "next_review_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Next Review Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_versions",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Older SDS this version replaces",
+   "fieldname": "supersedes",
+   "fieldtype": "Link",
+   "label": "Supersedes",
+   "options": "SDS"
+  },
+  {
+   "fieldname": "superseded_by",
+   "fieldtype": "Link",
+   "label": "Superseded By",
+   "no_copy": 1,
+   "options": "SDS",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Discontinued'",
+   "fieldname": "discontinued_date",
+   "fieldtype": "Date",
+   "label": "Discontinued On",
+   "mandatory_depends_on": "eval:doc.status=='Discontinued'",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Workflow State",
+   "no_copy": 1,
+   "options": "Workflow State",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SDS",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "tab_hazards",
+   "fieldtype": "Tab Break",
+   "label": "Hazards"
+  },
+  {
+   "fieldname": "section_hazards",
+   "fieldtype": "Section Break",
+   "label": "GHS Classification (SDS Section 2)"
+  },
+  {
+   "fieldname": "signal_word",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Signal Word",
+   "options": "\nDanger\nWarning\nNo Signal Word"
+  },
+  {
+   "fieldname": "pictograms",
+   "fieldtype": "Table MultiSelect",
+   "label": "Pictograms",
+   "options": "SDS Pictogram"
+  },
+  {
+   "fieldname": "chem_identifier",
+   "fieldtype": "Table MultiSelect",
+   "in_standard_filter": 1,
+   "label": "Hazard Keywords",
+   "options": "Chem Identifier"
+  },
+  {
+   "fieldname": "column_break_hazards",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "H-statements, e.g. H225 Highly flammable liquid and vapor",
+   "fieldname": "hazard_statements",
+   "fieldtype": "Small Text",
+   "label": "Hazard Statements"
+  },
+  {
+   "fieldname": "ppe_required",
+   "fieldtype": "Small Text",
+   "label": "Required PPE (Section 8)"
+  },
+  {
+   "fieldname": "first_aid_summary",
+   "fieldtype": "Small Text",
+   "label": "First Aid Summary (Section 4)"
+  },
+  {
+   "fieldname": "tab_manufacturer",
+   "fieldtype": "Tab Break",
+   "label": "Manufacturer Info"
+  },
+  {
+   "fieldname": "section_manufacturer",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "man_phone",
+   "fieldtype": "Data",
+   "label": "Manufacturer Phone Number"
+  },
+  {
+   "fieldname": "emergency_phone",
+   "fieldtype": "Data",
+   "label": "Manufacturer Emergency Phone Number"
+  },
+  {
+   "fieldname": "column_break_address",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "adress_one",
+   "fieldtype": "Data",
+   "label": "Manufacturer Address 1"
+  },
+  {
+   "fieldname": "address_two",
+   "fieldtype": "Data",
+   "label": "Manufacturer Address 2"
+  },
+  {
+   "fieldname": "manufacturer_city",
+   "fieldtype": "Data",
+   "label": "Manufacturer City"
+  },
+  {
+   "fieldname": "manufacturer_country",
+   "fieldtype": "Data",
+   "label": "Manufacturer Country"
+  },
+  {
+   "fieldname": "state_province",
+   "fieldtype": "Data",
+   "label": "Manufacturer State/Province"
+  },
+  {
+   "fieldname": "manufacturer_zip",
+   "fieldtype": "Data",
+   "label": "Manufacturer Zip/Postal Code"
+  },
+  {
+   "fieldname": "tab_usage",
+   "fieldtype": "Tab Break",
+   "label": "Locations and Use"
+  },
+  {
+   "fieldname": "section_locations",
+   "fieldtype": "Section Break",
+   "label": "Where Stored and Used"
+  },
+  {
+   "description": "One row per location. Set Use End Date when the chemical is removed from that location. These dates are the record of where and when the chemical was used.",
+   "fieldname": "locations",
+   "fieldtype": "Table",
+   "label": "Locations",
+   "options": "SDS Location"
+  },
+  {
+   "fieldname": "section_use_summary",
+   "fieldtype": "Section Break",
+   "label": "Use and Retention"
+  },
+  {
+   "fieldname": "in_use",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Currently In Use",
+   "read_only": 1
+  },
+  {
+   "fieldname": "first_used_date",
+   "fieldtype": "Date",
+   "label": "First Used",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_retention",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_used_date",
+   "fieldtype": "Date",
+   "label": "Last Used",
+   "read_only": 1
+  },
+  {
+   "description": "30 years after last use (29 CFR 1910.1020)",
+   "fieldname": "retention_until",
+   "fieldtype": "Date",
+   "label": "Keep Record Until",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_legacy",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Legacy Single-Location Fields"
+  },
+  {
+   "fieldname": "storage_location",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Storage Location",
+   "options": "\nAssembly Area\nFab Shop\nAwning Flam Locker\nPaint Room Flam Locker\nKitchen\nManufacturing Office"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "label": "End Date"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "volume_weight",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Volume/Weight Each"
+  },
+  {
+   "fieldname": "container_uom",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Container UOM",
+   "options": "\nGallon\nOunce\nGram\nCubic Centimeter\nCubic Foot\nCup\nPint\nPound\nKilogram\nmiligram"
+  },
+  {
+   "fieldname": "container_type",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Container Type",
+   "options": "\nBag\nBox\nCan\nAerosol\nTube\nBottle\nBucket"
+  }
+ ],
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-09-30 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "SDS",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "product_name,manufacturer_name,status",
+ "show_preview_popup": 1,
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

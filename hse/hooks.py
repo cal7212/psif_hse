@@ -302,10 +302,12 @@ override_doctype_dashboards = {
 after_install = [
 	"hse.asset_inspection.install.after_install",
 	"hse.housekeeping_inspection.install.after_install",
+	"hse.hse.sds_setup.after_install",
 ]
 after_migrate = [
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
+	"hse.hse.sds_setup.after_migrate",
 ]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):

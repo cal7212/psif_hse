@@ -1,0 +1,102 @@
+{
+ "creation": "2026-09-30 22:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "location",
+  "storage_detail",
+  "quantity",
+  "container_size",
+  "uom",
+  "container_type",
+  "column_break_dates",
+  "start_date",
+  "end_date",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Location",
+   "options": "Location",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "Cabinet, locker or shelf, e.g. Paint Room Flam Locker",
+   "fieldname": "storage_detail",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Storage Detail"
+  },
+  {
+   "columns": 1,
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Containers"
+  },
+  {
+   "columns": 1,
+   "fieldname": "container_size",
+   "fieldtype": "Float",
+   "label": "Size Each"
+  },
+  {
+   "columns": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "container_type",
+   "fieldtype": "Select",
+   "label": "Container Type",
+   "options": "\nAerosol\nBag\nBottle\nBox\nBucket\nCan\nDrum\nTote\nTube\nCylinder"
+  },
+  {
+   "fieldname": "column_break_dates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "default": "Today",
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Use Start Date",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "description": "Leave blank while still in use",
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Use End Date"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-30 22:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "SDS Location",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
