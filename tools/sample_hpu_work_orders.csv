@@ -1,0 +1,2 @@
+work_order,sales_order,customer_po,wo_status,customer_name,wo_date,promised_date,model,description,serial_no,motor_hp,voltage,phase,hz,pump_type,flow_gpm,relief_setting_psi,max_operating_psi,reservoir_gal,fluid,target_cleanliness,drawing_rev
+WO-10452,SO-88123,PO-5521,OPEN,Acme Marine,2026-09-28,2026-10-20,HPU-30-460-3,30 HP 460V HPU with 40 gal reservoir,,30,460,3,60,Piston (PC),21,3000,2750,40,ISO VG 46,18/16/13,D-4410 Rev B
