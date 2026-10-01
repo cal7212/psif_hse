@@ -68,7 +68,23 @@ class IntegrationTestHPUBuildInspection(IntegrationTestCase):
 					}
 				).insert()
 		cls.company = frappe.db.get_value("Company", {}, "name")
-		cls.employee = frappe.db.get_value("Employee", {"status": "Active"}, "name")
+		cls.employee = frappe.db.get_value("Employee", {"status": "Active", "company": cls.company}, "name")
+		if not cls.employee:
+			cls.employee = (
+				frappe.get_doc(
+					{
+						"doctype": "Employee",
+						"first_name": "_Test HPU Inspector",
+						"gender": frappe.db.get_value("Gender", {}, "name"),
+						"date_of_birth": "1990-01-01",
+						"date_of_joining": "2020-01-01",
+						"company": cls.company,
+						"status": "Active",
+					}
+				)
+				.insert()
+				.name
+			)
 
 	def setUp(self):
 		if frappe.db.exists("HPU Unit", WO):
