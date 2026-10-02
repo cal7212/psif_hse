@@ -265,6 +265,8 @@ doctype_js = {
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
 	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_hpu.js"],
+	"Quality Review": "public/js/quality_review.js",
+	"Quality Goal": "public/js/quality_goal.js",
 }
 
 doc_events = {
@@ -273,12 +275,20 @@ doc_events = {
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
 			"hse.hpu_build.events.validate",
+			"hse.quality_metrics.events.non_conformance_validate",
 		],
 		"on_update": [
 			"hse.asset_inspection.events.on_update",
 			"hse.housekeeping_inspection.events.on_update",
 			"hse.hpu_build.events.on_update",
 		],
+	},
+	"Quality Goal": {
+		"validate": "hse.quality_metrics.events.quality_goal_validate",
+	},
+	"Quality Review": {
+		"validate": "hse.quality_metrics.events.quality_review_validate",
+		"on_update": "hse.quality_metrics.events.quality_review_on_update",
 	},
 }
 
@@ -306,12 +316,14 @@ after_install = [
 	"hse.housekeeping_inspection.install.after_install",
 	"hse.hse.sds_setup.after_install",
 	"hse.hpu_build.install.after_install",
+	"hse.quality_metrics.install.after_install",
 ]
 after_migrate = [
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
 	"hse.hse.sds_setup.after_migrate",
 	"hse.hpu_build.install.after_migrate",
+	"hse.quality_metrics.install.after_migrate",
 ]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):

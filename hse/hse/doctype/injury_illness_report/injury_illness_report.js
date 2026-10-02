@@ -20,7 +20,11 @@ function count_days(row, incident_date) {
 function recalculate_table(frm, table) {
 	let remaining = DAY_CAP;
 	(frm.doc[table] || []).forEach((row) => {
-		if (row.start_date && row.return_date && frappe.datetime.get_diff(row.return_date, row.start_date) < 0) {
+		if (
+			row.start_date &&
+			row.return_date &&
+			frappe.datetime.get_diff(row.return_date, row.start_date) < 0
+		) {
 			frappe.msgprint(__("Return Date cannot be before Start Date"));
 			return;
 		}
