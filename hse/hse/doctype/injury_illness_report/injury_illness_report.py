@@ -50,7 +50,7 @@ class Injury_IllnessReport(Document):
 				if row.start_date and row.return_date and getdate(row.return_date) < getdate(row.start_date):
 					frappe.throw(
 						_("{0} row {1}: Return Date cannot be before Start Date.").format(
-							self.meta.get_label(table), row.idx
+							_(self.meta.get_label(table)), row.idx
 						)
 					)
 			raw = [count_days(r.start_date, r.return_date, self.incident_date) for r in rows]
@@ -60,7 +60,7 @@ class Injury_IllnessReport(Document):
 			if sum(raw) > DAY_CAP:
 				frappe.msgprint(
 					_("{0} total exceeds {1} days and has been capped at {1}.").format(
-						self.meta.get_label(table), DAY_CAP
+						_(self.meta.get_label(table)), DAY_CAP
 					),
 					indicator="orange",
 					alert=True,
