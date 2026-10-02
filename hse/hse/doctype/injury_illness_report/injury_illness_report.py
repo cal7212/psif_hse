@@ -36,7 +36,12 @@ def apply_cap(day_counts, cap=DAY_CAP):
 
 class Injury_IllnessReport(Document):
 	def validate(self):
+		self.set_status_label()
 		self.calculate_days()
+
+	def set_status_label(self):
+		"""Mirror Is Recordable into status_label (options: checked / unchecked)."""
+		self.status_label = "checked" if self.is_recordable else "unchecked"
 
 	def calculate_days(self):
 		for table in DAY_TABLES:

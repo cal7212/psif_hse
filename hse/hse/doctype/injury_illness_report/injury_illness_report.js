@@ -37,6 +37,9 @@ function recalculate_all(frm) {
 }
 
 frappe.ui.form.on("Injury_Illness Report", {
+	is_recordable(frm) {
+		frm.set_value("status_label", frm.doc.is_recordable ? "checked" : "unchecked");
+	},
 	incident_date: recalculate_all,
 	days_away_remove: (frm) => recalculate_table(frm, "days_away"),
 	job_restriction_remove: (frm) => recalculate_table(frm, "job_restriction"),
