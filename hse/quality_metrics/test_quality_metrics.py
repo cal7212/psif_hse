@@ -105,7 +105,11 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 				"goal": GOAL,
 				"frequency": "None",
 				"objectives": [
-					{"hse_metric": "nc_open_critical_over_7_days", "target_operator": AT_MOST, "target_value": 0},
+					{
+						"hse_metric": "nc_open_critical_over_7_days",
+						"target_operator": AT_MOST,
+						"target_value": 0,
+					},
 					{"hse_metric": "nc_opened", "target_operator": RECORD_ONLY},
 				],
 			}
@@ -122,7 +126,9 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		self.assertEqual(review.status, FAILED)
 		self.assertTrue(review.metrics_calculated_on)
 
-		action = frappe.db.get_value("Quality Action", {"review": review.name}, ["name", "corrective_preventive"])
+		action = frappe.db.get_value(
+			"Quality Action", {"review": review.name}, ["name", "corrective_preventive"]
+		)
 		self.assertTrue(action)
 		self.assertEqual(action[1], "Corrective")
 

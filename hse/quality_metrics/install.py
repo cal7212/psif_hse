@@ -160,7 +160,12 @@ def create_starter_goals(frequency: str = "Monthly", day_of_month: str = "1") ->
 				"frequency": frequency,
 				"date": day_of_month if frequency == "Monthly" else None,
 				"objectives": [
-					{"objective": METRICS[key][0], "hse_metric": key, "target_operator": op, "target_value": val}
+					{
+						"objective": METRICS[key][0],
+						"hse_metric": key,
+						"target_operator": op,
+						"target_value": val,
+					}
 					for key, op, val in spec["objectives"]
 				],
 			}

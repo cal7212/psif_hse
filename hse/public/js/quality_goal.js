@@ -9,7 +9,8 @@ frappe.ui.form.on("Quality Goal Objective", {
 				const m = (r.message || []).find((x) => x.value === row.hse_metric);
 				if (!m) return;
 				if (!row.objective) frappe.model.set_value(cdt, cdn, "objective", m.label);
-				if (!row.target_operator) frappe.model.set_value(cdt, cdn, "target_operator", "Record only");
+				if (!row.target_operator)
+					frappe.model.set_value(cdt, cdn, "target_operator", "Record only");
 			},
 		});
 	},

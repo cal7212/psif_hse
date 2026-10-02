@@ -135,4 +135,3 @@ def get_metric_choices() -> list[dict]:
 		{"value": key, "label": label, "uom": uom, "snapshot": snap}
 		for key, (label, _fn, uom, snap, _dt) in METRICS.items()
 	]
-

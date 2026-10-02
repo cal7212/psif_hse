@@ -139,7 +139,9 @@ def nc_opened(start, end):
 	)
 	if not rows:
 		return 0, _("None opened.")
-	by_sev = ", ".join(f"{sev or _('Not set')}: {n}" for sev, n in Counter(r.severity for r in rows).most_common())
+	by_sev = ", ".join(
+		f"{sev or _('Not set')}: {n}" for sev, n in Counter(r.severity for r in rows).most_common()
+	)
 	return len(rows), _("By severity: {0}").format(by_sev)
 
 
@@ -242,8 +244,20 @@ METRICS = {
 		"Asset Maintenance Log",
 	),
 	"assets_out_of_service": ("Assets Out of Service (now)", assets_out_of_service, "Nos", True, "Asset"),
-	"hk_avg_score": ("Housekeeping average score (%)", hk_avg_score, "Percent", False, "Housekeeping Inspection"),
-	"hk_areas_overdue": ("Housekeeping areas overdue (now)", hk_areas_overdue, "Nos", True, "Housekeeping Area"),
+	"hk_avg_score": (
+		"Housekeeping average score (%)",
+		hk_avg_score,
+		"Percent",
+		False,
+		"Housekeeping Inspection",
+	),
+	"hk_areas_overdue": (
+		"Housekeeping areas overdue (now)",
+		hk_areas_overdue,
+		"Nos",
+		True,
+		"Housekeeping Area",
+	),
 }
 
 
@@ -292,4 +306,10 @@ def get_metric_value(metric: str, period_start: str | None = None, period_end: s
 	if not (period_start and period_end):
 		period_start, period_end = get_review_period("Monthly", getdate())
 	value, detail = calculate(metric, period_start, period_end)
-	return {"metric": metric, "value": value, "detail": detail, "period_start": period_start, "period_end": period_end}
+	return {
+		"metric": metric,
+		"value": value,
+		"detail": detail,
+		"period_start": period_start,
+		"period_end": period_end,
+	}
