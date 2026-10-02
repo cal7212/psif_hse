@@ -1,0 +1,441 @@
+{
+ "autoname": "format:OSHA-300A-{year}",
+ "creation": "2026-10-01 22:40:00.000000",
+ "custom": 0,
+ "default_print_format": "OSHA 300A Summary",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_year",
+  "year",
+  "company",
+  "column_break_year",
+  "include_drafts",
+  "last_calculated",
+  "section_cases",
+  "total_deaths",
+  "total_days_away_cases",
+  "column_break_cases",
+  "total_transfer_cases",
+  "total_other_cases",
+  "section_days",
+  "total_days_away",
+  "column_break_days",
+  "total_transfer_days",
+  "section_types",
+  "total_injury",
+  "total_skin_disorder",
+  "total_respiratory",
+  "column_break_types",
+  "total_poisoning",
+  "total_hearing_loss",
+  "total_other_illness",
+  "cases_missing_type",
+  "section_establishment",
+  "establishment_name",
+  "street",
+  "city",
+  "state",
+  "zip_code",
+  "column_break_est",
+  "industry_description",
+  "naics_code",
+  "section_employment",
+  "annual_average_employees",
+  "column_break_emp",
+  "total_hours_worked",
+  "section_rates",
+  "trir",
+  "column_break_rates",
+  "dart_rate",
+  "section_certification",
+  "certified_by",
+  "certifier_title",
+  "column_break_cert",
+  "certifier_phone",
+  "certification_date",
+  "section_posting",
+  "post_from",
+  "post_until",
+  "column_break_post",
+  "retain_until",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_year",
+   "fieldtype": "Section Break",
+   "label": "Calendar Year"
+  },
+  {
+   "bold": 1,
+   "fieldname": "year",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_year",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Leave off for the posted and certified summary",
+   "fieldname": "include_drafts",
+   "fieldtype": "Check",
+   "label": "Count Draft Injury Reports"
+  },
+  {
+   "fieldname": "last_calculated",
+   "fieldtype": "Datetime",
+   "label": "Totals Last Calculated",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_cases",
+   "fieldtype": "Section Break",
+   "label": "Number of Cases"
+  },
+  {
+   "fieldname": "total_deaths",
+   "fieldtype": "Int",
+   "label": "Total Deaths (G)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_days_away_cases",
+   "fieldtype": "Int",
+   "label": "Cases With Days Away From Work (H)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cases",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_transfer_cases",
+   "fieldtype": "Int",
+   "label": "Cases With Job Transfer or Restriction (I)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_other_cases",
+   "fieldtype": "Int",
+   "label": "Other Recordable Cases (J)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_days",
+   "fieldtype": "Section Break",
+   "label": "Number of Days"
+  },
+  {
+   "fieldname": "total_days_away",
+   "fieldtype": "Int",
+   "label": "Total Days Away From Work (K)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_days",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_transfer_days",
+   "fieldtype": "Int",
+   "label": "Total Days of Job Transfer or Restriction (L)",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_types",
+   "fieldtype": "Section Break",
+   "label": "Injury and Illness Types (M)"
+  },
+  {
+   "fieldname": "total_injury",
+   "fieldtype": "Int",
+   "label": "(1) Injuries",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_skin_disorder",
+   "fieldtype": "Int",
+   "label": "(2) Skin Disorders",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_respiratory",
+   "fieldtype": "Int",
+   "label": "(3) Respiratory Conditions",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_types",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_poisoning",
+   "fieldtype": "Int",
+   "label": "(4) Poisonings",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_hearing_loss",
+   "fieldtype": "Int",
+   "label": "(5) Hearing Loss",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_other_illness",
+   "fieldtype": "Int",
+   "label": "(6) All Other Illnesses",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Recordable cases with no OSHA Injury/Illness Classification. Fix these before certifying.",
+   "fieldname": "cases_missing_type",
+   "fieldtype": "Int",
+   "label": "Cases Missing a Type",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_establishment",
+   "fieldtype": "Section Break",
+   "label": "Establishment Information"
+  },
+  {
+   "fieldname": "establishment_name",
+   "fieldtype": "Data",
+   "label": "Establishment Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "street",
+   "fieldtype": "Data",
+   "label": "Street"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "zip_code",
+   "fieldtype": "Data",
+   "label": "ZIP"
+  },
+  {
+   "fieldname": "column_break_est",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "e.g. Manufacture of motor truck trailers",
+   "fieldname": "industry_description",
+   "fieldtype": "Data",
+   "label": "Industry Description"
+  },
+  {
+   "fieldname": "naics_code",
+   "fieldtype": "Data",
+   "label": "NAICS Code",
+   "length": 6
+  },
+  {
+   "fieldname": "section_employment",
+   "fieldtype": "Section Break",
+   "label": "Employment Information"
+  },
+  {
+   "fieldname": "annual_average_employees",
+   "fieldtype": "Int",
+   "label": "Annual Average Number of Employees",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_emp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_hours_worked",
+   "fieldtype": "Float",
+   "label": "Total Hours Worked by All Employees Last Year",
+   "non_negative": 1,
+   "precision": "0",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_rates",
+   "fieldtype": "Section Break",
+   "label": "Incidence Rates (per 100 full-time workers)"
+  },
+  {
+   "description": "(G+H+I+J) x 200,000 / hours worked",
+   "fieldname": "trir",
+   "fieldtype": "Float",
+   "label": "Total Recordable Case Rate",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_rates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "(H+I) x 200,000 / hours worked",
+   "fieldname": "dart_rate",
+   "fieldtype": "Float",
+   "label": "DART Rate",
+   "no_copy": 1,
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "Knowingly falsifying this document may result in a fine. I certify that I have examined this document and that to the best of my knowledge the entries are true, accurate, and complete.",
+   "fieldname": "section_certification",
+   "fieldtype": "Section Break",
+   "label": "Sign Here"
+  },
+  {
+   "fieldname": "certified_by",
+   "fieldtype": "Data",
+   "label": "Company Executive"
+  },
+  {
+   "fieldname": "certifier_title",
+   "fieldtype": "Data",
+   "label": "Title"
+  },
+  {
+   "fieldname": "column_break_cert",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "certifier_phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "certification_date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_posting",
+   "fieldtype": "Section Break",
+   "label": "Posting and Retention"
+  },
+  {
+   "fieldname": "post_from",
+   "fieldtype": "Date",
+   "label": "Post By",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "post_until",
+   "fieldtype": "Date",
+   "label": "Keep Posted Until",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_post",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "5 years after the end of the calendar year (29 CFR 1904.33)",
+   "fieldname": "retain_until",
+   "fieldtype": "Date",
+   "label": "Keep Records Until",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "OSHA 300A Summary",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-01 22:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "OSHA 300A Summary",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "show_title_field_in_link": 0,
+ "sort_field": "year",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "establishment_name",
+ "track_changes": 1
+}

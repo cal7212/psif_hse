@@ -1,0 +1,65 @@
+<style>
+	.osha300 { font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #000; }
+	.osha300 h2 { font-size: 14px; margin: 0 0 2px 0; }
+	.osha300 .sub { font-size: 9px; margin-bottom: 6px; }
+	.osha300 table { width: 100%; border-collapse: collapse; }
+	.osha300 th, .osha300 td { border: 1px solid #000; padding: 2px 3px; vertical-align: top; }
+	.osha300 th { background: #e6e6e6; font-size: 8px; text-align: center; }
+	.osha300 td.c { text-align: center; }
+	.osha300 td.n { text-align: right; }
+	.osha300 tr.total td { font-weight: bold; background: #f2f2f2; }
+	.osha300 .note { font-size: 8px; margin-top: 6px; }
+</style>
+{% var year = filters.year; var t = {g:0,h:0,i:0,j:0,k:0,l:0,m1:0,m2:0,m3:0,m4:0,m5:0,m6:0};
+   var mkeys = {"injury":"m1","skin_disorder":"m2","respiratory":"m3","poisoning":"m4","hearing_loss":"m5","other_illness":"m6"};
+   var okeys = {"death":"g","days_away":"h","transfer":"i","other":"j"}; %}
+<div class="osha300">
+	<h2>{%= __("OSHA's Form 300 - Log of Work-Related Injuries and Illnesses") %}</h2>
+	<div class="sub">{%= __("Year") %} {%= year %} &nbsp;|&nbsp; {%= frappe.boot.sysdefaults.company || "" %}
+		&nbsp;|&nbsp; {%= __("Attention: This form contains information relating to employee health and must be used in a manner that protects the confidentiality of employees to the extent possible.") %}</div>
+	<table>
+		<thead>
+			<tr>
+				<th rowspan="2">(A)<br>{%= __("Case no.") %}</th>
+				<th rowspan="2">(B)<br>{%= __("Employee's name") %}</th>
+				<th rowspan="2">(C)<br>{%= __("Job title") %}</th>
+				<th rowspan="2">(D)<br>{%= __("Date of injury or onset of illness") %}</th>
+				<th rowspan="2">(E)<br>{%= __("Where the event occurred") %}</th>
+				<th rowspan="2" style="width:22%">(F)<br>{%= __("Describe injury or illness, parts of body affected, and object/substance that directly injured or made person ill") %}</th>
+				<th colspan="4">{%= __("Classify the case (most serious outcome)") %}</th>
+				<th colspan="2">{%= __("Number of days") %}</th>
+				<th colspan="6">(M) {%= __("Injury or illness type") %}</th>
+			</tr>
+			<tr>
+				<th>(G)<br>{%= __("Death") %}</th><th>(H)<br>{%= __("Days away") %}</th><th>(I)<br>{%= __("Transfer/ restriction") %}</th><th>(J)<br>{%= __("Other recordable") %}</th>
+				<th>(K)<br>{%= __("Away") %}</th><th>(L)<br>{%= __("Transfer/ restriction") %}</th>
+				<th>(1)<br>{%= __("Injury") %}</th><th>(2)<br>{%= __("Skin") %}</th><th>(3)<br>{%= __("Resp.") %}</th><th>(4)<br>{%= __("Poison") %}</th><th>(5)<br>{%= __("Hearing") %}</th><th>(6)<br>{%= __("Other illness") %}</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for (var i = 0; i < data.length; i++) { var r = data[i]; if (!r.case_no) continue;
+			var ok = okeys[r.outcome]; t[ok] += 1; t.k += (r.days_away || 0); t.l += (r.days_restricted || 0);
+			var mk = mkeys[r.illness_key]; if (mk) t[mk] += 1; %}
+			<tr>
+				<td>{%= r.case_no %}</td>
+				<td>{%= r.employee %}</td>
+				<td>{%= r.job_title %}</td>
+				<td>{%= frappe.datetime.str_to_user(r.incident_date) %}</td>
+				<td>{%= r.location %}</td>
+				<td>{%= r.description %}</td>
+				<td class="c">{%= ok == "g" ? "X" : "" %}</td><td class="c">{%= ok == "h" ? "X" : "" %}</td><td class="c">{%= ok == "i" ? "X" : "" %}</td><td class="c">{%= ok == "j" ? "X" : "" %}</td>
+				<td class="n">{%= r.days_away || "" %}</td><td class="n">{%= r.days_restricted || "" %}</td>
+				<td class="c">{%= mk == "m1" ? "X" : "" %}</td><td class="c">{%= mk == "m2" ? "X" : "" %}</td><td class="c">{%= mk == "m3" ? "X" : "" %}</td><td class="c">{%= mk == "m4" ? "X" : "" %}</td><td class="c">{%= mk == "m5" ? "X" : "" %}</td><td class="c">{%= mk == "m6" ? "X" : "" %}</td>
+			</tr>
+		{% } %}
+			<tr class="total">
+				<td colspan="6" style="text-align:right">{%= __("Page totals") %}</td>
+				<td class="c">{%= t.g %}</td><td class="c">{%= t.h %}</td><td class="c">{%= t.i %}</td><td class="c">{%= t.j %}</td>
+				<td class="n">{%= t.k %}</td><td class="n">{%= t.l %}</td>
+				<td class="c">{%= t.m1 %}</td><td class="c">{%= t.m2 %}</td><td class="c">{%= t.m3 %}</td><td class="c">{%= t.m4 %}</td><td class="c">{%= t.m5 %}</td><td class="c">{%= t.m6 %}</td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="note">{%= __("Be sure to transfer these totals to the Summary page (Form 300A) before you post it.") %}
+		{%= __("Printed") %} {%= frappe.datetime.str_to_user(frappe.datetime.get_today()) %}</div>
+</div>
