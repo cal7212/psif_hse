@@ -270,6 +270,8 @@ doctype_js = {
 	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_qc.js"],
 	"Quality Review": "public/js/quality_review.js",
 	"Quality Goal": "public/js/quality_goal.js",
+	"QC Inspection": "public/js/inspection_instruments.js",
+	"Asset Inspection": "public/js/inspection_instruments.js",
 }
 
 doctype_list_js = {

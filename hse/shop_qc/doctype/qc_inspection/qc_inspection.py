@@ -8,6 +8,15 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.naming import make_autoname
 from frappe.utils import cint, cstr, escape_html, flt, getdate
 
+from hse.hse.instruments import (
+	CRIMP_TYPES,
+	PRESSURE_TYPES,
+	add_used_instruments,
+	check_listed_instruments,
+	instrument_types,
+	listed_instruments,
+	pick,
+)
 from hse.shop_qc.utils import (
 	LOCKED_STATUSES,
 	count_open_ncs,
@@ -87,6 +96,7 @@ class QCInspection(Document):
 			self.set_hose_tests()
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
+		self.sync_instruments()
 		if self.docstatus == 0:
 			self.status = "Pending"
 
@@ -248,24 +258,42 @@ class QCInspection(Document):
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 
 	def check_test_equipment(self):
-		if not self.hose_tests and not any(r.numeric and r.result != NA for r in self.items):
+		"""Every reading names an instrument; every instrument is Active and in calibration."""
+		needs = self.hose_tests or any(r.numeric and r.result != NA for r in self.items)
+		if not needs and not self.instruments:
 			return
-		if not self.gauge_id:
-			frappe.throw(_("Enter the Gauge / Test Instrument ID used for the numeric readings."))
-		on = getdate(self.inspection_date)
-		for field, due in (("gauge_id", self.gauge_cal_due), ("flowmeter_id", self.flowmeter_cal_due)):
-			if self.get(field) and not due:
-				frappe.throw(
-					_("Enter the calibration due date for instrument {0}.").format(
-						frappe.bold(self.get(field))
-					)
-				)
-			if self.get(field) and getdate(due) < on:
-				frappe.throw(
-					_("Instrument {0} was out of calibration on the inspection date (due {1}).").format(
-						frappe.bold(self.get(field)), frappe.format(due, "Date")
-					)
-				)
+		if not self.instruments:
+			frappe.throw(_("Add the test equipment used for the numeric readings and hose tests."))
+		errors = check_listed_instruments(self, self.inspection_date)
+		for r in self.items:
+			if r.numeric and r.result != NA and flt(r.reading_value) and not r.instrument:
+				errors.append(_("Row {0}: select the instrument used for '{1}'.").format(r.idx, r.check_item))
+		for h in self.hose_tests:
+			if not h.instrument:
+				errors.append(_("Hose {0}: select the pressure instrument.").format(h.hose_tag))
+			if (flt(h.crimp_min) or flt(h.crimp_max)) and not h.crimp_instrument:
+				errors.append(_("Hose {0}: select the crimp measuring instrument.").format(h.hose_tag))
+		if errors:
+			frappe.throw("<br>".join(errors), title=_("Test Equipment"))
+
+	def sync_instruments(self):
+		"""Default the per-reading instrument when the choice is obvious, and list every
+		instrument a reading uses in the Test Equipment table."""
+		names = listed_instruments(self)
+		types = instrument_types(names)
+		only = pick(names, types)
+		for r in self.items:
+			if r.numeric and not r.instrument and only:
+				r.instrument = only
+		for h in self.hose_tests:
+			if not h.instrument:
+				h.instrument = pick(names, types, PRESSURE_TYPES)
+			if not h.crimp_instrument and (flt(h.crimp_min) or flt(h.crimp_max)):
+				h.crimp_instrument = pick(names, types, CRIMP_TYPES)
+		used = [r.instrument for r in self.items]
+		for h in self.hose_tests:
+			used += [h.instrument, h.crimp_instrument]
+		add_used_instruments(self, used)
 
 	def check_hold_points(self):
 		stage = frappe.get_cached_doc("QC Stage", self.stage)

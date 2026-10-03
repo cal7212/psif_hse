@@ -8,6 +8,7 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cstr, escape_html, flt, getdate, nowdate
 
 from hse.asset_inspection.utils import update_asset_safety_status
+from hse.hse.instruments import add_used_instruments, check_listed_instruments, listed_instruments
 
 PASS, FAIL, NA = "Pass", "Fail", "N/A"
 TEMPLATE_ROW_FIELDS = (
@@ -75,8 +76,19 @@ class AssetInspection(Document):
 		if not self.items:
 			self.set_items_from_template()
 		self.evaluate_numeric_readings()
+		self.sync_instruments()
 		if self.docstatus == 0:
 			self.status = "Pending"
+
+	def sync_instruments(self):
+		"""Default the per-reading instrument when only one is listed, and list every
+		instrument a reading uses in the Test Equipment table."""
+		names = listed_instruments(self)
+		only = names[0] if len(names) == 1 else None
+		for r in self.items:
+			if r.numeric and not r.instrument and only:
+				r.instrument = only
+		add_used_instruments(self, [r.instrument for r in self.items])
 
 	def validate_template(self):
 		template = frappe.get_cached_doc("Asset Inspection Template", self.template)
@@ -153,8 +165,24 @@ class AssetInspection(Document):
 				errors.append(_("Row {0}: Enter the reading for '{1}'.").format(row.idx, row.check_item))
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
+		self.check_test_equipment()
 
 		self.status = "Rejected" if self.get_failed_rows() else "Accepted"
+
+	def check_test_equipment(self):
+		needs = any(r.numeric and r.result != NA and flt(r.reading_value) for r in self.items)
+		if not needs and not self.instruments:
+			return
+		if not self.instruments:
+			frappe.throw(
+				_("Add the test equipment used for the numeric readings."), title=_("Test Equipment")
+			)
+		errors = check_listed_instruments(self, self.inspection_date)
+		for r in self.items:
+			if r.numeric and r.result != NA and flt(r.reading_value) and not r.instrument:
+				errors.append(_("Row {0}: select the instrument used for '{1}'.").format(r.idx, r.check_item))
+		if errors:
+			frappe.throw("<br>".join(errors), title=_("Test Equipment"))
 
 	def on_submit(self):
 		if self.status == "Rejected":

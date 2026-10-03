@@ -13,6 +13,7 @@
   "max_value",
   "uom",
   "column_break_r",
+  "instrument",
   "reading_value",
   "result",
   "finding",
@@ -20,7 +21,7 @@
  ],
  "fields": [
   {
-   "columns": 3,
+   "columns": 2,
    "fieldname": "check_item",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -75,6 +76,15 @@
    "fieldtype": "Column Break"
   },
   {
+   "columns": 2,
+   "description": "Instrument used for this reading. Filled in automatically when only one instrument is listed.",
+   "fieldname": "instrument",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
    "columns": 1,
    "depends_on": "numeric",
    "fieldname": "reading_value",
@@ -91,7 +101,7 @@
    "options": "\nPass\nFail\nN/A"
   },
   {
-   "columns": 3,
+   "columns": 2,
    "fieldname": "finding",
    "fieldtype": "Small Text",
    "in_list_view": 1,
@@ -105,7 +115,7 @@
   }
  ],
  "istable": 1,
- "modified": "2026-09-30 12:00:00.000000",
+ "modified": "2026-10-02 23:45:00.000000",
  "modified_by": "Administrator",
  "module": "Asset Inspection",
  "name": "Asset Inspection Reading",
