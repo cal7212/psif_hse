@@ -547,8 +547,8 @@
   ]
  },
  {
-  "template_name": "SA - Pressure & Function Test",
-  "stage": "SA - Pressure & Function Test",
+  "template_name": "LA - Pressure & Function Test",
+  "stage": "LA - Pressure & Function Test",
   "items": [
    {
     "check_item": "Proof pressure hold",
