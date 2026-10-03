@@ -459,6 +459,14 @@
     "record_text": 0
    },
    {
+    "check_item": "Hose identification",
+    "criteria": "Record hose manufacturer, type and lot or date code",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
     "check_item": "Cut quality",
     "criteria": "Square cut, no frayed wire or loose reinforcement",
     "is_critical": 0,
@@ -481,6 +489,14 @@
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 0
+   },
+   {
+    "check_item": "Fitting orientation",
+    "criteria": "Angle between elbow fittings per drawing",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
    }
   ]
  },
@@ -490,25 +506,33 @@
   "product_type": "Hose Assembly",
   "items": [
    {
-    "check_item": "Crimp die and settings per manufacturer chart",
-    "criteria": "Die set and crimp setting recorded",
+    "check_item": "Crimp die and setting",
+    "criteria": "Die set and crimp setting per the manufacturer's chart; record",
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 1
    },
    {
-    "check_item": "Test fluid and bench",
-    "criteria": "Test medium and bench ID recorded",
+    "check_item": "Test medium and bench",
+    "criteria": "Record test fluid and bench ID",
     "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 1
    },
    {
-    "check_item": "No visible distortion after test",
-    "criteria": "No ferrule movement, bulging or weeping after pressure hold",
+    "check_item": "No distortion after test",
+    "criteria": "No ferrule movement, bulging or weeping after the hold",
     "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Hoses cleaned and capped after test",
+    "criteria": "Test fluid drained and ends capped",
+    "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 0
@@ -522,7 +546,7 @@
   "items": [
    {
     "check_item": "Ends capped or plugged",
-    "criteria": "Clean caps/plugs installed on both ends",
+    "criteria": "Clean caps or plugs installed on both ends",
     "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
@@ -530,7 +554,7 @@
    },
    {
     "check_item": "Tag attached",
-    "criteria": "Tag/label legible and matches the test record",
+    "criteria": "Tag or label legible and matches the test record",
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
@@ -538,8 +562,16 @@
    },
    {
     "check_item": "Quantity matches work order",
-    "criteria": "Count of tagged hoses equals work order quantity",
+    "criteria": "Count of tagged hoses equals the work order quantity",
     "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Protective sleeve / guard",
+    "criteria": "Sleeve, spring guard or fire sleeve fitted where the work order calls for it",
+    "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 0
@@ -551,8 +583,8 @@
   "stage": "LA - Pressure & Function Test",
   "items": [
    {
-    "check_item": "Proof pressure hold",
-    "criteria": "No external leakage at proof test pressure",
+    "check_item": "Proof pressure reached (psi)",
+    "criteria": "Reading must reach the unit's Proof Test psi; edit the tolerance to match your procedure",
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 1,
@@ -562,20 +594,52 @@
     "tolerance_plus_pct": 10
    },
    {
-    "check_item": "Valve / cartridge settings",
-    "criteria": "Settings recorded and match the work order",
+    "check_item": "Pressure hold",
+    "criteria": "Hold at proof pressure for the time in the procedure; no decay beyond limit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "External leak check",
+    "criteria": "No leakage at any plug, cartridge, port or seal",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Valve and cartridge settings",
+    "criteria": "Relief, reducing and flow settings set and recorded; match the unit's Valve / Cartridge Settings",
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 1
    },
    {
-    "check_item": "Function check",
-    "criteria": "All valves shift and ports flow as drawn",
+    "check_item": "Valve function",
+    "criteria": "Every valve shifts and each port flows as drawn",
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 0
+   },
+   {
+    "check_item": "Coil operation",
+    "criteria": "Each coil energizes and shifts its valve at rated voltage",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Test bench and instrument",
+    "criteria": "Record test bench and gauge ID",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
    }
   ]
  },
@@ -592,26 +656,490 @@
     "record_text": 0
    },
    {
+    "check_item": "Reported problem recorded",
+    "criteria": "Customer's reported problem entered on the QC Unit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
     "check_item": "As-received photos",
-    "criteria": "Photos of all sides, tags and damage before teardown",
+    "criteria": "Photos of all sides, tags and any damage before teardown",
     "is_critical": 0,
     "requires_photo": 1,
     "numeric": 0,
     "record_text": 0
    },
    {
-    "check_item": "External damage noted",
-    "criteria": "Describe any shipping or external damage",
+    "check_item": "External damage",
+    "criteria": "Describe shipping or external damage, or 'none'",
     "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
     "record_text": 1
    },
    {
-    "check_item": "Fluid sample retained",
-    "criteria": "Sample retained if fluid present (or N/A)",
+    "check_item": "Fluid sample",
+    "criteria": "Sample retained if fluid present; record condition or N/A",
     "is_critical": 0,
     "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Tagged and segregated",
+    "criteria": "Unit tagged with the RGA number and held in the repair area",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "LA - Component & Assembly Check",
+  "stage": "LA - Component & Assembly Check",
+  "items": [
+   {
+    "check_item": "Parts match work order / BOM",
+    "criteria": "Body, cartridges, valves and fittings match the work order and drawing",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Body / manifold part number",
+    "criteria": "Record body part number and serial or heat number",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Cartridges and valves installed per drawing",
+    "criteria": "Correct cavity, correct orientation, correct part in every position",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Cartridge and fastener torque",
+    "criteria": "Torqued to manufacturer value; record torque wrench ID",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Torque marked",
+    "criteria": "Torque stripe on cartridges, plugs and mounting bolts",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Port plugs and O-rings",
+    "criteria": "Correct plug type, O-rings lubricated and undamaged",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Port identification",
+    "criteria": "Port markings or stamps match the drawing",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Mounting and brackets",
+    "criteria": "Brackets, sub-plates and mounting hardware secure",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "LA - Electrical & Controls",
+  "stage": "LA - Electrical & Controls",
+  "items": [
+   {
+    "check_item": "Coil voltage",
+    "criteria": "Coil voltage and type match the work order; record",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Connectors",
+    "criteria": "Connector type (DIN, Deutsch, flying lead) matches the work order",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Coil resistance / continuity",
+    "criteria": "Record per coil",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Wiring and strain relief",
+    "criteria": "Terminations tight, strain relief fitted, no pinched conductors",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Labels",
+    "criteria": "Coils, valves and wires labeled per schematic",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Grounding and bonding",
+    "criteria": "Ground conductor terminated where a motor or enclosure is present",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Motor nameplate",
+    "criteria": "Small power units: nameplate HP, voltage and phase match the unit; mark N/A if no motor",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   }
+  ]
+ },
+ {
+  "template_name": "LA - Flush & Cleanliness",
+  "stage": "LA - Flush & Cleanliness",
+  "items": [
+   {
+    "check_item": "Internal passages clean",
+    "criteria": "Deburred and free of chips; inspect cross-drills with a light",
+    "is_critical": 1,
+    "requires_photo": 1,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Flush performed",
+    "criteria": "Flushed per procedure; record fluid and flush time",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Cleanliness result",
+    "criteria": "Record ISO code; must meet the unit's target cleanliness",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Ports capped after flush",
+    "criteria": "All ports capped or plugged immediately after flushing",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "LA - Final Release",
+  "stage": "LA - Final Release",
+  "items": [
+   {
+    "check_item": "All stages accepted",
+    "criteria": "Every required stage accepted and no open Non Conformances",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Settings tag",
+    "criteria": "Final valve settings tagged or stamped on the assembly",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Ports capped",
+    "criteria": "All ports capped or plugged; clean caps",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Nameplate / tag",
+    "criteria": "Label or tag attached and matches the serial number",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Finish",
+    "criteria": "Paint or plating complete; no damage",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Final photos",
+    "criteria": "Photo of the completed assembly showing the tag",
+    "is_critical": 0,
+    "requires_photo": 1,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Packaging",
+    "criteria": "Protected for shipment; ports and coils protected",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Repair - Evaluation",
+  "stage": "Repair - Evaluation",
+  "items": [
+   {
+    "check_item": "Teardown findings",
+    "criteria": "Record what was found on disassembly",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Failed parts photographed",
+    "criteria": "Photos of failed or worn parts",
+    "is_critical": 0,
+    "requires_photo": 1,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Contamination",
+    "criteria": "Record signs of contamination (particles, water, varnish) or 'none'",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Root cause",
+    "criteria": "Cause identified and Failure Cause selected on the QC Unit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Parts to replace",
+    "criteria": "List parts and seal kits to be replaced",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Warranty determination",
+    "criteria": "Warranty status set on the QC Unit with the reason",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Customer approval",
+    "criteria": "Quote approved by the customer before work, where required",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Repair - Repair Work",
+  "stage": "Repair - Repair Work",
+  "items": [
+   {
+    "check_item": "Parts replaced per evaluation",
+    "criteria": "Every part on the evaluation list replaced or noted",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Seals replaced",
+    "criteria": "All disturbed seals and O-rings replaced",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Cleanliness during rebuild",
+    "criteria": "Components cleaned; ports capped during work",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Torque",
+    "criteria": "Fasteners and cartridges torqued to spec; record wrench ID",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Removed parts",
+    "criteria": "Removed parts tagged and retained if the customer requested them",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Work performed recorded",
+    "criteria": "Work Performed entered on the QC Unit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Repair - Test",
+  "stage": "Repair - Test",
+  "items": [
+   {
+    "check_item": "Test pressure",
+    "criteria": "Tested at the pressure in the original spec or procedure; record the value",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "External leak check",
+    "criteria": "No leakage at any joint, fitting or seal",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Reported problem resolved",
+    "criteria": "Customer's reported problem verified as no longer present",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Settings re-verified",
+    "criteria": "Relief and valve settings checked and recorded",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Electrical check",
+    "criteria": "Current draw or coil operation recorded where applicable; N/A otherwise",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   },
+   {
+    "check_item": "Test bench and instrument",
+    "criteria": "Record test bench and gauge ID",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 1
+   }
+  ]
+ },
+ {
+  "template_name": "Repair - Final Release",
+  "stage": "Repair - Final Release",
+  "items": [
+   {
+    "check_item": "Repair record complete",
+    "criteria": "Failure Cause, Work Performed and Disposition entered on the QC Unit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "All stages accepted",
+    "criteria": "Every required stage accepted and no open Non Conformances",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "Cleaned and capped",
+    "criteria": "Cleaned, touched up and all ports capped",
+    "is_critical": 0,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "RGA tag",
+    "criteria": "RGA number tagged on the unit",
+    "is_critical": 1,
+    "requires_photo": 0,
+    "numeric": 0,
+    "record_text": 0
+   },
+   {
+    "check_item": "As-shipped photos",
+    "criteria": "Photo of the unit as shipped",
+    "is_critical": 0,
+    "requires_photo": 1,
     "numeric": 0,
     "record_text": 0
    }

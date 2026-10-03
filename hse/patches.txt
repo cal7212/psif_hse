@@ -9,3 +9,4 @@ hse.patches.sds_backfill
 hse.patches.injury_status_label_backfill
 hse.patches.shop_qc_backfill
 hse.patches.shop_qc_light_assembly_and_samples
+hse.patches.shop_qc_sample_templates_v2
