@@ -269,6 +269,10 @@ doctype_js = {
 	"Quality Goal": "public/js/quality_goal.js",
 }
 
+doctype_list_js = {
+	"Quality Goal": "public/js/quality_goal_list.js",
+}
+
 doc_events = {
 	"Non Conformance": {
 		"validate": [

@@ -145,7 +145,7 @@ def backfill_resolved_on():
 
 
 def create_starter_goals(frequency: str = "Monthly", day_of_month: str = "1") -> list[str]:
-	"""Run once by hand:
+	"""Run from the "Create Starter Goals" button on the Quality Goal list, or by hand:
 	bench --site <site> execute hse.quality_metrics.install.create_starter_goals
 	Goals whose module isn't in use are still created; delete any you don't need.
 	Existing goals with the same name are left alone."""
