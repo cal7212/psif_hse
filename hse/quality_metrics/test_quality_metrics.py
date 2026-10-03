@@ -173,3 +173,75 @@ class IntegrationTestStarterGoalsButton(IntegrationTestCase):
 				create_starter_goals()
 		finally:
 			frappe.set_user("Administrator")
+
+
+class UnitTestQualityDashboardPeriods(UnitTestCase):
+	def test_periods(self):
+		from hse.quality_metrics.dashboard import get_period
+
+		self.assertEqual(get_period("month_to_date", "2026-10-15"), (date(2026, 10, 1), date(2026, 10, 15)))
+		self.assertEqual(get_period("last_month", "2026-10-15"), (date(2026, 9, 1), date(2026, 9, 30)))
+		self.assertEqual(get_period("quarter_to_date", "2026-11-15"), (date(2026, 10, 1), date(2026, 11, 15)))
+		self.assertEqual(get_period("last_30_days", "2026-10-30"), (date(2026, 10, 1), date(2026, 10, 30)))
+		self.assertEqual(get_period("last_90_days", "2026-10-30")[0], date(2026, 8, 2))
+
+
+class IntegrationTestQualityDashboard(IntegrationTestCase):
+	def test_setup_creates_cards_and_workspace_once(self):
+		import json
+
+		from hse.quality_metrics.dashboard import CARD_METHOD, CARDS, WORKSPACE, setup_dashboard
+
+		setup_dashboard()
+		setup_dashboard()  # idempotent
+		for label, metric, _period, _color in CARDS:
+			card = frappe.get_doc("Number Card", label)
+			self.assertEqual(card.type, "Custom")
+			self.assertEqual(card.method, CARD_METHOD)
+			self.assertEqual(json.loads(card.filters_json)["metric"], metric)
+		self.assertEqual(frappe.db.count("Number Card", {"method": CARD_METHOD}), len(CARDS))
+		ws = frappe.get_doc("Workspace", WORKSPACE)
+		self.assertEqual(len(ws.number_cards), len(CARDS))
+		self.assertIsInstance(json.loads(ws.content), list)
+
+	def test_every_card_returns_a_number_card_result(self):
+		import json
+
+		from hse.quality_metrics.dashboard import CARDS, get_card_value
+
+		for label, metric, period, _color in CARDS:
+			res = get_card_value(json.dumps({"metric": metric, "period": period}))
+			self.assertIn(res["fieldtype"], ("Percent", "Float", "Int"), label)
+			self.assertEqual(res["route"][0], "List", label)
+			self.assertIn("value", res)
+
+	def test_card_counts_open_critical_nc(self):
+		from hse.quality_metrics.dashboard import get_card_value
+
+		before = get_card_value({"metric": "nc_open_critical_over_7_days"})["value"]
+		nc = frappe.get_doc(
+			{
+				"doctype": "Non Conformance",
+				"subject": f"_Test dashboard NC {frappe.generate_hash(length=6)}",
+				"procedure": self._procedure(),
+				"status": "Open",
+				"severity": "Critical",
+			}
+		).insert()
+		frappe.db.set_value(
+			"Non Conformance", nc.name, "creation", now_datetime() - timedelta(days=9), update_modified=False
+		)
+		res = get_card_value({"metric": "nc_open_critical_over_7_days"})
+		self.assertEqual(res["value"], before + 1)
+		self.assertEqual(res["route_options"]["severity"], "Critical")
+
+	def test_unknown_metric_rejected(self):
+		from hse.quality_metrics.dashboard import get_card_value
+
+		with self.assertRaises(frappe.ValidationError):
+			get_card_value({"metric": "nope"})
+
+	def _procedure(self):
+		if not frappe.db.exists("Quality Procedure", PROC):
+			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
+		return PROC
