@@ -55,17 +55,19 @@ def _exists(doctype: str) -> bool:
 	return bool(frappe.db.exists("DocType", doctype))
 
 
-# ---------------------------------------------------------------- HPU Build
+# ---------------------------------------------------------------- Shop QC
+# Metric keys keep their original hpu_* names so existing Quality Goals keep working;
+# they now cover every shop.
 def hpu_first_pass_yield(start, end):
 	s, e = _bounds(start, end)
-	units = frappe.get_all("HPU Unit", filters={"released_on": ["between", [s, e]]}, pluck="name")
+	units = frappe.get_all("QC Unit", filters={"released_on": ["between", [s, e]]}, pluck="name")
 	if not units:
-		return None, _("No HPU Units released in the period.")
+		return None, _("No QC Units released in the period.")
 	rejected = set(
 		frappe.get_all(
-			"HPU Build Inspection",
-			filters={"hpu_unit": ["in", units], "docstatus": 1, "status": "Rejected"},
-			pluck="hpu_unit",
+			"QC Inspection",
+			filters={"qc_unit": ["in", units], "docstatus": 1, "status": "Rejected"},
+			pluck="qc_unit",
 		)
 	)
 	first_pass = len(units) - len(rejected)
@@ -77,13 +79,18 @@ def hpu_first_pass_yield(start, end):
 
 def hpu_units_released(start, end):
 	s, e = _bounds(start, end)
-	units = frappe.get_all("HPU Unit", filters={"released_on": ["between", [s, e]]}, pluck="name")
-	return len(units), _names(units) if units else _("None released.")
+	units = frappe.get_all(
+		"QC Unit", filters={"released_on": ["between", [s, e]]}, fields=["name", "shop"], order_by="name"
+	)
+	if not units:
+		return 0, _("None released.")
+	by_shop = ", ".join(f"{shop or '-'}: {n}" for shop, n in Counter(u.shop for u in units).most_common())
+	return len(units), _("By shop: {0}").format(by_shop)
 
 
 def hpu_shipped_before_release(start, end):
 	units = frappe.get_all(
-		"HPU Unit",
+		"QC Unit",
 		filters={"trulinx_ship_date": ["between", [getdate(start), getdate(end)]], "qc_flag": ["is", "set"]},
 		pluck="name",
 	)
@@ -93,14 +100,55 @@ def hpu_shipped_before_release(start, end):
 def hpu_stage_rejections(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
-		"HPU Build Inspection",
+		"QC Inspection",
 		filters={"inspection_date": ["between", [s, e]], "docstatus": 1, "status": "Rejected"},
 		pluck="stage",
 	)
 	if not rows:
-		return 0, _("No rejected build inspections.")
+		return 0, _("No rejected QC inspections.")
 	top = ", ".join(f"{stage}: {n}" for stage, n in Counter(rows).most_common(5))
 	return len(rows), _("By stage: {0}").format(top)
+
+
+def rga_received(start, end):
+	rows = frappe.get_all(
+		"QC Unit",
+		filters={"job_type": "Repair", "received_date": ["between", [getdate(start), getdate(end)]]},
+		fields=["name", "shop"],
+	)
+	if not rows:
+		return 0, _("No RGAs received.")
+	by_shop = ", ".join(f"{shop or '-'}: {n}" for shop, n in Counter(r.shop for r in rows).most_common())
+	return len(rows), _("By shop: {0}").format(by_shop)
+
+
+def repair_turnaround_days(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"QC Unit",
+		filters={"job_type": "Repair", "released_on": ["between", [s, e]], "received_date": ["is", "set"]},
+		fields=["name", "received_date", "released_on"],
+	)
+	if not rows:
+		return None, _("No repairs released in the period.")
+	days = [(getdate(r.released_on) - getdate(r.received_date)).days for r in rows]
+	return round(sum(days) / len(days), 1), _("{0} repairs; longest {1} days.").format(len(rows), max(days))
+
+
+def repair_failure_causes(start, end):
+	rows = frappe.get_all(
+		"QC Unit",
+		filters={
+			"job_type": "Repair",
+			"received_date": ["between", [getdate(start), getdate(end)]],
+			"failure_cause": ["is", "set"],
+		},
+		pluck="failure_cause",
+	)
+	if not rows:
+		return 0, _("No failure causes recorded.")
+	top = ", ".join(f"{cause}: {n}" for cause, n in Counter(rows).most_common(5))
+	return len(rows), _("Top causes: {0}").format(top)
 
 
 # ---------------------------------------------------------------- Non Conformance
@@ -205,22 +253,37 @@ def hk_areas_overdue(start, end):
 # ---------------------------------------------------------------- registry
 # key: (label, function, default uom, snapshot?, required doctype)
 METRICS = {
-	"hpu_first_pass_yield": ("HPU first-pass yield (%)", hpu_first_pass_yield, "Percent", False, "HPU Unit"),
-	"hpu_units_released": ("HPU units released", hpu_units_released, "Nos", False, "HPU Unit"),
+	"hpu_first_pass_yield": (
+		"QC first-pass yield, all shops (%)",
+		hpu_first_pass_yield,
+		"Percent",
+		False,
+		"QC Unit",
+	),
+	"hpu_units_released": ("QC units released", hpu_units_released, "Nos", False, "QC Unit"),
 	"hpu_shipped_before_release": (
-		"HPU units shipped before QC release",
+		"Units shipped before QC release",
 		hpu_shipped_before_release,
 		"Nos",
 		False,
-		"HPU Unit",
+		"QC Unit",
 	),
 	"hpu_stage_rejections": (
-		"HPU build inspections rejected",
+		"QC inspections rejected",
 		hpu_stage_rejections,
 		"Nos",
 		False,
-		"HPU Build Inspection",
+		"QC Inspection",
 	),
+	"rga_received": ("RGAs received", rga_received, "Nos", False, "QC Unit"),
+	"repair_turnaround_days": (
+		"Average repair turnaround (received to release, days)",
+		repair_turnaround_days,
+		"Day",
+		False,
+		"QC Unit",
+	),
+	"repair_failure_causes": ("Repairs with a failure cause", repair_failure_causes, "Nos", False, "QC Unit"),
 	"nc_avg_days_to_resolve": (
 		"Average days to resolve a Non Conformance",
 		nc_avg_days_to_resolve,

@@ -8,7 +8,7 @@ Run on a machine that can see the TrulinX export (Windows Task Scheduler every 1
   python trulinx_hpu_sync.py "\\\\server\\exports\\hpu_work_orders.csv"
 
 CSV source: a saved TrulinX MS Query / SQL report filtered to HPU work orders, with columns
-named like FIELD_MAP keys in hse/hpu_build/api.py (work_order, model, serial_no, ...).
+named like FIELD_MAP keys in hse/shop_qc/api.py (work_order, model, serial_no, ...).
 COLUMN_RENAMES below translates the real TrulinX column headers if they differ.
 """
 
@@ -47,7 +47,7 @@ def read_rows(path: Path) -> list[dict]:
 
 
 def push(rows: list[dict]) -> dict:
-	url = os.environ["FRAPPE_URL"].rstrip("/") + "/api/method/hse.hpu_build.api.upsert_hpu_units"
+	url = os.environ["FRAPPE_URL"].rstrip("/") + "/api/method/hse.shop_qc.api.upsert_qc_units"
 	headers = {"Authorization": f"token {os.environ['FRAPPE_API_KEY']}:{os.environ['FRAPPE_API_SECRET']}"}
 	totals = {"created": [], "updated": [], "unchanged": [], "errors": []}
 	for i in range(0, len(rows), BATCH):

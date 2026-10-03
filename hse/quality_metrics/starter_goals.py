@@ -4,12 +4,20 @@
 
 STARTER_GOALS = [
 	{
-		"goal": "HPU Build Quality",
+		"goal": "Shop QC Quality",
 		"objectives": [
 			("hpu_first_pass_yield", "At least", 90),
 			("hpu_shipped_before_release", "At most", 0),
 			("hpu_units_released", "Record only", 0),
 			("hpu_stage_rejections", "Record only", 0),
+		],
+	},
+	{
+		"goal": "Repairs and RGAs",
+		"objectives": [
+			("rga_received", "Record only", 0),
+			("repair_turnaround_days", "Record only", 0),
+			("repair_failure_causes", "Record only", 0),
 		],
 	},
 	{
