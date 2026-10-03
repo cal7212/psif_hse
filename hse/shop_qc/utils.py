@@ -231,9 +231,15 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		inspections.append(doc)
 		for h in doc.hose_tests:
 			hose_results[h.hose_tag] = frappe._dict(h.as_dict(), inspection=doc.name, stage=s.name)
+	instruments = {}
+	for doc in inspections:
+		for row in doc.get("instruments") or []:
+			entry = instruments.setdefault(row.instrument, frappe._dict(row.as_dict(), stages=[]))
+			entry.stages.append(doc.stage)
 	return frappe._dict(
 		unit=unit,
 		shop=shop,
+		instruments=list(instruments.values()),
 		title=shop.get("certificate_title") or _("{0} Quality Control Certificate").format(unit.shop or ""),
 		statement=shop.get("certificate_statement"),
 		stages=stages,

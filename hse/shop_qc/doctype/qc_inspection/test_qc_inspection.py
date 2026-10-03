@@ -89,6 +89,21 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 						"default_hold_time_sec": 30,
 					}
 				).insert()
+		for iid, itype, due in (
+			("_T-G1", "Pressure Gauge", "2099-12-31"),
+			("_T-G2", "Pressure Gauge", "2099-12-31"),
+			("_T-CAL", "Caliper / Micrometer", "2099-12-31"),
+			("_T-EXP", "Pressure Gauge", "2000-01-01"),
+		):
+			if not frappe.db.exists("Measuring Instrument", iid):
+				frappe.get_doc(
+					{
+						"doctype": "Measuring Instrument",
+						"instrument_id": iid,
+						"instrument_type": itype,
+						"calibration_due": due,
+					}
+				).insert()
 		if not frappe.db.exists("QC Failure Cause", "Other"):
 			frappe.get_doc({"doctype": "QC Failure Cause", "failure_cause": "Other"}).insert()
 		for name, seq, final, hose in HOSE_STAGES:
@@ -218,7 +233,20 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			}
 		).insert()
 
-	def make(self, stage, results=None, reading=None, submit=True, unit=WO, hose_values=None, **kw):
+	def default_instruments(self, unit):
+		return ["_T-G1", "_T-CAL"] if unit == HOSE_WO else ["_T-G1"]
+
+	def make(
+		self,
+		stage,
+		results=None,
+		reading=None,
+		submit=True,
+		unit=WO,
+		hose_values=None,
+		instruments=None,
+		**kw,
+	):
 		doc = frappe.get_doc(
 			{
 				"doctype": "QC Inspection",
@@ -226,8 +254,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				"stage": stage,
 				"template": f"{stage} Template",
 				"inspected_by": self.employee,
-				"gauge_id": "G-1",
-				"gauge_cal_due": "2099-12-31",
+				"instruments": [{"instrument": i} for i in (instruments or self.default_instruments(unit))],
 				**kw,
 			}
 		)
@@ -376,3 +403,49 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		)
 		self.make("_T Release", unit=unit.name)
 		self.assertEqual(frappe.db.get_value("QC Unit", unit.name, "status"), "Released")
+
+	def test_expired_instrument_blocks_submit(self):
+		self.make("_T Assembly")
+		with self.assertRaises(frappe.ValidationError):
+			self.make("_T Test", reading=3000, instruments=["_T-EXP"])
+
+	def test_single_instrument_fills_readings(self):
+		self.make("_T Assembly")
+		doc = self.make("_T Test", reading=3000, instruments=["_T-G1"])
+		self.assertTrue(all(r.instrument == "_T-G1" for r in doc.items if r.numeric))
+		self.assertEqual(str(doc.instruments[0].calibration_due), "2099-12-31")
+
+	def test_two_instruments_need_reading_instrument(self):
+		self.make("_T Assembly")
+		with self.assertRaises(frappe.ValidationError):
+			self.make("_T Test", reading=3000, instruments=["_T-G1", "_T-G2"])
+		doc = self.make("_T Test", reading=3000, instruments=["_T-G1", "_T-G2"], submit=False)
+		for r in doc.items:
+			if r.numeric:
+				r.instrument = "_T-G2"
+		doc.save()
+		doc.submit()
+		self.assertEqual(doc.status, "Accepted")
+
+	def test_reading_instrument_added_to_table(self):
+		self.make("_T Assembly")
+		doc = self.make("_T Test", reading=3000, instruments=["_T-G1"], submit=False)
+		for r in doc.items:
+			if r.numeric:
+				r.instrument = "_T-G2"
+		doc.save()
+		self.assertEqual(sorted(i.instrument for i in doc.instruments), ["_T-G1", "_T-G2"])
+
+	def test_hose_instruments_picked_by_type(self):
+		self.make_hose_unit()
+		good = {
+			"crimp_a": 1.0,
+			"crimp_b": 1.0,
+			"pressure_reached": 6100,
+			"hold_time_actual": 30,
+			"leak_check": "No Leak",
+		}
+		doc = self.make("_T Hose Test", unit=HOSE_WO, hose_values={"_TH-1": good, "_TH-2": good})
+		self.assertTrue(
+			all(h.instrument == "_T-G1" and h.crimp_instrument == "_T-CAL" for h in doc.hose_tests)
+		)

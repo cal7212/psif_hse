@@ -23,6 +23,8 @@
   "non_conformance",
   "is_reinspection",
   "reinspection_of",
+  "section_equipment",
+  "instruments",
   "section_items",
   "instructions",
   "items",
@@ -172,6 +174,19 @@
    "options": "Asset Inspection"
   },
   {
+   "collapsible": 0,
+   "fieldname": "section_equipment",
+   "fieldtype": "Section Break",
+   "label": "Test Equipment"
+  },
+  {
+   "description": "Every meter or tester used (e.g. insulation resistance tester, IR camera, multimeter). Required when the checklist has numeric readings; each must be Active and in calibration on the inspection date.",
+   "fieldname": "instruments",
+   "fieldtype": "Table",
+   "label": "Test Equipment",
+   "options": "Inspection Instrument"
+  },
+  {
    "fieldname": "section_items",
    "fieldtype": "Section Break",
    "label": "Checklist"
@@ -218,7 +233,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2026-09-30 21:00:00.000000",
+ "modified": "2026-10-02 23:45:00.000000",
  "modified_by": "Administrator",
  "module": "Asset Inspection",
  "name": "Asset Inspection",

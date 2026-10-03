@@ -1,0 +1,255 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:instrument_id",
+ "creation": "2026-10-02 23:45:00.000000",
+ "custom": 0,
+ "description": "Gauges, meters and other test equipment used on QC and asset inspections, with calibration status.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "instrument_id",
+  "instrument_type",
+  "description",
+  "status",
+  "column_break_a",
+  "manufacturer",
+  "model_no",
+  "serial_no",
+  "measuring_range",
+  "accuracy",
+  "location",
+  "asset",
+  "section_cal",
+  "calibration_required",
+  "last_calibrated",
+  "calibration_interval_months",
+  "calibration_due",
+  "column_break_c",
+  "calibrated_by",
+  "calibration_certificate",
+  "calibration_notes"
+ ],
+ "fields": [
+  {
+   "description": "The ID on the instrument's tag, e.g. G-014.",
+   "fieldname": "instrument_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Instrument ID",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "instrument_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "Pressure Gauge\nPressure Transducer\nFlowmeter\nThermometer\nCaliper / Micrometer\nTorque Wrench\nParticle Counter\nSound Level Meter\nMultimeter\nClamp Meter\nInsulation Resistance Tester\nLow-Resistance Ohmmeter\nGround Resistance Tester\nInfrared Camera\nPower Quality Analyzer\nRelay / Injection Test Set\nHipot Tester\nVoltage Detector\nPhase Rotation Meter\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nOut for Calibration\nRetired\nLost",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manufacturer",
+   "fieldtype": "Data",
+   "label": "Manufacturer"
+  },
+  {
+   "fieldname": "model_no",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Serial No"
+  },
+  {
+   "description": "e.g. 0-6000 psi",
+   "fieldname": "measuring_range",
+   "fieldtype": "Data",
+   "label": "Range"
+  },
+  {
+   "description": "e.g. \u00b10.25% FS",
+   "fieldname": "accuracy",
+   "fieldtype": "Data",
+   "label": "Accuracy"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "label": "Location / Station"
+  },
+  {
+   "description": "Optional: the fixed asset record for this instrument.",
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Asset",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "section_cal",
+   "fieldtype": "Section Break",
+   "label": "Calibration"
+  },
+  {
+   "default": "1",
+   "description": "Clear only for equipment that is verified rather than calibrated (e.g. a voltage detector checked on a proving unit before and after use).",
+   "fieldname": "calibration_required",
+   "fieldtype": "Check",
+   "label": "Calibration Required"
+  },
+  {
+   "depends_on": "calibration_required",
+   "fieldname": "last_calibrated",
+   "fieldtype": "Date",
+   "label": "Last Calibrated"
+  },
+  {
+   "depends_on": "calibration_required",
+   "description": "Due date is calculated from Last Calibrated when this is set.",
+   "fieldname": "calibration_interval_months",
+   "fieldtype": "Int",
+   "label": "Calibration Interval (months)"
+  },
+  {
+   "depends_on": "calibration_required",
+   "fieldname": "calibration_due",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Calibration Due"
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "calibration_required",
+   "description": "Lab or person",
+   "fieldname": "calibrated_by",
+   "fieldtype": "Data",
+   "label": "Calibrated By"
+  },
+  {
+   "depends_on": "calibration_required",
+   "fieldname": "calibration_certificate",
+   "fieldtype": "Attach",
+   "label": "Calibration Certificate"
+  },
+  {
+   "fieldname": "calibration_notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-02 23:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Measuring Instrument",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "share": 0,
+   "write": 0
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "quick_entry": 0,
+ "search_fields": "instrument_type,description,serial_no,calibration_due",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "instrument_id",
+ "track_changes": 1
+}

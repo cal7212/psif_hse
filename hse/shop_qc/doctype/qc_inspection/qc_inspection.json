@@ -28,11 +28,7 @@
   "is_reinspection",
   "reinspection_of",
   "section_equipment",
-  "gauge_id",
-  "gauge_cal_due",
-  "column_break_e",
-  "flowmeter_id",
-  "flowmeter_cal_due",
+  "instruments",
   "section_items",
   "instructions",
   "items",
@@ -208,35 +204,17 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "eval:doc.gauge_id",
+   "collapsible_depends_on": "eval:(doc.instruments || []).length",
    "fieldname": "section_equipment",
    "fieldtype": "Section Break",
    "label": "Test Equipment"
   },
   {
-   "description": "Required when the checklist has numeric readings.",
-   "fieldname": "gauge_id",
-   "fieldtype": "Data",
-   "label": "Gauge / Test Instrument ID"
-  },
-  {
-   "fieldname": "gauge_cal_due",
-   "fieldtype": "Date",
-   "label": "Calibration Due"
-  },
-  {
-   "fieldname": "column_break_e",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "flowmeter_id",
-   "fieldtype": "Data",
-   "label": "Flow Meter / Other Instrument ID"
-  },
-  {
-   "fieldname": "flowmeter_cal_due",
-   "fieldtype": "Date",
-   "label": "Calibration Due (Other)"
+   "description": "Every gauge, meter or tool used. Required when the checklist has numeric readings or hose tests; each instrument must be Active and in calibration on the inspection date.",
+   "fieldname": "instruments",
+   "fieldtype": "Table",
+   "label": "Test Equipment",
+   "options": "Inspection Instrument"
   },
   {
    "fieldname": "section_items",
@@ -304,7 +282,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-02 20:30:00.000000",
+ "modified": "2026-10-02 23:45:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",
