@@ -4,6 +4,7 @@
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+from hse.quality_metrics.dashboard import setup_dashboard
 from hse.quality_metrics.metrics import METRICS, OPERATORS, metric_options
 from hse.quality_metrics.starter_goals import STARTER_GOALS
 
@@ -182,3 +183,4 @@ def after_install():
 def after_migrate():
 	make_custom_fields()
 	backfill_resolved_on()
+	setup_dashboard()
