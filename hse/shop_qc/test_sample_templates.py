@@ -21,6 +21,19 @@ class TestSampleTemplates(IntegrationTestCase):
 				frappe.db.exists("QC Inspection Template", t["template_name"]), t["template_name"]
 			)
 
+	def test_every_default_stage_has_a_sample(self):
+		data = json.loads((Path(__file__).parent / "sample_templates.json").read_text())
+		covered = {t["stage"] for t in data}
+		missing = [name for rows in DEFAULT_STAGES.values() for name, *_ in rows if name not in covered]
+		self.assertEqual(missing, [])
+
+	def test_update_unused_refreshes_items(self):
+		create_sample_templates()
+		name = "LA - Final Release"
+		frappe.db.delete("QC Inspection Template Item", {"parent": name})
+		create_sample_templates(update_unused=True)
+		self.assertGreater(len(frappe.get_doc("QC Inspection Template", name).items), 0)
+
 	def test_light_assembly_seeded(self):
 		self.assertEqual(frappe.db.get_value("Build Shop", "Light Assembly", "inspection_prefix"), "LAI")
 		self.assertFalse(frappe.db.exists("Build Shop", "Small Assembly"))

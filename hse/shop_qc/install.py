@@ -127,6 +127,18 @@ def make_role():
 		)
 
 
+def sample_is_untouched(template: str) -> bool:
+	"""Never used by an inspection, and never edited by anyone but Administrator."""
+	if frappe.db.exists("QC Inspection", {"template": template}):
+		return False
+	if frappe.db.get_value("QC Inspection Template", template, "modified_by") != "Administrator":
+		return False
+	return not frappe.db.exists(
+		"Version",
+		{"ref_doctype": "QC Inspection Template", "docname": template, "owner": ("!=", "Administrator")},
+	)
+
+
 def make_shops():
 	for name, prefix, title in SHOPS:
 		if frappe.db.exists("Build Shop", name):
@@ -173,11 +185,12 @@ def make_default_stages():
 			).insert(ignore_permissions=True)
 
 
-def create_sample_templates(quality_procedure: str = "QC Inspection"):
+def create_sample_templates(quality_procedure: str = "QC Inspection", update_unused: bool = False):
 	"""Run once by hand:
 	bench --site <site> execute hse.shop_qc.install.create_sample_templates
-	Creates the Quality Procedure (if missing) and sample templates for the default stages.
-	Existing templates with the same name are left alone."""
+	Creates the Quality Procedure (if missing) and the sample templates for the default stages.
+	Existing templates are left alone, except with update_unused=True: a sample template that no
+	inspection uses and that only Administrator has touched gets the current sample items."""
 	if not frappe.db.exists("Quality Procedure", quality_procedure):
 		frappe.get_doc(
 			{
@@ -189,9 +202,15 @@ def create_sample_templates(quality_procedure: str = "QC Inspection"):
 	data = json.loads((Path(__file__).parent / "sample_templates.json").read_text())
 	created = []
 	for t in data:
-		if frappe.db.exists("QC Inspection Template", t["template_name"]):
-			continue
 		if not frappe.db.exists("QC Stage", t["stage"]):
+			continue
+		if frappe.db.exists("QC Inspection Template", t["template_name"]):
+			if update_unused and sample_is_untouched(t["template_name"]):
+				doc = frappe.get_doc("QC Inspection Template", t["template_name"])
+				doc.set("items", t["items"])
+				doc.product_type = t.get("product_type")
+				doc.save(ignore_permissions=True)
+				created.append(doc.name)
 			continue
 		doc = frappe.get_doc(
 			{"doctype": "QC Inspection Template", "quality_procedure": quality_procedure, **t}
