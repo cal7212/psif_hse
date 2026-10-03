@@ -29,7 +29,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("(A) Case No."), "fieldname": "case_no", "fieldtype": "Link", "options": "Injury_Illness Report", "width": 140},
+		{
+			"label": _("(A) Case No."),
+			"fieldname": "case_no",
+			"fieldtype": "Link",
+			"options": "Injury_Illness Report",
+			"width": 140,
+		},
 		{"label": _("(B) Employee"), "fieldname": "employee", "fieldtype": "Data", "width": 150},
 		{"label": _("(C) Job Title"), "fieldname": "job_title", "fieldtype": "Data", "width": 120},
 		{"label": _("(D) Date"), "fieldname": "incident_date", "fieldtype": "Date", "width": 95},
@@ -52,4 +58,6 @@ def get_summary(t):
 		(_("Days Restricted (L)"), t.total_transfer_days),
 	]
 	cards += [(_(label), t[f"total_{key}"]) for label, key in ILLNESS_TYPES]
-	return [{"label": label, "value": value, "datatype": "Int", "indicator": "blue"} for label, value in cards]
+	return [
+		{"label": label, "value": value, "datatype": "Int", "indicator": "blue"} for label, value in cards
+	]

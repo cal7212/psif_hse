@@ -17,12 +17,13 @@ ILLNESS_TYPES = [
 	("All other Illnesses", "other_illness"),
 ]
 
-# Columns G-J: only the most serious outcome is checked
+# Columns G-J: only the most serious outcome is checked.
+# Labels are translated where used, not at import (Frappe multitenancy rule).
 OUTCOMES = [
-	("death", _("Death")),
-	("days_away", _("Days Away")),
-	("transfer", _("Job Transfer or Restriction")),
-	("other", _("Other Recordable")),
+	("death", "Death"),
+	("days_away", "Days Away"),
+	("transfer", "Job Transfer or Restriction"),
+	("other", "Other Recordable"),
 ]
 
 
@@ -37,8 +38,17 @@ def get_cases(year: int, include_drafts: bool = False) -> list[dict]:
 			"incident_date": ["between", [f"{year}-01-01", f"{year}-12-31"]],
 		},
 		fields=[
-			"name", "docstatus", "employee_name", "non_employee_name", "privacy_case", "incident_date",
-			"incident_location", "injury_type", "body_part_affected", "object_harm", "classification",
+			"name",
+			"docstatus",
+			"employee_name",
+			"non_employee_name",
+			"privacy_case",
+			"incident_date",
+			"incident_location",
+			"injury_type",
+			"body_part_affected",
+			"object_harm",
+			"classification",
 			"death_date",
 		],
 		order_by="incident_date asc, name asc",
@@ -96,7 +106,7 @@ def get_cases(year: int, include_drafts: bool = False) -> list[dict]:
 				location=r.incident_location or "",
 				description=description,
 				outcome=outcome,
-				outcome_label=dict(OUTCOMES)[outcome],
+				outcome_label=_(dict(OUTCOMES)[outcome]),
 				days_away=away,
 				days_restricted=restricted,
 				illness_type=r.classification if type_key else "",
@@ -109,8 +119,13 @@ def get_cases(year: int, include_drafts: bool = False) -> list[dict]:
 def summarize(cases: list[dict]) -> frappe._dict:
 	"""Column totals for the OSHA 300A."""
 	totals = frappe._dict(
-		total_deaths=0, total_days_away_cases=0, total_transfer_cases=0, total_other_cases=0,
-		total_days_away=0, total_transfer_days=0, cases_missing_type=0,
+		total_deaths=0,
+		total_days_away_cases=0,
+		total_transfer_cases=0,
+		total_other_cases=0,
+		total_days_away=0,
+		total_transfer_days=0,
+		cases_missing_type=0,
 	)
 	for _label, key in ILLNESS_TYPES:
 		totals[f"total_{key}"] = 0
