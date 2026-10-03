@@ -40,11 +40,37 @@ def has_column(doctype: str, column: str) -> bool:
 	)
 
 
+def move_module(old: str, new: str):
+	"""Frappe only renames custom modules, so create the new Module Def and repoint every
+	Link to Module Def (DocType, Print Format, Report, Workspace, ...) before removing the old one."""
+	if not frappe.db.exists("Module Def", old):
+		return
+	if not frappe.db.exists("Module Def", new):
+		frappe.get_doc({"doctype": "Module Def", "module_name": new, "app_name": "hse"}).insert(
+			ignore_permissions=True
+		)
+	link = {"fieldtype": "Link", "options": "Module Def"}
+	fields = [
+		(f.parent, f.fieldname)
+		for f in frappe.get_all("DocField", filters=link, fields=["parent", "fieldname"])
+	] + [
+		(f.dt, f.fieldname) for f in frappe.get_all("Custom Field", filters=link, fields=["dt", "fieldname"])
+	]
+	for parent, fieldname in set(fields):
+		meta = frappe.db.get_value("DocType", parent, ["issingle", "is_virtual"], as_dict=True)
+		if not meta or meta.issingle or meta.is_virtual or not frappe.db.table_exists(parent):
+			continue
+		if not has_column(parent, fieldname):
+			continue
+		t = frappe.qb.DocType(parent)
+		frappe.qb.update(t).set(t[fieldname], new).where(t[fieldname] == old).run()
+	frappe.db.delete("Module Def", {"name": old})
+	frappe.clear_cache()
+
+
 def execute():
 	for old, new in MODULES:
-		if frappe.db.exists("Module Def", old) and not frappe.db.exists("Module Def", new):
-			frappe.rename_doc("Module Def", old, new, force=True)
-			frappe.db.set_value("Module Def", new, "module_name", new)
+		move_module(old, new)
 
 	for old, new in DOCTYPES:
 		if frappe.db.exists("DocType", old) and not frappe.db.exists("DocType", new):
