@@ -30,7 +30,14 @@ OLD_NC_FIELDS = ["hpu_section", "hpu_unit", "hpu_build_inspection", "hpu_column_
 
 
 def has_column(doctype: str, column: str) -> bool:
-	return bool(frappe.db.sql(f"show columns from `tab{doctype}` like %s", column))
+	# Read the live schema (not the cached meta): tables were just renamed.
+	return bool(
+		frappe.db.sql(
+			"""select 1 from information_schema.columns
+			where table_schema = database() and table_name = %s and column_name = %s""",
+			(f"tab{doctype}", column),
+		)
+	)
 
 
 def execute():
