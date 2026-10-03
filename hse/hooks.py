@@ -326,6 +326,7 @@ after_install = [
 	"hse.quality_metrics.install.after_install",
 ]
 after_migrate = [
+	"hse.module_setup.ensure_module_defs",  # must run first
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
 	"hse.hse.sds_setup.after_migrate",
