@@ -20,9 +20,16 @@ class OSHA300ASummary(Document):
 	def calculate_totals(self):
 		cases = get_cases(cint(self.year), include_drafts=cint(self.include_drafts))
 		self.update(summarize(cases))
-		recordable = self.total_deaths + self.total_days_away_cases + self.total_transfer_cases + self.total_other_cases
+		recordable = (
+			self.total_deaths
+			+ self.total_days_away_cases
+			+ self.total_transfer_cases
+			+ self.total_other_cases
+		)
 		self.trir = incidence_rate(recordable, self.total_hours_worked)
-		self.dart_rate = incidence_rate(self.total_days_away_cases + self.total_transfer_cases, self.total_hours_worked)
+		self.dart_rate = incidence_rate(
+			self.total_days_away_cases + self.total_transfer_cases, self.total_hours_worked
+		)
 		self.last_calculated = now_datetime()
 
 	def set_dates(self):
@@ -36,9 +43,9 @@ class OSHA300ASummary(Document):
 			frappe.throw(_("Turn off Count Draft Injury Reports and submit those reports before certifying."))
 		if self.cases_missing_type:
 			frappe.throw(
-				_("{0} recordable case(s) have no OSHA Injury/Illness Classification. Fix them in the OSHA 300 Log first.").format(
-					self.cases_missing_type
-				)
+				_(
+					"{0} recordable case(s) have no OSHA Injury/Illness Classification. Fix them in the OSHA 300 Log first."
+				).format(self.cases_missing_type)
 			)
 		missing = [
 			self.meta.get_label(f)
@@ -46,4 +53,6 @@ class OSHA300ASummary(Document):
 			if not self.get(f)
 		]
 		if missing:
-			frappe.throw(_("A company executive must certify the summary. Missing: {0}").format(", ".join(missing)))
+			frappe.throw(
+				_("A company executive must certify the summary. Missing: {0}").format(", ".join(missing))
+			)

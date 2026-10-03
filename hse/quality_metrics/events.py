@@ -135,3 +135,22 @@ def get_metric_choices() -> list[dict]:
 		{"value": key, "label": label, "uom": uom, "snapshot": snap}
 		for key, (label, _fn, uom, snap, _dt) in METRICS.items()
 	]
+
+
+@frappe.whitelist(methods=["POST"])
+def create_starter_goals() -> dict:
+	"""Desk button on the Quality Goal list. Same as the bench command."""
+	frappe.only_for(("Quality Manager", "System Manager"))
+	from hse.quality_metrics.install import create_starter_goals as _create
+	from hse.quality_metrics.starter_goals import STARTER_GOALS
+
+	created = _create()
+	existing = [g["goal"] for g in STARTER_GOALS if g["goal"] not in created]
+	return {"created": created, "existing": existing}
+
+
+@frappe.whitelist()
+def get_missing_starter_goals() -> list[str]:
+	from hse.quality_metrics.starter_goals import STARTER_GOALS
+
+	return [g["goal"] for g in STARTER_GOALS if not frappe.db.exists("Quality Goal", g["goal"])]

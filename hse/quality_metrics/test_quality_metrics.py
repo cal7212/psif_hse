@@ -135,3 +135,41 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		# Saving again does not create a second action
 		review.save()
 		self.assertEqual(frappe.db.count("Quality Action", {"review": review.name}), 1)
+
+
+class IntegrationTestStarterGoalsButton(IntegrationTestCase):
+	def test_button_creates_missing_goals_once(self):
+		from hse.quality_metrics.events import create_starter_goals, get_missing_starter_goals
+		from hse.quality_metrics.starter_goals import STARTER_GOALS
+
+		names = [g["goal"] for g in STARTER_GOALS]
+		for n in names:
+			if frappe.db.exists("Quality Goal", n):
+				frappe.delete_doc("Quality Goal", n, force=1)
+		self.assertEqual(sorted(get_missing_starter_goals()), sorted(names))
+
+		result = create_starter_goals()
+		self.assertEqual(sorted(result["created"]), sorted(names))
+		self.assertEqual(get_missing_starter_goals(), [])
+		goal = frappe.get_doc("Quality Goal", "Housekeeping")
+		self.assertEqual(goal.frequency, "Monthly")
+		self.assertTrue(all(o.hse_metric for o in goal.objectives))
+
+		again = create_starter_goals()
+		self.assertEqual(again["created"], [])
+		self.assertEqual(sorted(again["existing"]), sorted(names))
+
+	def test_button_requires_quality_role(self):
+		from hse.quality_metrics.events import create_starter_goals
+
+		user = "test-no-quality-role@example.com"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc(
+				{"doctype": "User", "email": user, "first_name": "No Quality Role", "send_welcome_email": 0}
+			).insert()
+		frappe.set_user(user)
+		try:
+			with self.assertRaises(frappe.PermissionError):
+				create_starter_goals()
+		finally:
+			frappe.set_user("Administrator")
