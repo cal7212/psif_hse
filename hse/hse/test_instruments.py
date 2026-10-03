@@ -81,3 +81,14 @@ class TestInspectionInstruments(IntegrationTestCase):
 		doc = self.asset_inspection([])
 		with self.assertRaises(frappe.ValidationError):
 			doc.check_test_equipment()
+
+	def test_record_only_reading_needs_no_instrument(self):
+		doc = frappe.new_doc("Asset Inspection")
+		doc.inspection_date = frappe.utils.now_datetime()
+		doc.append(
+			"items",
+			{"check_item": "Odometer at start", "numeric": 1, "reading_value": 48210, "result": "Pass"},
+		)
+		doc.sync_instruments()
+		doc.check_test_equipment()  # no error
+		self.assertFalse(doc.instruments)

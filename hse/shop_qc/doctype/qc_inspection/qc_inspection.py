@@ -15,6 +15,7 @@ from hse.hse.instruments import (
 	check_listed_instruments,
 	instrument_types,
 	listed_instruments,
+	needs_instrument,
 	pick,
 )
 from hse.shop_qc.utils import (
@@ -259,14 +260,14 @@ class QCInspection(Document):
 
 	def check_test_equipment(self):
 		"""Every reading names an instrument; every instrument is Active and in calibration."""
-		needs = self.hose_tests or any(r.numeric and r.result != NA for r in self.items)
+		needs = self.hose_tests or any(needs_instrument(r) for r in self.items)
 		if not needs and not self.instruments:
 			return
 		if not self.instruments:
 			frappe.throw(_("Add the test equipment used for the numeric readings and hose tests."))
 		errors = check_listed_instruments(self, self.inspection_date)
 		for r in self.items:
-			if r.numeric and r.result != NA and flt(r.reading_value) and not r.instrument:
+			if needs_instrument(r) and flt(r.reading_value) and not r.instrument:
 				errors.append(_("Row {0}: select the instrument used for '{1}'.").format(r.idx, r.check_item))
 		for h in self.hose_tests:
 			if not h.instrument:
@@ -283,7 +284,7 @@ class QCInspection(Document):
 		types = instrument_types(names)
 		only = pick(names, types)
 		for r in self.items:
-			if r.numeric and not r.instrument and only:
+			if needs_instrument(r) and not r.instrument and only:
 				r.instrument = only
 		for h in self.hose_tests:
 			if not h.instrument:

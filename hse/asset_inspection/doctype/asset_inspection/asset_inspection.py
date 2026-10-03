@@ -8,7 +8,12 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cstr, escape_html, flt, getdate, nowdate
 
 from hse.asset_inspection.utils import update_asset_safety_status
-from hse.hse.instruments import add_used_instruments, check_listed_instruments, listed_instruments
+from hse.hse.instruments import (
+	add_used_instruments,
+	check_listed_instruments,
+	listed_instruments,
+	needs_instrument,
+)
 
 PASS, FAIL, NA = "Pass", "Fail", "N/A"
 TEMPLATE_ROW_FIELDS = (
@@ -86,7 +91,7 @@ class AssetInspection(Document):
 		names = listed_instruments(self)
 		only = names[0] if len(names) == 1 else None
 		for r in self.items:
-			if r.numeric and not r.instrument and only:
+			if needs_instrument(r) and not r.instrument and only:
 				r.instrument = only
 		add_used_instruments(self, [r.instrument for r in self.items])
 
@@ -170,7 +175,7 @@ class AssetInspection(Document):
 		self.status = "Rejected" if self.get_failed_rows() else "Accepted"
 
 	def check_test_equipment(self):
-		needs = any(r.numeric and r.result != NA and flt(r.reading_value) for r in self.items)
+		needs = any(needs_instrument(r) and flt(r.reading_value) for r in self.items)
 		if not needs and not self.instruments:
 			return
 		if not self.instruments:
@@ -179,7 +184,7 @@ class AssetInspection(Document):
 			)
 		errors = check_listed_instruments(self, self.inspection_date)
 		for r in self.items:
-			if r.numeric and r.result != NA and flt(r.reading_value) and not r.instrument:
+			if needs_instrument(r) and flt(r.reading_value) and not r.instrument:
 				errors.append(_("Row {0}: select the instrument used for '{1}'.").format(r.idx, r.check_item))
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Test Equipment"))
