@@ -8,3 +8,4 @@ hse.patches.rename_hpu_to_shop_qc
 hse.patches.sds_backfill
 hse.patches.injury_status_label_backfill
 hse.patches.shop_qc_backfill
+hse.patches.shop_qc_light_assembly_and_samples

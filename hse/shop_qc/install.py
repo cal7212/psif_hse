@@ -13,7 +13,7 @@ SYNC_ROLE = "HPU Sync"
 SHOPS = [
 	# name, inspection prefix, certificate title
 	("HPU", "HBI", "HPU Quality Control Certificate"),
-	("Small Assembly", "SAI", "Small Assembly Quality Control Certificate"),
+	("Light Assembly", "LAI", "Light Assembly Quality Control Certificate"),
 	("Hose", "HOS", "Hose Assembly Test Certificate"),
 ]
 
@@ -45,12 +45,12 @@ DEFAULT_STAGES = {
 		("Pressure & Function Test", 60, 1, 1, 0, 0),
 		("Final Release", 70, 1, 1, 1, 0),
 	],
-	("Small Assembly", "New Build"): [
-		("SA - Component & Assembly Check", 10, 1, 0, 0, 0),
-		("SA - Electrical & Controls", 20, 0, 0, 0, 0),
-		("SA - Flush & Cleanliness", 30, 1, 1, 0, 0),
-		("SA - Pressure & Function Test", 40, 1, 1, 0, 0),
-		("SA - Final Release", 50, 1, 1, 1, 0),
+	("Light Assembly", "New Build"): [
+		("LA - Component & Assembly Check", 10, 1, 0, 0, 0),
+		("LA - Electrical & Controls", 20, 0, 0, 0, 0),
+		("LA - Flush & Cleanliness", 30, 1, 1, 0, 0),
+		("LA - Pressure & Function Test", 40, 1, 1, 0, 0),
+		("LA - Final Release", 50, 1, 1, 1, 0),
 	],
 	("Hose", "New Build"): [
 		("Hose - Fabrication Check", 10, 1, 0, 0, 0),
