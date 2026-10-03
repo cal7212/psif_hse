@@ -10,10 +10,16 @@ due date is copied onto the row so the record shows the status at the time of us
 
 import frappe
 from frappe import _
-from frappe.utils import cint, getdate
+from frappe.utils import cint, flt, getdate
 
 PRESSURE_TYPES = ("Pressure Gauge", "Pressure Transducer")
 CRIMP_TYPES = ("Caliper / Micrometer",)
+
+
+def needs_instrument(row) -> bool:
+	"""A numeric reading judged against a limit must name its instrument. Record-only values
+	(odometer, hour meter) have no limit and do not."""
+	return bool(row.numeric and row.result != "N/A" and (flt(row.min_value) or flt(row.max_value)))
 
 
 def listed_instruments(doc) -> list[str]:
