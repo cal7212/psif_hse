@@ -1,0 +1,646 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "",
+ "creation": "2026-10-01 16:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_job",
+  "shop",
+  "product_type",
+  "column_break_job",
+  "job_type",
+  "rga_number",
+  "section_trulinx",
+  "trulinx_work_order",
+  "trulinx_line",
+  "trulinx_sales_order",
+  "customer_po",
+  "trulinx_status",
+  "trulinx_url",
+  "column_break_trx",
+  "customer_name",
+  "customer",
+  "company",
+  "wo_date",
+  "promised_date",
+  "trulinx_ship_date",
+  "section_unit",
+  "model",
+  "description",
+  "serial_no",
+  "column_break_unit",
+  "item_code",
+  "section_specs",
+  "motor_hp",
+  "voltage",
+  "phase",
+  "hz",
+  "column_break_spec1",
+  "pump_type",
+  "flow_gpm",
+  "relief_setting_psi",
+  "max_operating_psi",
+  "proof_test_psi",
+  "column_break_spec2",
+  "reservoir_gal",
+  "fluid",
+  "target_cleanliness",
+  "drawing_rev",
+  "valve_settings",
+  "section_hoses",
+  "hoses",
+  "hose_count",
+  "section_repair",
+  "received_date",
+  "reported_problem",
+  "as_received_condition",
+  "as_received_photo",
+  "column_break_repair",
+  "warranty_status",
+  "failure_cause",
+  "disposition",
+  "section_repair_work",
+  "failure_analysis",
+  "work_performed",
+  "section_qc",
+  "stage_progress",
+  "section_qc_status",
+  "status",
+  "open_non_conformances",
+  "column_break_qc",
+  "released_by",
+  "released_on",
+  "qc_flag",
+  "section_sync",
+  "sync_source",
+  "last_synced_on",
+  "column_break_sync",
+  "sync_hash",
+  "sync_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_job",
+   "fieldtype": "Section Break",
+   "label": "Job"
+  },
+  {
+   "bold": 1,
+   "fieldname": "shop",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Shop",
+   "options": "Build Shop",
+   "reqd": 1
+  },
+  {
+   "default": "Power Unit",
+   "fieldname": "product_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Product Type",
+   "options": "Power Unit\nManifold\nValve Stand\nHose Assembly\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_job",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "default": "New Build",
+   "fieldname": "job_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Job Type",
+   "options": "New Build\nRepair",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.job_type=='Repair'",
+   "description": "Record name becomes RGA-<number>",
+   "fieldname": "rga_number",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "RGA Number",
+   "mandatory_depends_on": "eval:doc.job_type=='Repair'",
+   "unique": 1
+  },
+  {
+   "fieldname": "section_trulinx",
+   "fieldtype": "Section Break",
+   "label": "TrulinX Work Order"
+  },
+  {
+   "bold": 1,
+   "description": "Required for new builds. Optional for repairs.",
+   "fieldname": "trulinx_work_order",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "TrulinX Work Order",
+   "mandatory_depends_on": "eval:doc.job_type=='New Build'",
+   "search_index": 1,
+   "set_only_once": 1,
+   "unique": 1
+  },
+  {
+   "description": "Only if TrulinX uses line numbers or suffixes for multi-unit work orders.",
+   "fieldname": "trulinx_line",
+   "fieldtype": "Data",
+   "label": "WO Line / Suffix"
+  },
+  {
+   "fieldname": "trulinx_sales_order",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "TrulinX Sales Order",
+   "search_index": 1
+  },
+  {
+   "fieldname": "customer_po",
+   "fieldtype": "Data",
+   "label": "Customer PO"
+  },
+  {
+   "description": "Synced from TrulinX. Manual edits are overwritten by the next sync.",
+   "fieldname": "trulinx_status",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "TrulinX Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "trulinx_url",
+   "fieldtype": "Data",
+   "label": "Open in TrulinX",
+   "options": "URL"
+  },
+  {
+   "fieldname": "column_break_trx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Synced from TrulinX. Manual edits are overwritten by the next sync.",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer (TrulinX)"
+  },
+  {
+   "description": "Optional. Matched to an ERPNext Customer by name during sync.",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "wo_date",
+   "fieldtype": "Date",
+   "label": "WO Date"
+  },
+  {
+   "fieldname": "promised_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Promised Ship Date"
+  },
+  {
+   "fieldname": "trulinx_ship_date",
+   "fieldtype": "Date",
+   "label": "Shipped / Invoiced Date (TrulinX)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_unit",
+   "fieldtype": "Section Break",
+   "label": "Unit"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Model / Part No.",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "description": "Nameplate serial. Unique when entered; may be assigned later than the WO.",
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Unit Serial No",
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_unit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Optional link if the model or part exists as an ERPNext Item.",
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:['Power Unit','Manifold','Valve Stand'].includes(doc.product_type)",
+   "fieldname": "section_specs",
+   "fieldtype": "Section Break",
+   "label": "Unit Design Data"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "motor_hp",
+   "fieldtype": "Float",
+   "label": "Motor HP"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "voltage",
+   "fieldtype": "Data",
+   "label": "Voltage"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "phase",
+   "fieldtype": "Select",
+   "label": "Phase",
+   "options": "\n1\n3"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "hz",
+   "fieldtype": "Select",
+   "label": "Hz",
+   "options": "\n60\n50"
+  },
+  {
+   "fieldname": "column_break_spec1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "pump_type",
+   "fieldtype": "Data",
+   "label": "Pump Type"
+  },
+  {
+   "fieldname": "flow_gpm",
+   "fieldtype": "Float",
+   "label": "Design Flow (GPM)"
+  },
+  {
+   "fieldname": "relief_setting_psi",
+   "fieldtype": "Float",
+   "label": "Relief Setting (psi)"
+  },
+  {
+   "fieldname": "max_operating_psi",
+   "fieldtype": "Float",
+   "label": "Max Operating Pressure (psi)"
+  },
+  {
+   "depends_on": "eval:['Power Unit','Manifold','Valve Stand'].includes(doc.product_type)",
+   "description": "Leave blank to use Max Operating x the shop's test multiplier",
+   "fieldname": "proof_test_psi",
+   "fieldtype": "Float",
+   "label": "Proof Test Pressure (psi)"
+  },
+  {
+   "fieldname": "column_break_spec2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "reservoir_gal",
+   "fieldtype": "Float",
+   "label": "Reservoir (gal)"
+  },
+  {
+   "fieldname": "fluid",
+   "fieldtype": "Data",
+   "label": "Hydraulic Fluid"
+  },
+  {
+   "description": "e.g. 18/16/13",
+   "fieldname": "target_cleanliness",
+   "fieldtype": "Data",
+   "label": "Target Cleanliness (ISO 4406)"
+  },
+  {
+   "fieldname": "drawing_rev",
+   "fieldtype": "Data",
+   "label": "Drawing / Rev"
+  },
+  {
+   "depends_on": "eval:['Manifold','Valve Stand'].includes(doc.product_type)",
+   "description": "e.g. RV1 3000 psi, CB1 2500 psi",
+   "fieldname": "valve_settings",
+   "fieldtype": "Small Text",
+   "label": "Valve / Cartridge Settings"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Hose Assembly'",
+   "fieldname": "section_hoses",
+   "fieldtype": "Section Break",
+   "label": "Hose Assemblies"
+  },
+  {
+   "description": "One row per tagged hose. Test pressure defaults to working pressure x the shop's test multiplier.",
+   "fieldname": "hoses",
+   "fieldtype": "Table",
+   "label": "Hoses",
+   "options": "QC Hose Assembly"
+  },
+  {
+   "fieldname": "hose_count",
+   "fieldtype": "Int",
+   "label": "Hose Count",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.job_type=='Repair'",
+   "fieldname": "section_repair",
+   "fieldtype": "Section Break",
+   "label": "Repair / RGA"
+  },
+  {
+   "fieldname": "received_date",
+   "fieldtype": "Date",
+   "label": "Received Date",
+   "mandatory_depends_on": "eval:doc.job_type=='Repair'"
+  },
+  {
+   "fieldname": "reported_problem",
+   "fieldtype": "Small Text",
+   "label": "Customer Reported Problem",
+   "mandatory_depends_on": "eval:doc.job_type=='Repair'"
+  },
+  {
+   "fieldname": "as_received_condition",
+   "fieldtype": "Small Text",
+   "label": "As-Received Condition"
+  },
+  {
+   "fieldname": "as_received_photo",
+   "fieldtype": "Attach Image",
+   "label": "As-Received Photo"
+  },
+  {
+   "fieldname": "column_break_repair",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "warranty_status",
+   "fieldtype": "Select",
+   "label": "Warranty Status",
+   "options": "\nWarranty\nBillable\nGoodwill\nUnder Review"
+  },
+  {
+   "fieldname": "failure_cause",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Failure Cause",
+   "options": "QC Failure Cause"
+  },
+  {
+   "fieldname": "disposition",
+   "fieldtype": "Select",
+   "label": "Disposition",
+   "options": "\nRepair\nReplace\nReturn As-Is\nScrap"
+  },
+  {
+   "collapsible": 0,
+   "depends_on": "eval:doc.job_type=='Repair'",
+   "fieldname": "section_repair_work",
+   "fieldtype": "Section Break",
+   "label": "Repair Findings"
+  },
+  {
+   "fieldname": "failure_analysis",
+   "fieldtype": "Text",
+   "label": "Failure Analysis / Root Cause"
+  },
+  {
+   "fieldname": "work_performed",
+   "fieldtype": "Text",
+   "label": "Work Performed"
+  },
+  {
+   "fieldname": "section_qc",
+   "fieldtype": "Section Break",
+   "label": "QC Status (Frappe-owned; never overwritten by sync)"
+  },
+  {
+   "fieldname": "stage_progress",
+   "fieldtype": "HTML",
+   "label": "Build Stage Progress"
+  },
+  {
+   "fieldname": "section_qc_status",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "Pending Build",
+   "description": "Set automatically from QC Inspections and Non Conformances.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "QC Status",
+   "no_copy": 1,
+   "options": "Pending Build\nIn Build\nQC Hold\nReady for Release\nReleased\nShipped\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_non_conformances",
+   "fieldtype": "Int",
+   "label": "Open Non Conformances",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "released_by",
+   "fieldtype": "Link",
+   "label": "Released By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "released_on",
+   "fieldtype": "Datetime",
+   "label": "Released On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Set by sync when TrulinX and QC disagree (e.g. shipped before QC release).",
+   "fieldname": "qc_flag",
+   "fieldtype": "Small Text",
+   "label": "QC Flag",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_sync",
+   "fieldtype": "Section Break",
+   "label": "Sync"
+  },
+  {
+   "default": "Manual",
+   "fieldname": "sync_source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "TrulinX\nManual",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_synced_on",
+   "fieldtype": "Datetime",
+   "label": "Last Synced On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_sync",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sync_hash",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Sync Hash",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sync_note",
+   "fieldtype": "Small Text",
+   "label": "Last Sync Note",
+   "no_copy": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Unit",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User"
+  },
+  {
+   "create": 1,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "HPU Sync",
+   "write": 1
+  }
+ ],
+ "search_fields": "model,serial_no,customer_name,rga_number,trulinx_work_order",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Pending Build"
+  },
+  {
+   "color": "Blue",
+   "title": "In Build"
+  },
+  {
+   "color": "Red",
+   "title": "QC Hold"
+  },
+  {
+   "color": "Orange",
+   "title": "Ready for Release"
+  },
+  {
+   "color": "Green",
+   "title": "Released"
+  },
+  {
+   "color": "Green",
+   "title": "Shipped"
+  },
+  {
+   "color": "Gray",
+   "title": "Cancelled"
+  }
+ ],
+ "title_field": "model",
+ "track_changes": 1
+}

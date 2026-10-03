@@ -77,6 +77,9 @@ app_license = "mit"
 # ----------
 
 # add methods and filters to jinja environment
+jinja = {
+	"methods": ["hse.shop_qc.utils.get_qc_certificate_data"],
+}
 # jinja = {
 # 	"methods": "hse.utils.jinja_methods",
 # 	"filters": "hse.utils.jinja_filters"
@@ -264,7 +267,7 @@ required_apps = ["erpnext"]  # merge if you already list required apps
 doctype_js = {
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
-	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_hpu.js"],
+	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_qc.js"],
 	"Quality Review": "public/js/quality_review.js",
 	"Quality Goal": "public/js/quality_goal.js",
 }
@@ -278,13 +281,13 @@ doc_events = {
 		"validate": [
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
-			"hse.hpu_build.events.validate",
+			"hse.shop_qc.events.validate",
 			"hse.quality_metrics.events.non_conformance_validate",
 		],
 		"on_update": [
 			"hse.asset_inspection.events.on_update",
 			"hse.housekeeping_inspection.events.on_update",
-			"hse.hpu_build.events.on_update",
+			"hse.shop_qc.events.on_update",
 		],
 	},
 	"Quality Goal": {
@@ -319,14 +322,14 @@ after_install = [
 	"hse.asset_inspection.install.after_install",
 	"hse.housekeeping_inspection.install.after_install",
 	"hse.hse.sds_setup.after_install",
-	"hse.hpu_build.install.after_install",
+	"hse.shop_qc.install.after_install",
 	"hse.quality_metrics.install.after_install",
 ]
 after_migrate = [
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
 	"hse.hse.sds_setup.after_migrate",
-	"hse.hpu_build.install.after_migrate",
+	"hse.shop_qc.install.after_migrate",
 	"hse.quality_metrics.install.after_migrate",
 ]
 #

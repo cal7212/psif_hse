@@ -1,0 +1,151 @@
+{
+ "actions": [],
+ "autoname": "field:shop_name",
+ "creation": "2026-10-02 20:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shop_name",
+  "inspection_prefix",
+  "disabled",
+  "column_break_shop",
+  "quality_procedure",
+  "section_cert",
+  "certificate_title",
+  "certificate_statement",
+  "section_test",
+  "test_pressure_multiplier",
+  "column_break_test",
+  "default_hold_time_sec"
+ ],
+ "fields": [
+  {
+   "fieldname": "shop_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shop Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "description": "e.g. HBI gives HBI-2026-00001",
+   "fieldname": "inspection_prefix",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Inspection Number Prefix",
+   "length": 6,
+   "reqd": 1
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "column_break_shop",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "quality_procedure",
+   "fieldtype": "Link",
+   "label": "Default Quality Procedure",
+   "options": "Quality Procedure"
+  },
+  {
+   "fieldname": "section_cert",
+   "fieldtype": "Section Break",
+   "label": "Certificate"
+  },
+  {
+   "description": "Shown at the top of this shop's QC certificates",
+   "fieldname": "certificate_title",
+   "fieldtype": "Data",
+   "label": "Certificate Title"
+  },
+  {
+   "description": "Optional conformance statement printed above the release signature",
+   "fieldname": "certificate_statement",
+   "fieldtype": "Small Text",
+   "label": "Certificate Statement"
+  },
+  {
+   "fieldname": "section_test",
+   "fieldtype": "Section Break",
+   "label": "Test Defaults"
+  },
+  {
+   "description": "Test pressure = working/max operating pressure x this value, when a test pressure is not entered. Set per your procedure or customer spec.",
+   "fieldname": "test_pressure_multiplier",
+   "fieldtype": "Float",
+   "label": "Test Pressure Multiplier",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_test",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_hold_time_sec",
+   "fieldtype": "Int",
+   "label": "Default Hold Time (seconds)",
+   "non_negative": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "Build Shop",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "shop_name",
+ "track_changes": 1
+}

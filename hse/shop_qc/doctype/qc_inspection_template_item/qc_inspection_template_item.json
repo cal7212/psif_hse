@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "creation": "2026-10-01 16:45:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "check_item",
+  "criteria",
+  "is_critical",
+  "requires_photo",
+  "cb_num",
+  "numeric",
+  "min_value",
+  "max_value",
+  "uom",
+  "cb_spec",
+  "unit_spec_field",
+  "tolerance_minus_pct",
+  "tolerance_plus_pct",
+  "record_text"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "check_item",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Check Item",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "criteria",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Acceptance Criteria"
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "description": "Safety or pressure-integrity item. A failure creates a Critical Non Conformance.",
+   "fieldname": "is_critical",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Critical"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_photo",
+   "fieldtype": "Check",
+   "label": "Photo Required"
+  },
+  {
+   "fieldname": "cb_num",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "fieldname": "numeric",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Numeric Reading"
+  },
+  {
+   "columns": 1,
+   "depends_on": "eval:doc.numeric && !doc.unit_spec_field",
+   "fieldname": "min_value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Min Value"
+  },
+  {
+   "columns": 1,
+   "depends_on": "eval:doc.numeric && !doc.unit_spec_field",
+   "fieldname": "max_value",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Max Value"
+  },
+  {
+   "depends_on": "numeric",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "cb_spec",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "numeric",
+   "description": "Use the QC Unit's design value as nominal, e.g. relief_setting_psi. Overrides Min/Max.",
+   "fieldname": "unit_spec_field",
+   "fieldtype": "Select",
+   "label": "Limit From Unit Design Value",
+   "options": "\nrelief_setting_psi\nmax_operating_psi\nproof_test_psi\nflow_gpm\nmotor_hp\nreservoir_gal"
+  },
+  {
+   "depends_on": "unit_spec_field",
+   "fieldname": "tolerance_minus_pct",
+   "fieldtype": "Float",
+   "label": "Tolerance \u2212 %"
+  },
+  {
+   "depends_on": "unit_spec_field",
+   "fieldname": "tolerance_plus_pct",
+   "fieldtype": "Float",
+   "label": "Tolerance + %"
+  },
+  {
+   "default": "0",
+   "description": "Inspector must record a text value, e.g. cleanliness code, gauge ID, component serial.",
+   "fieldname": "record_text",
+   "fieldtype": "Check",
+   "label": "Record Text Value"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Inspection Template Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

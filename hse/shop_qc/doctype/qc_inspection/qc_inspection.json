@@ -1,0 +1,379 @@
+{
+ "actions": [],
+ "autoname": "",
+ "creation": "2026-10-01 16:45:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "qc_unit",
+  "shop",
+  "product_type",
+  "job_type",
+  "model",
+  "serial_no",
+  "customer_name",
+  "company",
+  "column_break_a",
+  "stage",
+  "stage_sequence",
+  "template",
+  "quality_procedure",
+  "inspection_date",
+  "inspected_by",
+  "inspector_name",
+  "column_break_b",
+  "status",
+  "non_conformance",
+  "is_reinspection",
+  "reinspection_of",
+  "section_equipment",
+  "gauge_id",
+  "gauge_cal_due",
+  "column_break_e",
+  "flowmeter_id",
+  "flowmeter_cal_due",
+  "section_items",
+  "instructions",
+  "items",
+  "section_hose_tests",
+  "hose_tests",
+  "section_sign",
+  "test_report",
+  "remarks",
+  "column_break_s",
+  "signature",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "qc_unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "QC Unit",
+   "options": "QC Unit",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fetch_from": "qc_unit.shop",
+   "fieldname": "shop",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Shop",
+   "options": "Build Shop",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.product_type",
+   "fieldname": "product_type",
+   "fieldtype": "Data",
+   "label": "Product Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.job_type",
+   "fieldname": "job_type",
+   "fieldtype": "Data",
+   "label": "Job Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.model",
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Model",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.serial_no",
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Unit Serial No",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "qc_unit.company",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Build Stage",
+   "options": "QC Stage",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "stage.sequence",
+   "fieldname": "stage_sequence",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Stage Sequence",
+   "read_only": 1
+  },
+  {
+   "fieldname": "template",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Inspection Template",
+   "options": "QC Inspection Template",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "template.quality_procedure",
+   "fieldname": "quality_procedure",
+   "fieldtype": "Link",
+   "label": "Quality Procedure",
+   "options": "Quality Procedure",
+   "read_only": 1
+  },
+  {
+   "default": "Now",
+   "fieldname": "inspection_date",
+   "fieldtype": "Datetime",
+   "label": "Inspection Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspected_by",
+   "fieldtype": "Link",
+   "label": "Inspected By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "inspected_by.employee_name",
+   "fieldname": "inspector_name",
+   "fieldtype": "Data",
+   "label": "Inspector Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nAccepted\nRejected",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "non_conformance",
+   "fieldtype": "Link",
+   "label": "Non Conformance",
+   "no_copy": 1,
+   "options": "Non Conformance",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_reinspection",
+   "fieldtype": "Check",
+   "label": "Re-inspection"
+  },
+  {
+   "depends_on": "is_reinspection",
+   "fieldname": "reinspection_of",
+   "fieldtype": "Link",
+   "label": "Re-inspection Of",
+   "mandatory_depends_on": "is_reinspection",
+   "options": "QC Inspection"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.gauge_id",
+   "fieldname": "section_equipment",
+   "fieldtype": "Section Break",
+   "label": "Test Equipment"
+  },
+  {
+   "description": "Required when the checklist has numeric readings.",
+   "fieldname": "gauge_id",
+   "fieldtype": "Data",
+   "label": "Gauge / Test Instrument ID"
+  },
+  {
+   "fieldname": "gauge_cal_due",
+   "fieldtype": "Date",
+   "label": "Calibration Due"
+  },
+  {
+   "fieldname": "column_break_e",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "flowmeter_id",
+   "fieldtype": "Data",
+   "label": "Flow Meter / Other Instrument ID"
+  },
+  {
+   "fieldname": "flowmeter_cal_due",
+   "fieldtype": "Date",
+   "label": "Calibration Due (Other)"
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "instructions",
+   "fieldtype": "HTML",
+   "label": "Instructions"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Readings",
+   "options": "QC Inspection Reading",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:(doc.hose_tests||[]).length",
+   "fieldname": "section_hose_tests",
+   "fieldtype": "Section Break",
+   "label": "Hose Tests"
+  },
+  {
+   "description": "One row per hose. Result is set automatically from crimp diameter, pressure reached, hold time and leak check.",
+   "fieldname": "hose_tests",
+   "fieldtype": "Table",
+   "label": "Hose Tests",
+   "options": "QC Hose Test"
+  },
+  {
+   "fieldname": "section_sign",
+   "fieldtype": "Section Break",
+   "label": "Sign-off"
+  },
+  {
+   "fieldname": "test_report",
+   "fieldtype": "Attach",
+   "label": "Test Report / Data Sheet"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "column_break_s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "signature",
+   "fieldtype": "Signature",
+   "label": "Inspector Signature"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "QC Inspection",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Inspection",
+ "naming_rule": "By script",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "search_fields": "model,stage,status",
+ "show_title_field_in_link": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "qc_unit",
+ "track_changes": 1
+}

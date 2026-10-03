@@ -1,8 +1,0 @@
-# Copyright (c) 2026, Calvin Johnston and contributors
-# For license information, please see license.txt
-
-from frappe.model.document import Document
-
-
-class HPUBuildInspectionTemplateItem(Document):
-	pass

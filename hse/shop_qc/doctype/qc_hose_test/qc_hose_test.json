@@ -1,0 +1,136 @@
+{
+ "actions": [],
+ "creation": "2026-10-02 20:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "hose_tag",
+  "part_number",
+  "crimp_min",
+  "crimp_max",
+  "test_pressure_spec",
+  "hold_time_spec",
+  "column_break_ht",
+  "crimp_a",
+  "crimp_b",
+  "pressure_reached",
+  "hold_time_actual",
+  "leak_check",
+  "result",
+  "finding"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "hose_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hose Tag",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "part_number",
+   "fieldtype": "Data",
+   "label": "Part Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crimp_min",
+   "fieldtype": "Float",
+   "label": "Crimp Min (in)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "crimp_max",
+   "fieldtype": "Float",
+   "label": "Crimp Max (in)",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "test_pressure_spec",
+   "fieldtype": "Float",
+   "label": "Required Test Pressure (psi)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hold_time_spec",
+   "fieldtype": "Int",
+   "label": "Required Hold (sec)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ht",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "crimp_a",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Crimp Diameter End A (in)",
+   "precision": "4"
+  },
+  {
+   "columns": 1,
+   "fieldname": "crimp_b",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Crimp Diameter End B (in)",
+   "precision": "4"
+  },
+  {
+   "columns": 1,
+   "fieldname": "pressure_reached",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Pressure Reached (psi)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "hold_time_actual",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Hold Time (sec)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "leak_check",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Leak Check",
+   "options": "\nNo Leak\nLeak"
+  },
+  {
+   "columns": 1,
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "finding",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Finding"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Hose Test",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

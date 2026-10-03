@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "creation": "2026-10-02 20:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "hose_tag",
+  "part_number",
+  "hose_size",
+  "length_in",
+  "fitting_a",
+  "fitting_b",
+  "column_break_hose",
+  "working_pressure_psi",
+  "test_pressure_psi",
+  "hold_time_sec",
+  "crimp_diameter_spec",
+  "crimp_tolerance"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "hose_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hose Tag / Serial",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "part_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Part Number"
+  },
+  {
+   "columns": 1,
+   "fieldname": "hose_size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hose Size / Dash"
+  },
+  {
+   "columns": 1,
+   "fieldname": "length_in",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Length (in)"
+  },
+  {
+   "fieldname": "fitting_a",
+   "fieldtype": "Data",
+   "label": "Fitting End A"
+  },
+  {
+   "fieldname": "fitting_b",
+   "fieldtype": "Data",
+   "label": "Fitting End B"
+  },
+  {
+   "fieldname": "column_break_hose",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "working_pressure_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Working Pressure (psi)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "test_pressure_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Test Pressure (psi)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "hold_time_sec",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Hold Time (sec)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "crimp_diameter_spec",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Crimp Diameter Spec (in)",
+   "precision": "4"
+  },
+  {
+   "fieldname": "crimp_tolerance",
+   "fieldtype": "Float",
+   "label": "Crimp Tolerance +/- (in)",
+   "precision": "4"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Hose Assembly",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,149 @@
+{
+ "actions": [],
+ "autoname": "field:template_name",
+ "creation": "2026-10-01 16:45:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_name",
+  "stage",
+  "product_type",
+  "model_prefix",
+  "cb1",
+  "quality_procedure",
+  "disabled",
+  "section_items",
+  "items",
+  "section_notes",
+  "instructions"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Template Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Build Stage",
+   "options": "QC Stage",
+   "reqd": 1
+  },
+  {
+   "description": "Blank = any product type",
+   "fieldname": "product_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Product Type",
+   "options": "\nPower Unit\nManifold\nValve Stand\nHose Assembly\nOther"
+  },
+  {
+   "description": "Leave blank for all models. e.g. HPU-30 matches HPU-30-460-3.",
+   "fieldname": "model_prefix",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Applies to Models Starting With"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Documented method (SOP) for this inspection. Required because Non Conformance requires a procedure.",
+   "fieldname": "quality_procedure",
+   "fieldtype": "Link",
+   "label": "Quality Procedure",
+   "options": "Quality Procedure",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Checklist Items",
+   "options": "QC Inspection Template Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Instructions"
+  },
+  {
+   "fieldname": "instructions",
+   "fieldtype": "Text Editor",
+   "label": "Inspector Instructions"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-02 20:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Inspection Template",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Manufacturing User"
+  }
+ ],
+ "search_fields": "stage,product_type,model_prefix",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "template_name",
+ "track_changes": 1
+}
