@@ -16,6 +16,7 @@
   "company",
   "column_break_a",
   "stage",
+  "proof_stage",
   "stage_sequence",
   "template",
   "quality_procedure",
@@ -34,6 +35,12 @@
   "items",
   "section_pmg_tests",
   "pmg_tests",
+  "device_tests",
+  "accumulator_tests",
+  "section_proof",
+  "proof_tests",
+  "section_coating",
+  "coating_layers",
   "section_hose_tests",
   "hose_tests",
   "section_sign",
@@ -120,6 +127,14 @@
    "label": "Build Stage",
    "options": "QC Stage",
    "reqd": 1
+  },
+  {
+   "fetch_from": "stage.proof_test",
+   "fieldname": "proof_stage",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Proof Test Stage",
+   "read_only": 1
   },
   {
    "fetch_from": "stage.sequence",
@@ -248,6 +263,44 @@
    "options": "QC PMG Test"
   },
   {
+   "depends_on": "eval:(doc.device_tests || []).length",
+   "fieldname": "device_tests",
+   "fieldtype": "Table",
+   "label": "Device Settings",
+   "options": "QC Device Test"
+  },
+  {
+   "depends_on": "eval:(doc.accumulator_tests || []).length",
+   "fieldname": "accumulator_tests",
+   "fieldtype": "Table",
+   "label": "Accumulators",
+   "options": "QC Accumulator Test"
+  },
+  {
+   "depends_on": "eval:(doc.proof_tests || []).length || doc.proof_stage",
+   "fieldname": "section_proof",
+   "fieldtype": "Section Break",
+   "label": "Proof Test Record"
+  },
+  {
+   "fieldname": "proof_tests",
+   "fieldtype": "Table",
+   "label": "Proof Tests",
+   "options": "QC Proof Test"
+  },
+  {
+   "depends_on": "eval:(doc.coating_layers || []).length",
+   "fieldname": "section_coating",
+   "fieldtype": "Section Break",
+   "label": "Coating Application Record"
+  },
+  {
+   "fieldname": "coating_layers",
+   "fieldtype": "Table",
+   "label": "Coating Layers",
+   "options": "QC Coating Layer"
+  },
+  {
    "depends_on": "eval:(doc.hose_tests||[]).length",
    "fieldname": "section_hose_tests",
    "fieldtype": "Section Break",
@@ -296,7 +349,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-05 10:45:00.000000",
+ "modified": "2026-10-05 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

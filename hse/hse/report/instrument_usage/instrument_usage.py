@@ -17,6 +17,8 @@ SOURCES = {
 			("QC Hose Test", "crimp_instrument"),
 			("QC PMG Test", "instrument"),
 			("QC PMG Test", "amps_instrument"),
+			("QC Accumulator Test", "instrument"),
+			("QC Proof Test", "instrument"),
 		],
 		"qc_unit",
 		"stage",

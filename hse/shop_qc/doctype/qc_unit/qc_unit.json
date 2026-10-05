@@ -26,9 +26,14 @@
   "company",
   "wo_date",
   "promised_date",
+  "target_date",
+  "start_date",
   "trulinx_ship_date",
   "section_unit",
   "model",
+  "project_name",
+  "unit_no",
+  "unit_qty",
   "description",
   "serial_no",
   "column_break_unit",
@@ -54,6 +59,11 @@
   "pump_motor_groups",
   "pmg_count",
   "setting_tolerance_psi",
+  "section_devices",
+  "circuit_devices",
+  "accumulators",
+  "section_proof_items",
+  "proof_test_items",
   "section_hoses",
   "hoses",
   "hose_count",
@@ -69,6 +79,67 @@
   "section_repair_work",
   "failure_analysis",
   "work_performed",
+  "tab_requirements",
+  "section_cdocs",
+  "construction_documents",
+  "section_qdocs",
+  "quality_documents",
+  "section_materials",
+  "mat_primary_items",
+  "mat_fluid_conductors",
+  "mat_seals",
+  "mat_fasteners",
+  "cb_mat",
+  "mat_reservoir",
+  "mat_enclosures",
+  "mat_conduit",
+  "section_coating_spec",
+  "coat_preparation_level",
+  "coat_application_method",
+  "coat_brand",
+  "coat_color",
+  "cb_fit",
+  "fit_fluid_connections",
+  "fit_port_configuration",
+  "fit_flange",
+  "fit_tube",
+  "fit_instrument",
+  "section_power_fluid",
+  "control_voltage",
+  "control_current",
+  "control_analog",
+  "cb_fluid",
+  "fluid_brand",
+  "fluid_viscosity",
+  "section_weld_env",
+  "weld_performance_code",
+  "weld_procedure_number",
+  "weld_inspection_method",
+  "weld_certification",
+  "cb_env",
+  "env_noise_level",
+  "env_exposure",
+  "env_nema_rating",
+  "env_other",
+  "section_wiring_testing",
+  "wire_terminate_devices",
+  "wire_motors",
+  "wire_mount_sensors",
+  "cb_test",
+  "test_not_required",
+  "test_hydrostatic",
+  "test_functional",
+  "test_operational",
+  "section_packaging",
+  "packaging",
+  "protect_foam",
+  "protect_shrink_wrap",
+  "protect_preservative",
+  "cb_ship",
+  "ship_carrier",
+  "ship_service",
+  "ship_trailer",
+  "tab_qc",
   "section_qc",
   "stage_progress",
   "section_qc_status",
@@ -78,6 +149,10 @@
   "released_by",
   "released_on",
   "qc_flag",
+  "section_post_ship",
+  "post_shipment_reviews",
+  "review_date",
+  "reviewed_by",
   "section_sync",
   "sync_source",
   "last_synced_on",
@@ -224,6 +299,16 @@
    "label": "Promised Ship Date"
   },
   {
+   "fieldname": "target_date",
+   "fieldtype": "Date",
+   "label": "Target Date"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
    "fieldname": "trulinx_ship_date",
    "fieldtype": "Date",
    "label": "Shipped / Invoiced Date (TrulinX)",
@@ -241,6 +326,22 @@
    "in_standard_filter": 1,
    "label": "Model / Part No.",
    "reqd": 1
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "Project Name"
+  },
+  {
+   "description": "This unit's number in the order, e.g. 1",
+   "fieldname": "unit_no",
+   "fieldtype": "Int",
+   "label": "Unit No."
+  },
+  {
+   "fieldname": "unit_qty",
+   "fieldtype": "Int",
+   "label": "Of (Order Quantity)"
   },
   {
    "fieldname": "description",
@@ -394,6 +495,40 @@
    "label": "Setting Tolerance \u00b1 (psi)"
   },
   {
+   "collapsible": 1,
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "description": "Adjustable devices and accumulators to record at the test stage. Use the PMG tag to tie each to a circuit.",
+   "fieldname": "section_devices",
+   "fieldtype": "Section Break",
+   "label": "Circuit Devices and Accumulators"
+  },
+  {
+   "fieldname": "circuit_devices",
+   "fieldtype": "Table",
+   "label": "Adjustable Devices",
+   "options": "QC Circuit Device"
+  },
+  {
+   "fieldname": "accumulators",
+   "fieldtype": "Table",
+   "label": "Accumulators",
+   "options": "QC Accumulator"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:['Power Unit','Manifold','Valve Stand'].includes(doc.product_type)",
+   "description": "Components to proof test and the pressures required. Loaded into the Proof Test Record at proof-test stages.",
+   "fieldname": "section_proof_items",
+   "fieldtype": "Section Break",
+   "label": "Proof Test Items"
+  },
+  {
+   "fieldname": "proof_test_items",
+   "fieldtype": "Table",
+   "label": "Proof Test Items",
+   "options": "QC Proof Test Item"
+  },
+  {
    "depends_on": "eval:doc.product_type=='Hose Assembly'",
    "fieldname": "section_hoses",
    "fieldtype": "Section Break",
@@ -481,6 +616,326 @@
    "label": "Work Performed"
   },
   {
+   "depends_on": "eval:doc.product_type!='Hose Assembly'",
+   "fieldname": "tab_requirements",
+   "fieldtype": "Tab Break",
+   "label": "Construction Requirements"
+  },
+  {
+   "fieldname": "section_cdocs",
+   "fieldtype": "Section Break",
+   "label": "Construction Documentation"
+  },
+  {
+   "description": "Drawings and procedures this build is made to. Rows are added automatically.",
+   "fieldname": "construction_documents",
+   "fieldtype": "Table",
+   "label": "Construction Documentation",
+   "options": "QC Order Document"
+  },
+  {
+   "fieldname": "section_qdocs",
+   "fieldtype": "Section Break",
+   "label": "Quality Documents"
+  },
+  {
+   "description": "Documents the customer requires in the quality package.",
+   "fieldname": "quality_documents",
+   "fieldtype": "Table",
+   "label": "Quality Documents",
+   "options": "QC Order Document"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_materials",
+   "fieldtype": "Section Break",
+   "label": "Component Materials"
+  },
+  {
+   "fieldname": "mat_primary_items",
+   "fieldtype": "Data",
+   "label": "Primary Items"
+  },
+  {
+   "fieldname": "mat_fluid_conductors",
+   "fieldtype": "Data",
+   "label": "Fluid Conductors"
+  },
+  {
+   "fieldname": "mat_seals",
+   "fieldtype": "Data",
+   "label": "Seals"
+  },
+  {
+   "fieldname": "mat_fasteners",
+   "fieldtype": "Data",
+   "label": "Fasteners"
+  },
+  {
+   "fieldname": "cb_mat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "mat_reservoir",
+   "fieldtype": "Data",
+   "label": "Reservoir"
+  },
+  {
+   "fieldname": "mat_enclosures",
+   "fieldtype": "Data",
+   "label": "Enclosures"
+  },
+  {
+   "fieldname": "mat_conduit",
+   "fieldtype": "Data",
+   "label": "Conduit"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_coating_spec",
+   "fieldtype": "Section Break",
+   "label": "Surface Coating and Fittings"
+  },
+  {
+   "description": "e.g. SSPC-SP6",
+   "fieldname": "coat_preparation_level",
+   "fieldtype": "Data",
+   "label": "Preparation Level"
+  },
+  {
+   "fieldname": "coat_application_method",
+   "fieldtype": "Data",
+   "label": "Application Method"
+  },
+  {
+   "fieldname": "coat_brand",
+   "fieldtype": "Data",
+   "label": "Brand Requirement"
+  },
+  {
+   "fieldname": "coat_color",
+   "fieldtype": "Data",
+   "label": "Color / Code"
+  },
+  {
+   "fieldname": "cb_fit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fit_fluid_connections",
+   "fieldtype": "Data",
+   "label": "Fluid Connections"
+  },
+  {
+   "fieldname": "fit_port_configuration",
+   "fieldtype": "Data",
+   "label": "Port Configuration"
+  },
+  {
+   "fieldname": "fit_flange",
+   "fieldtype": "Data",
+   "label": "Flange Fittings"
+  },
+  {
+   "fieldname": "fit_tube",
+   "fieldtype": "Data",
+   "label": "Tube Fittings"
+  },
+  {
+   "fieldname": "fit_instrument",
+   "fieldtype": "Data",
+   "label": "Instrument Fittings"
+  },
+  {
+   "collapsible": 1,
+   "description": "Primary power is the supply voltage / phase / Hz under Unit Design Data.",
+   "fieldname": "section_power_fluid",
+   "fieldtype": "Section Break",
+   "label": "Control Power and Fluid"
+  },
+  {
+   "fieldname": "control_voltage",
+   "fieldtype": "Data",
+   "label": "Control Voltage"
+  },
+  {
+   "fieldname": "control_current",
+   "fieldtype": "Data",
+   "label": "Control Current"
+  },
+  {
+   "description": "e.g. 4-20 mA",
+   "fieldname": "control_analog",
+   "fieldtype": "Data",
+   "label": "Analog Signals"
+  },
+  {
+   "fieldname": "cb_fluid",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fluid_brand",
+   "fieldtype": "Data",
+   "label": "Fluid Brand"
+  },
+  {
+   "description": "e.g. ISO VG 46. Fluid type and ISO code are under Unit Design Data.",
+   "fieldname": "fluid_viscosity",
+   "fieldtype": "Data",
+   "label": "Fluid Viscosity"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_weld_env",
+   "fieldtype": "Section Break",
+   "label": "Welding and Environmental"
+  },
+  {
+   "description": "e.g. AWS D1.1",
+   "fieldname": "weld_performance_code",
+   "fieldtype": "Data",
+   "label": "Welding Performance Code"
+  },
+  {
+   "fieldname": "weld_procedure_number",
+   "fieldtype": "Data",
+   "label": "Weld Procedure Number"
+  },
+  {
+   "fieldname": "weld_inspection_method",
+   "fieldtype": "Data",
+   "label": "Weld Inspection Method"
+  },
+  {
+   "fieldname": "weld_certification",
+   "fieldtype": "Data",
+   "label": "Welder Certification"
+  },
+  {
+   "fieldname": "cb_env",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "env_noise_level",
+   "fieldtype": "Data",
+   "label": "Noise Level Limit"
+  },
+  {
+   "description": "e.g. Outdoor, marine, washdown",
+   "fieldname": "env_exposure",
+   "fieldtype": "Data",
+   "label": "Exposure"
+  },
+  {
+   "fieldname": "env_nema_rating",
+   "fieldtype": "Data",
+   "label": "NEMA Rating"
+  },
+  {
+   "fieldname": "env_other",
+   "fieldtype": "Data",
+   "label": "Other Environmental"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_wiring_testing",
+   "fieldtype": "Section Break",
+   "label": "Wiring Scope and Testing"
+  },
+  {
+   "fieldname": "wire_terminate_devices",
+   "fieldtype": "Check",
+   "label": "Terminate Devices"
+  },
+  {
+   "fieldname": "wire_motors",
+   "fieldtype": "Check",
+   "label": "Wire Motors"
+  },
+  {
+   "fieldname": "wire_mount_sensors",
+   "fieldtype": "Check",
+   "label": "Mount Sensors"
+  },
+  {
+   "fieldname": "cb_test",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "test_not_required",
+   "fieldtype": "Check",
+   "label": "Testing Not Required (Assembly Only)"
+  },
+  {
+   "fieldname": "test_hydrostatic",
+   "fieldtype": "Check",
+   "label": "Hydrostatic (See Proof Test Record)"
+  },
+  {
+   "fieldname": "test_functional",
+   "fieldtype": "Check",
+   "label": "Functional (Recorded on Test Stage)"
+  },
+  {
+   "fieldname": "test_operational",
+   "fieldtype": "Check",
+   "label": "Operational (See F.A.T. Procedure Record)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_packaging",
+   "fieldtype": "Section Break",
+   "label": "Packaging and Shipping"
+  },
+  {
+   "fieldname": "packaging",
+   "fieldtype": "Select",
+   "label": "Packaging",
+   "options": "\nPallet\nSkid\nCrate\nRunners\nBox\nNone"
+  },
+  {
+   "fieldname": "protect_foam",
+   "fieldtype": "Check",
+   "label": "Protection: Foam"
+  },
+  {
+   "fieldname": "protect_shrink_wrap",
+   "fieldtype": "Check",
+   "label": "Protection: Shrink Wrap"
+  },
+  {
+   "fieldname": "protect_preservative",
+   "fieldtype": "Check",
+   "label": "Protection: Preservative"
+  },
+  {
+   "fieldname": "cb_ship",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ship_carrier",
+   "fieldtype": "Select",
+   "label": "Carrier",
+   "options": "\nUPS / FedEx\nLTL Carrier\nDedicated"
+  },
+  {
+   "fieldname": "ship_service",
+   "fieldtype": "Select",
+   "label": "Service",
+   "options": "\nStandard\n2nd Day\nOvernight"
+  },
+  {
+   "fieldname": "ship_trailer",
+   "fieldtype": "Select",
+   "label": "Truck",
+   "options": "\nBox\nFlat Bed\nLow Deck"
+  },
+  {
+   "fieldname": "tab_qc",
+   "fieldtype": "Tab Break",
+   "label": "QC Status"
+  },
+  {
    "fieldname": "section_qc",
    "fieldtype": "Section Break",
    "label": "QC Status (Frappe-owned; never overwritten by sync)"
@@ -542,6 +997,31 @@
   },
   {
    "collapsible": 1,
+   "depends_on": "eval:['Shipped','Released'].includes(doc.status) || (doc.post_shipment_reviews || []).length",
+   "fieldname": "section_post_ship",
+   "fieldtype": "Section Break",
+   "label": "Post-Shipment Feedback and Review"
+  },
+  {
+   "description": "Rows are added when the unit is shipped.",
+   "fieldname": "post_shipment_reviews",
+   "fieldtype": "Table",
+   "label": "Review",
+   "options": "QC Post-Shipment Review"
+  },
+  {
+   "fieldname": "review_date",
+   "fieldtype": "Date",
+   "label": "Review Date"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User"
+  },
+  {
+   "collapsible": 1,
    "fieldname": "section_sync",
    "fieldtype": "Section Break",
    "label": "Sync"
@@ -583,7 +1063,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-05 10:45:00.000000",
+ "modified": "2026-10-05 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

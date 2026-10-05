@@ -1,0 +1,112 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "pmg_tag",
+  "bom_item",
+  "description",
+  "serial_no",
+  "volume_gal",
+  "precharge_spec",
+  "precharge_actual",
+  "tolerance_psi",
+  "instrument",
+  "result",
+  "comment"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "pmg_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Circuit (PMG)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bom_item",
+   "fieldtype": "Data",
+   "label": "BOM Item No.",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Serial No",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "volume_gal",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volume (gal)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "precharge_spec",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Pre-Charge Design (psi)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "precharge_actual",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Pre-Charge Actual (psi)"
+  },
+  {
+   "fieldname": "tolerance_psi",
+   "fieldtype": "Float",
+   "label": "Tolerance \u00b1 (psi)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Link",
+   "label": "Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
+   "columns": 1,
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail\nN/A"
+  },
+  {
+   "columns": 2,
+   "fieldname": "comment",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Comment"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Accumulator Test",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

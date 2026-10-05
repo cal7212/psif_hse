@@ -102,6 +102,31 @@ def evaluate_pmg(row) -> str | None:
 	return PASS if ok else FAIL
 
 
+def evaluate_proof(row) -> str | None:
+	"""Pass when there is no leak and each required proof pressure is reached; None while incomplete."""
+	if not row.leak_check or not flt(row.p1_psi):
+		return None
+	if flt(row.p2_spec) and not flt(row.p2_psi):
+		return None
+	ok = row.leak_check == "No Leak" and flt(row.p1_psi) >= flt(row.p1_spec)
+	if flt(row.p2_spec):
+		ok = ok and flt(row.p2_psi) >= flt(row.p2_spec)
+	return PASS if ok else FAIL
+
+
+def evaluate_accumulator(row) -> str | None:
+	"""Pre-charge against design when the unit has a setting tolerance; None = inspector decides."""
+	tol = flt(row.tolerance_psi)
+	if not tol or not flt(row.precharge_spec):
+		return None
+	if not flt(row.precharge_actual):
+		return ""
+	return PASS if abs(flt(row.precharge_actual) - flt(row.precharge_spec)) <= tol else FAIL
+
+
+COATING_LAYERS = ("Surface Conditioning", "Base Coat / Primer", "Intermediate Coat", "Top Coat", "Sealer")
+
+
 class QCInspection(Document):
 	def autoname(self):
 		shop = self.shop or frappe.db.get_value("QC Unit", self.qc_unit, "shop")
@@ -119,9 +144,17 @@ class QCInspection(Document):
 			self.set_hose_tests()
 		if not self.pmg_tests and self.is_pmg_test_stage():
 			self.set_pmg_tests()
+		if self.is_pmg_test_stage() and not (self.device_tests or self.accumulator_tests):
+			self.set_circuit_tests()
+		if not self.proof_tests and self.is_flag_stage("proof_test"):
+			self.set_proof_tests()
+		if not self.coating_layers and self.is_flag_stage("coating_record"):
+			for layer in COATING_LAYERS:
+				self.append("coating_layers", {"layer": layer})
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
 		self.evaluate_pmg_tests()
+		self.evaluate_circuit_tests()
 		self.sync_instruments()
 		if self.docstatus == 0:
 			self.status = "Pending"
@@ -235,6 +268,51 @@ class QCInspection(Document):
 		for row in build_pmg_tests(self.qc_unit, tags):
 			self.append("pmg_tests", row)
 
+	def is_flag_stage(self, flag: str) -> bool:
+		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, flag))
+
+	def previous_failures(self, child: str, field: str) -> set | None:
+		"""Keys of rows that failed in the inspection this one re-inspects; None = load everything."""
+		if not (self.is_reinspection and self.reinspection_of):
+			return None
+		return set(
+			frappe.get_all(
+				child,
+				filters={"parent": self.reinspection_of, "parenttype": "QC Inspection", "result": FAIL},
+				pluck=field,
+			)
+		)
+
+	def set_circuit_tests(self):
+		pmg_tags = {g.pmg_tag for g in self.pmg_tests}
+		failed_devices = self.previous_failures("QC Device Test", "description")
+		failed_accs = self.previous_failures("QC Accumulator Test", "description")
+		devices, accumulators = build_circuit_tests(self.qc_unit)
+		self.set("device_tests", [])
+		self.set("accumulator_tests", [])
+		for row in devices:
+			if failed_devices is None or row["description"] in failed_devices or row["pmg_tag"] in pmg_tags:
+				self.append("device_tests", row)
+		for row in accumulators:
+			if failed_accs is None or row["description"] in failed_accs or row["pmg_tag"] in pmg_tags:
+				self.append("accumulator_tests", row)
+
+	def set_proof_tests(self):
+		failed = self.previous_failures("QC Proof Test", "description")
+		for row in build_proof_tests(self.qc_unit):
+			if failed is None or row["description"] in failed:
+				self.append("proof_tests", row)
+
+	def evaluate_circuit_tests(self):
+		for row in self.accumulator_tests:
+			if row.result == NA:
+				continue
+			result = evaluate_accumulator(row)
+			if result is not None:
+				row.result = result or None
+		for row in self.proof_tests:
+			row.result = evaluate_proof(row)
+
 	def evaluate_pmg_tests(self):
 		for row in self.pmg_tests:
 			if row.result == NA:
@@ -330,6 +408,7 @@ class QCInspection(Document):
 				errors.append(_("{0}: select the result.").format(tag))
 			elif row.result == FAIL and not cstr(row.finding).strip():
 				errors.append(_("{0}: a finding is required for a failed pump/motor group.").format(tag))
+		errors += self.circuit_test_errors()
 		if (
 			self.is_pmg_test_stage()
 			and not self.pmg_tests
@@ -339,9 +418,70 @@ class QCInspection(Document):
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 
+	def circuit_test_errors(self) -> list:
+		errors = []
+		for row in self.device_tests:
+			label = row.description or row.bom_item or _("row {0}").format(row.idx)
+			if row.result != NA and not cstr(row.as_set).strip():
+				errors.append(_("Device {0}: enter the as-set adjustment.").format(label))
+			if not row.result:
+				errors.append(_("Device {0}: select the result.").format(label))
+			elif row.result in (FAIL, NA) and not cstr(row.comment).strip():
+				errors.append(_("Device {0}: a comment is required for {1}.").format(label, row.result))
+		for row in self.accumulator_tests:
+			label = row.description or row.bom_item or _("row {0}").format(row.idx)
+			if row.result != NA and not flt(row.precharge_actual):
+				errors.append(_("Accumulator {0}: enter the actual pre-charge.").format(label))
+			if not row.result:
+				errors.append(_("Accumulator {0}: select the result.").format(label))
+			elif row.result in (FAIL, NA) and not cstr(row.comment).strip():
+				errors.append(_("Accumulator {0}: a comment is required for {1}.").format(label, row.result))
+		for row in self.proof_tests:
+			label = row.description or _("row {0}").format(row.idx)
+			missing = [
+				row.meta.get_label(f)
+				for f in ("p1_psi", "p1_media", "p1_duration_min", "leak_check")
+				if not row.get(f)
+			]
+			if flt(row.p2_spec) and not flt(row.p2_psi):
+				missing.append(row.meta.get_label("p2_psi"))
+			if missing:
+				errors.append(_("Proof test {0}: enter {1}.").format(label, ", ".join(missing)))
+			elif row.result == FAIL and not cstr(row.finding).strip():
+				errors.append(
+					_("Proof test {0}: a finding is required for a failed proof test.").format(label)
+				)
+		if self.is_flag_stage("proof_test") and not self.proof_tests:
+			if frappe.db.get_value("QC Unit", self.qc_unit, "test_hydrostatic"):
+				errors.append(_("The order calls for a hydrostatic test: add the proof test record rows."))
+		applied = 0
+		for row in self.coating_layers:
+			if not row.applied:
+				errors.append(_("Coating {0}: mark it Applied or N/A.").format(row.layer))
+				continue
+			if row.applied != "Yes":
+				continue
+			applied += 1
+			missing = [
+				row.meta.get_label(f) for f in ("product_type", "brand", "product_code") if not row.get(f)
+			]
+			if row.layer != "Surface Conditioning" and not flt(row.mil_thickness):
+				missing.append(row.meta.get_label("mil_thickness"))
+			if missing:
+				errors.append(_("Coating {0}: enter {1}.").format(row.layer, ", ".join(missing)))
+		if self.coating_layers and not applied:
+			errors.append(_("Coating Application Record: at least one layer must be applied."))
+		return errors
+
 	def check_test_equipment(self):
 		"""Every reading names an instrument; every instrument is Active and in calibration."""
-		needs = self.hose_tests or self.pmg_tests or any(needs_instrument(r) for r in self.items)
+		needs = (
+			self.hose_tests
+			or self.pmg_tests
+			or self.accumulator_tests
+			or self.proof_tests
+			or any(needs_instrument(r) for r in self.items)
+		)
 		if not needs and not self.instruments:
 			return
 		if not self.instruments:
@@ -362,6 +502,16 @@ class QCInspection(Document):
 				errors.append(_("{0}: select the pressure instrument.").format(g.pmg_tag))
 			if flt(g.motor_amps) and not g.amps_instrument:
 				errors.append(_("{0}: select the instrument used for running amps.").format(g.pmg_tag))
+		for a in self.accumulator_tests:
+			if flt(a.precharge_actual) and not a.instrument:
+				errors.append(
+					_("Accumulator {0}: select the pre-charge gauge.").format(a.description or a.idx)
+				)
+		for p in self.proof_tests:
+			if flt(p.p1_psi) and not p.instrument:
+				errors.append(
+					_("Proof test {0}: select the pressure instrument.").format(p.description or p.idx)
+				)
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Test Equipment"))
 
@@ -384,11 +534,18 @@ class QCInspection(Document):
 				g.instrument = pick(names, types, PRESSURE_TYPES)
 			if not g.amps_instrument and flt(g.motor_amps):
 				g.amps_instrument = pick(names, types, AMPS_TYPES)
+		for row in self.accumulator_tests:
+			if not row.instrument and flt(row.precharge_actual):
+				row.instrument = pick(names, types, PRESSURE_TYPES)
+		for row in self.proof_tests:
+			if not row.instrument and flt(row.p1_psi):
+				row.instrument = pick(names, types, PRESSURE_TYPES)
 		used = [r.instrument for r in self.items]
 		for h in self.hose_tests:
 			used += [h.instrument, h.crimp_instrument]
 		for g in self.pmg_tests:
 			used += [g.instrument, g.amps_instrument]
+		used += [r.instrument for r in self.accumulator_tests] + [r.instrument for r in self.proof_tests]
 		add_used_instruments(self, used)
 
 	def check_hold_points(self):
@@ -526,6 +683,9 @@ class QCInspection(Document):
 			[r for r in self.items if r.result == FAIL]
 			+ [h for h in self.hose_tests if h.result == FAIL]
 			+ [g for g in self.pmg_tests if g.result == FAIL]
+			+ [r for r in self.device_tests if r.result == FAIL]
+			+ [r for r in self.accumulator_tests if r.result == FAIL]
+			+ [r for r in self.proof_tests if r.result == FAIL]
 		)
 
 	def create_non_conformance(self):
@@ -533,7 +693,30 @@ class QCInspection(Document):
 		failed_hoses = [h for h in self.hose_tests if h.result == FAIL]
 		failed_pmgs = [g for g in self.pmg_tests if g.result == FAIL]
 		# A failed hose pressure test or a wrong relief/compensator setting is always critical.
-		critical = any(r.is_critical for r in failed) or bool(failed_hoses) or bool(failed_pmgs)
+		failed_other = (
+			[
+				(_("Device"), r.description, r.as_set, r.design_setting, r.comment)
+				for r in self.device_tests
+				if r.result == FAIL
+			]
+			+ [
+				(_("Accumulator"), r.description, r.precharge_actual, r.precharge_spec, r.comment)
+				for r in self.accumulator_tests
+				if r.result == FAIL
+			]
+			+ [
+				(_("Proof test"), r.description, f"{r.p1_psi} / {r.leak_check}", r.p1_spec, r.finding)
+				for r in self.proof_tests
+				if r.result == FAIL
+			]
+		)
+		# Pressure-containing failures are always critical.
+		critical = (
+			any(r.is_critical for r in failed)
+			or bool(failed_hoses)
+			or bool(failed_pmgs)
+			or any(r.result == FAIL for r in self.proof_tests)
+		)
 
 		def reading(r):
 			if r.numeric:
@@ -599,6 +782,19 @@ class QCInspection(Document):
 				f"<th>{_('PMG')}</th><th>{_('Relief as-set / design')}</th><th>{_('Compensator as-set / design')}</th>"
 				f"<th>{_('Nameplates')}</th><th>{_('Rotation')}</th><th>{_('Finding')}</th></tr></thead>"
 				f"<tbody>{pmg_rows}</tbody></table>"
+			)
+		if failed_other:
+			other_rows = "".join(
+				"<tr>"
+				+ "".join(f"<td>{escape_html(cstr(v if v is not None else ''))}</td>" for v in row)
+				+ "</tr>"
+				for row in failed_other
+			)
+			details += (
+				f"<p><b>{_('Failed devices, accumulators and proof tests')}</b></p>"
+				f"<table class='table table-bordered'><thead><tr><th>{_('Type')}</th><th>{_('Description')}</th>"
+				f"<th>{_('As found / as-set')}</th><th>{_('Design')}</th><th>{_('Finding')}</th></tr></thead>"
+				f"<tbody>{other_rows}</tbody></table>"
 			)
 		if self.remarks:
 			details += f"<p>{_('Remarks')}: {escape_html(self.remarks)}</p>"
@@ -683,6 +879,7 @@ def build_pmg_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 				"compensator_spec": g.compensator_setting_psi,
 				"tolerance_psi": unit.setting_tolerance_psi,
 				"motor_fla": g.motor_fla,
+				"theoretical_flow_gpm": g.design_flow_gpm,
 			}
 		)
 	return rows
@@ -724,6 +921,49 @@ def get_template_instructions(template: str) -> str:
 
 
 @frappe.whitelist()
+def build_circuit_tests(qc_unit: str) -> tuple[list[dict], list[dict]]:
+	"""Device and accumulator test rows from the unit's circuit lists."""
+	unit = frappe.get_doc("QC Unit", qc_unit)
+	if unit.product_type != "Power Unit":
+		return [], []
+	devices = [
+		{
+			"pmg_tag": d.pmg_tag,
+			"bom_item": d.bom_item,
+			"description": d.description,
+			"design_setting": d.design_setting,
+		}
+		for d in unit.circuit_devices
+	]
+	accumulators = [
+		{
+			"pmg_tag": a.pmg_tag,
+			"bom_item": a.bom_item,
+			"description": a.description,
+			"serial_no": a.serial_no,
+			"volume_gal": a.volume_gal,
+			"precharge_spec": a.precharge_psi,
+			"tolerance_psi": unit.setting_tolerance_psi,
+		}
+		for a in unit.accumulators
+	]
+	return devices, accumulators
+
+
+def build_proof_tests(qc_unit: str) -> list[dict]:
+	unit = frappe.get_doc("QC Unit", qc_unit)
+	return [
+		{
+			"bom_item": p.bom_item,
+			"description": p.description or p.bom_item,
+			"serial_no": p.serial_no,
+			"p1_spec": p.p1_psi,
+			"p2_spec": p.p2_psi,
+		}
+		for p in unit.proof_test_items
+	]
+
+
 def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 	def postprocess(source, target):
 		target.is_reinspection = 1
@@ -738,6 +978,12 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 		target.set("pmg_tests", [])
 		if target.is_pmg_test_stage():
 			target.set_pmg_tests()
+		for table in ("device_tests", "accumulator_tests", "proof_tests", "coating_layers"):
+			target.set(table, [])
+		if target.is_pmg_test_stage():
+			target.set_circuit_tests()
+		if target.is_flag_stage("proof_test"):
+			target.set_proof_tests()
 		target.inspected_by = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
 
 	return get_mapped_doc(
@@ -762,6 +1008,10 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 					"items",
 					"hose_tests",
 					"pmg_tests",
+					"device_tests",
+					"accumulator_tests",
+					"proof_tests",
+					"coating_layers",
 					"naming_series",
 				],
 			}

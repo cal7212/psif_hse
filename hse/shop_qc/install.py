@@ -41,7 +41,9 @@ DEFAULT_STAGES = {
 		("Mechanical Assembly", 20, 1, 1, 0, 0),
 		("Hydraulic Plumbing", 30, 1, 1, 0, 0),
 		("Electrical & Controls", 40, 1, 1, 0, 0),
+		("Coating", 45, 1, 1, 0, 0),
 		("Flush & Cleanliness", 50, 1, 1, 0, 0),
+		("Pre-Test Preparation", 55, 1, 1, 0, 0),
 		("Pressure & Function Test", 60, 1, 1, 0, 0),
 		("Final Release", 70, 1, 1, 1, 0),
 	],
@@ -163,6 +165,8 @@ def make_failure_causes():
 
 # Stages that load one test row per pump/motor group on a power unit
 PMG_TEST_STAGES = ("Pressure & Function Test", "Repair - Test")
+PROOF_TEST_STAGES = ("Pressure & Function Test", "LA - Pressure & Function Test", "Repair - Test")
+COATING_STAGES = ("Coating",)
 
 
 def make_default_stages():
@@ -186,6 +190,8 @@ def make_default_stages():
 					"is_final_release": final,
 					"hose_test": hose,
 					"pmg_test": 1 if name in PMG_TEST_STAGES else 0,
+					"proof_test": 1 if name in PROOF_TEST_STAGES else 0,
+					"coating_record": 1 if name in COATING_STAGES else 0,
 				}
 			).insert(ignore_permissions=True)
 

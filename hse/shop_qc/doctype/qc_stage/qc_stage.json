@@ -17,6 +17,8 @@
   "is_final_release",
   "hose_test",
   "pmg_test",
+  "proof_test",
+  "coating_record",
   "disabled",
   "sb_desc",
   "description"
@@ -96,6 +98,18 @@
    "label": "Per-PMG Test"
   },
   {
+   "description": "Loads the unit's proof test items (and allows adding more) with P1/P2 pressure, media, duration and leak check",
+   "fieldname": "proof_test",
+   "fieldtype": "Check",
+   "label": "Proof Test Record"
+  },
+  {
+   "description": "Loads one row per coating layer (product, brand, code, mils, recoat and cure time)",
+   "fieldname": "coating_record",
+   "fieldtype": "Check",
+   "label": "Coating Application Record"
+  },
+  {
    "default": "0",
    "fieldname": "disabled",
    "fieldtype": "Check",
@@ -112,7 +126,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-05 10:45:00.000000",
+ "modified": "2026-10-05 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Stage",

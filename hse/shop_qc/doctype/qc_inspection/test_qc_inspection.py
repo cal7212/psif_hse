@@ -9,9 +9,11 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	FAIL,
 	PASS,
 	build_items,
+	evaluate_accumulator,
 	evaluate_hose,
 	evaluate_numeric,
 	evaluate_pmg,
+	evaluate_proof,
 )
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
@@ -25,6 +27,19 @@ HOSE_STAGES = [("_T Hose Test", 10, 0, 1), ("_T Hose Release", 20, 1, 0)]
 
 
 class UnitTestQCInspection(UnitTestCase):
+	def test_proof_and_accumulator_evaluation(self):
+		row = frappe._dict(p1_spec=4500, p1_psi=4500, leak_check="No Leak")
+		self.assertEqual(evaluate_proof(row), PASS)
+		self.assertEqual(evaluate_proof(frappe._dict(row, p1_psi=4400)), FAIL)
+		self.assertEqual(evaluate_proof(frappe._dict(row, leak_check="Leak")), FAIL)
+		self.assertIsNone(evaluate_proof(frappe._dict(row, leak_check=None)))
+		self.assertIsNone(evaluate_proof(frappe._dict(row, p2_spec=6000)))  # P2 not entered yet
+		self.assertEqual(evaluate_proof(frappe._dict(row, p2_spec=6000, p2_psi=6000)), PASS)
+		acc = frappe._dict(precharge_spec=1000, tolerance_psi=50, precharge_actual=1030)
+		self.assertEqual(evaluate_accumulator(acc), PASS)
+		self.assertEqual(evaluate_accumulator(frappe._dict(acc, precharge_actual=900)), FAIL)
+		self.assertIsNone(evaluate_accumulator(frappe._dict(acc, tolerance_psi=0)))
+
 	def test_pmg_evaluation(self):
 		row = frappe._dict(
 			relief_spec=3000,
@@ -217,7 +232,14 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		if names:
 			frappe.db.delete("QC Inspection Reading", {"parent": ("in", names)})
 			frappe.db.delete("QC Hose Test", {"parent": ("in", names)})
-			frappe.db.delete("QC PMG Test", {"parent": ("in", names)})
+			for child in (
+				"QC PMG Test",
+				"QC Device Test",
+				"QC Accumulator Test",
+				"QC Proof Test",
+				"QC Coating Layer",
+			):
+				frappe.db.delete(child, {"parent": ("in", names)})
 		frappe.db.delete("QC Inspection", {"qc_unit": unit})
 		frappe.db.delete("Non Conformance", {"qc_unit": unit})
 		frappe.delete_doc("QC Unit", unit, force=1)
@@ -534,3 +556,80 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			)
 		finally:
 			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)
+
+	def test_unit_order_documents_and_theoretical_flow(self):
+		unit = self.set_pmgs([{"displacement": 80, "displacement_uom": "cc/rev", "motor_rpm": 1780}])
+		self.assertEqual(len(unit.construction_documents), 18)
+		self.assertEqual(len(unit.quality_documents), 10)
+		self.assertAlmostEqual(unit.pump_motor_groups[0].design_flow_gpm, 37.62, places=2)
+		unit.append("circuit_devices", {"pmg_tag": "PMG-9", "description": "PRV"})
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()
+
+	def test_circuit_devices_accumulators_and_proof(self):
+		unit = self.set_pmgs([{"relief_setting_psi": 3000}], tolerance=50)
+		unit.append(
+			"circuit_devices", {"pmg_tag": "pmg-1", "description": "PRV-1", "design_setting": "1500 psi"}
+		)
+		unit.append("accumulators", {"pmg_tag": "PMG-1", "description": "ACC-1", "precharge_psi": 1000})
+		unit.append("proof_test_items", {"description": "Manifold MF-1", "p1_psi": 4500})
+		unit.save()
+		for flag in ("pmg_test", "proof_test"):
+			frappe.db.set_value("QC Stage", "_T Test", flag, 1)
+		try:
+			self.make("_T Assembly")
+			doc = self.make("_T Test", reading=3000, submit=False)
+			self.assertEqual([r.description for r in doc.device_tests], ["PRV-1"])
+			self.assertEqual(doc.accumulator_tests[0].precharge_spec, 1000)
+			self.assertEqual(doc.proof_tests[0].p1_spec, 4500)
+			doc.pmg_tests[0].update(
+				{"nameplate_verified": "Yes", "rotation_verified": "Yes", "relief_as_set": 3000}
+			)
+			doc.device_tests[0].update({"as_set": "1500 psi", "result": PASS})
+			doc.accumulator_tests[0].precharge_actual = 1010
+			doc.proof_tests[0].update(
+				{
+					"p1_psi": 4300,
+					"p1_media": "Hydraulic Oil",
+					"p1_duration_min": 5,
+					"leak_check": "No Leak",
+					"finding": "Pump could not reach proof pressure",
+				}
+			)
+			doc.save()
+			self.assertEqual(doc.accumulator_tests[0].result, PASS)
+			self.assertEqual(doc.accumulator_tests[0].instrument, "_T-G1")
+			self.assertEqual(doc.proof_tests[0].result, FAIL)
+			doc.submit()
+			self.assertEqual(doc.status, "Rejected")
+			self.assertEqual(
+				frappe.db.get_value("Non Conformance", doc.non_conformance, "severity"), "Critical"
+			)
+		finally:
+			for flag in ("pmg_test", "proof_test"):
+				frappe.db.set_value("QC Stage", "_T Test", flag, 0)
+
+	def test_coating_record_required(self):
+		frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 1)
+		try:
+			doc = self.make("_T Assembly", submit=False)
+			self.assertEqual(len(doc.coating_layers), 5)
+			with self.assertRaises(frappe.ValidationError):
+				doc.submit()  # layers not marked
+			doc.reload()
+			for row in doc.coating_layers:
+				row.applied = "N/A"
+			doc.coating_layers[1].update(
+				{
+					"applied": "Yes",
+					"product_type": "Epoxy",
+					"brand": "B",
+					"product_code": "X1",
+					"mil_thickness": 3,
+				}
+			)
+			doc.save()
+			doc.submit()
+			self.assertEqual(doc.status, "Accepted")
+		finally:
+			frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 0)

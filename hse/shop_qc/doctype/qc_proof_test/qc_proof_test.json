@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "bom_item",
+  "description",
+  "serial_no",
+  "p1_spec",
+  "p1_psi",
+  "p1_media",
+  "p1_duration_min",
+  "cb_p",
+  "p2_spec",
+  "p2_psi",
+  "p2_media",
+  "p2_duration_min",
+  "other",
+  "leak_check",
+  "instrument",
+  "result",
+  "finding"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "bom_item",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "BOM Item No."
+  },
+  {
+   "columns": 2,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Data",
+   "label": "Serial No"
+  },
+  {
+   "fieldname": "p1_spec",
+   "fieldtype": "Float",
+   "label": "P1 Required (psi)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "p1_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "P1 Reached (psi)"
+  },
+  {
+   "fieldname": "p1_media",
+   "fieldtype": "Select",
+   "label": "P1 Test Media",
+   "options": "\nHydraulic Oil\nWater\nAir\nNitrogen\nOther"
+  },
+  {
+   "columns": 1,
+   "fieldname": "p1_duration_min",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "P1 Duration (min)"
+  },
+  {
+   "fieldname": "cb_p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "p2_spec",
+   "fieldtype": "Float",
+   "label": "P2 Required (psi)",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "p2_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "P2 Reached (psi)"
+  },
+  {
+   "fieldname": "p2_media",
+   "fieldtype": "Select",
+   "label": "P2 Test Media",
+   "options": "\nHydraulic Oil\nWater\nAir\nNitrogen\nOther"
+  },
+  {
+   "fieldname": "p2_duration_min",
+   "fieldtype": "Float",
+   "label": "P2 Duration (min)"
+  },
+  {
+   "fieldname": "other",
+   "fieldtype": "Data",
+   "label": "Other"
+  },
+  {
+   "columns": 1,
+   "fieldname": "leak_check",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Leak Check",
+   "options": "\nNo Leak\nLeak"
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Link",
+   "label": "Pressure Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
+   "columns": 1,
+   "description": "Pass when there is no leak and each required pressure is reached.",
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "finding",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Finding"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Proof Test",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

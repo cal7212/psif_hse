@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "pmg_tag",
+  "bom_item",
+  "description",
+  "design_setting",
+  "as_set",
+  "result",
+  "comment"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "pmg_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Circuit (PMG)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bom_item",
+   "fieldtype": "Data",
+   "label": "BOM Item No.",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "design_setting",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Design Setting",
+   "read_only": 1
+  },
+  {
+   "columns": 1,
+   "description": "With units",
+   "fieldname": "as_set",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "As-Set"
+  },
+  {
+   "columns": 1,
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail\nN/A"
+  },
+  {
+   "columns": 3,
+   "fieldname": "comment",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Comment"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Device Test",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
