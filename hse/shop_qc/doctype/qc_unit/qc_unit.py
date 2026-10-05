@@ -113,7 +113,7 @@ class QCUnit(Document):
 				if r.pmg_tag and r.pmg_tag not in tags:
 					frappe.throw(
 						_("{0} row {1}: circuit {2} is not one of this unit's pump / motor groups.").format(
-							self.meta.get_label(table), r.idx, r.pmg_tag
+							_(self.meta.get_label(table)), r.idx, r.pmg_tag
 						)
 					)
 		for r in self.accumulators:
