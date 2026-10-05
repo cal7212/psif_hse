@@ -37,7 +37,9 @@ def execute():
 				"motor_voltage": u.voltage,
 				"motor_phase": u.phase,
 				"motor_hz": u.hz,
-				"notes": None if u.pump_type in PUMP_TYPES or not u.pump_type else f"Pump type: {u.pump_type}",
+				"notes": None
+				if u.pump_type in PUMP_TYPES or not u.pump_type
+				else f"Pump type: {u.pump_type}",
 			}
 		).db_insert()
 		frappe.db.set_value("QC Unit", u.name, "pmg_count", 1, update_modified=False)
