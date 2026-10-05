@@ -58,6 +58,11 @@ REVIEW_AREAS = (
 	"Non-Conformances",
 	"Other",
 )
+# (table, template link, template category, built-in list used when no template exists)
+DOCUMENT_TABLES = (
+	("construction_documents", "construction_document_template", "Construction", CONSTRUCTION_DOCUMENTS),
+	("quality_documents", "quality_document_template", "Quality", QUALITY_DOCUMENTS),
+)
 CC_PER_GAL = 3785.41
 IN3_PER_GAL = 231.0
 
@@ -90,15 +95,25 @@ class QCUnit(Document):
 		self.validate_status_change()
 
 	def set_order_documents(self):
+		"""Load each document list from its template (or the default template) when it is empty."""
 		if self.product_type not in SYSTEM_TYPES:
 			return
-		for table, names in (
-			("construction_documents", CONSTRUCTION_DOCUMENTS),
-			("quality_documents", QUALITY_DOCUMENTS),
-		):
-			if not self.get(table):
-				for name in names:
-					self.append(table, {"document": name})
+		for table, link, category, fallback in DOCUMENT_TABLES:
+			if self.get(table):
+				continue
+			template = self.get(link) or default_document_template(category, self.product_type)
+			if (
+				self.get(link)
+				and frappe.db.get_value("QC Document Template", template, "category") != category
+			):
+				frappe.throw(_("{0} must be a {1} document template.").format(template, _(category)))
+			if template:
+				self.set(link, template)
+				rows = get_document_template_rows(template)
+			else:
+				rows = [{"document": name} for name in fallback]
+			for row in rows:
+				self.append(table, row)
 
 	def set_post_shipment_review(self):
 		if self.status == "Shipped" and not self.post_shipment_reviews:
@@ -248,6 +263,24 @@ class QCUnit(Document):
 	def validate_status_change(self):
 		if self.status in ("Released", "Shipped") and (self.open_non_conformances or 0) > 0:
 			frappe.throw(_("Cannot release a unit with open Non Conformances."))
+
+
+def default_document_template(category: str, product_type: str | None) -> str | None:
+	"""Default template for this product type, else the default for all system types."""
+	filters = {"category": category, "is_default": 1, "disabled": 0}
+	if product_type:
+		name = frappe.db.get_value("QC Document Template", {**filters, "product_type": product_type})
+		if name:
+			return name
+	return frappe.db.get_value("QC Document Template", {**filters, "product_type": ("is", "not set")})
+
+
+@frappe.whitelist()
+def get_document_template_rows(template: str) -> list[dict]:
+	"""Rows to copy from a QC Document Template into a unit's document table."""
+	frappe.has_permission("QC Document Template", "read", template, throw=True)
+	doc = frappe.get_cached_doc("QC Document Template", template)
+	return [{"document": r.document, "required": r.required, "reference": r.reference} for r in doc.documents]
 
 
 def theoretical_flow(r) -> float:
