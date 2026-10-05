@@ -9,6 +9,7 @@ from frappe.model.naming import make_autoname
 from frappe.utils import cint, cstr, escape_html, flt, getdate
 
 from hse.hse.instruments import (
+	AMPS_TYPES,
 	CRIMP_TYPES,
 	PRESSURE_TYPES,
 	add_used_instruments,
@@ -80,6 +81,27 @@ def evaluate_hose(row) -> str | None:
 	return PASS if ok else FAIL
 
 
+def evaluate_pmg(row) -> str | None:
+	"""Pass/Fail for one pump/motor group. A "No" answer always fails. Settings are judged
+	against the design value only when the unit has a setting tolerance; otherwise the
+	inspector's result stands (None = leave it)."""
+	if row.nameplate_verified == "No" or row.rotation_verified == "No":
+		return FAIL
+	tol = flt(row.tolerance_psi)
+	if not tol:
+		return None
+	pairs = [
+		(flt(row.relief_spec), flt(row.relief_as_set)),
+		(flt(row.compensator_spec), flt(row.compensator_as_set)),
+	]
+	if not (row.nameplate_verified and row.rotation_verified):
+		return ""
+	if any(spec and not actual for spec, actual in pairs):
+		return ""
+	ok = all(abs(actual - spec) <= tol for spec, actual in pairs if spec)
+	return PASS if ok else FAIL
+
+
 class QCInspection(Document):
 	def autoname(self):
 		shop = self.shop or frappe.db.get_value("QC Unit", self.qc_unit, "shop")
@@ -95,8 +117,11 @@ class QCInspection(Document):
 			self.set_items_from_template()
 		if not self.hose_tests and self.is_hose_test_stage():
 			self.set_hose_tests()
+		if not self.pmg_tests and self.is_pmg_test_stage():
+			self.set_pmg_tests()
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
+		self.evaluate_pmg_tests()
 		self.sync_instruments()
 		if self.docstatus == 0:
 			self.status = "Pending"
@@ -192,6 +217,32 @@ class QCInspection(Document):
 		for row in build_hose_tests(self.qc_unit, tags):
 			self.append("hose_tests", row)
 
+	def is_pmg_test_stage(self) -> bool:
+		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, "pmg_test"))
+
+	def set_pmg_tests(self):
+		tags = None
+		if self.is_reinspection and self.reinspection_of:
+			# Re-test only the groups that failed last time
+			tags = set(
+				frappe.get_all(
+					"QC PMG Test",
+					filters={"parent": self.reinspection_of, "parenttype": "QC Inspection", "result": FAIL},
+					pluck="pmg_tag",
+				)
+			)
+		self.set("pmg_tests", [])
+		for row in build_pmg_tests(self.qc_unit, tags):
+			self.append("pmg_tests", row)
+
+	def evaluate_pmg_tests(self):
+		for row in self.pmg_tests:
+			if row.result == NA:
+				continue
+			result = evaluate_pmg(row)
+			if result is not None:
+				row.result = result or None
+
 	def evaluate_hose_tests(self):
 		for row in self.hose_tests:
 			row.result = evaluate_hose(row)
@@ -255,16 +306,46 @@ class QCInspection(Document):
 				errors.append(_("Hose {0}: a finding is required for a failed hose.").format(row.hose_tag))
 		if self.is_hose_test_stage() and not self.hose_tests:
 			errors.append(_("This stage tests each hose, but the unit has no tagged hoses."))
+		for row in self.pmg_tests:
+			tag = row.pmg_tag
+			if row.result == NA:
+				if not cstr(row.finding).strip():
+					errors.append(_("{0}: say why this pump/motor group is N/A in the finding.").format(tag))
+				continue
+			if not flt(row.relief_spec):
+				errors.append(
+					_("{0}: no relief valve setting on the unit. Enter it on the QC Unit and reload.").format(
+						tag
+					)
+				)
+			if not row.nameplate_verified:
+				errors.append(_("{0}: confirm whether the nameplates match.").format(tag))
+			if not row.rotation_verified:
+				errors.append(_("{0}: confirm the rotation.").format(tag))
+			if flt(row.relief_spec) and not flt(row.relief_as_set):
+				errors.append(_("{0}: enter the relief as-set pressure.").format(tag))
+			if flt(row.compensator_spec) and not flt(row.compensator_as_set):
+				errors.append(_("{0}: enter the compensator as-set pressure.").format(tag))
+			if not row.result:
+				errors.append(_("{0}: select the result.").format(tag))
+			elif row.result == FAIL and not cstr(row.finding).strip():
+				errors.append(_("{0}: a finding is required for a failed pump/motor group.").format(tag))
+		if (
+			self.is_pmg_test_stage()
+			and not self.pmg_tests
+			and frappe.db.get_value("QC Unit", self.qc_unit, "product_type") == "Power Unit"
+		):
+			errors.append(_("This stage tests each pump/motor group, but the unit has none listed."))
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 
 	def check_test_equipment(self):
 		"""Every reading names an instrument; every instrument is Active and in calibration."""
-		needs = self.hose_tests or any(needs_instrument(r) for r in self.items)
+		needs = self.hose_tests or self.pmg_tests or any(needs_instrument(r) for r in self.items)
 		if not needs and not self.instruments:
 			return
 		if not self.instruments:
-			frappe.throw(_("Add the test equipment used for the numeric readings and hose tests."))
+			frappe.throw(_("Add the test equipment used for the numeric readings and pressure tests."))
 		errors = check_listed_instruments(self, self.inspection_date)
 		for r in self.items:
 			if needs_instrument(r) and flt(r.reading_value) and not r.instrument:
@@ -274,6 +355,13 @@ class QCInspection(Document):
 				errors.append(_("Hose {0}: select the pressure instrument.").format(h.hose_tag))
 			if (flt(h.crimp_min) or flt(h.crimp_max)) and not h.crimp_instrument:
 				errors.append(_("Hose {0}: select the crimp measuring instrument.").format(h.hose_tag))
+		for g in self.pmg_tests:
+			if g.result == NA:
+				continue
+			if (flt(g.relief_as_set) or flt(g.compensator_as_set)) and not g.instrument:
+				errors.append(_("{0}: select the pressure instrument.").format(g.pmg_tag))
+			if flt(g.motor_amps) and not g.amps_instrument:
+				errors.append(_("{0}: select the instrument used for running amps.").format(g.pmg_tag))
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Test Equipment"))
 
@@ -291,9 +379,16 @@ class QCInspection(Document):
 				h.instrument = pick(names, types, PRESSURE_TYPES)
 			if not h.crimp_instrument and (flt(h.crimp_min) or flt(h.crimp_max)):
 				h.crimp_instrument = pick(names, types, CRIMP_TYPES)
+		for g in self.pmg_tests:
+			if not g.instrument and (flt(g.relief_as_set) or flt(g.compensator_as_set)):
+				g.instrument = pick(names, types, PRESSURE_TYPES)
+			if not g.amps_instrument and flt(g.motor_amps):
+				g.amps_instrument = pick(names, types, AMPS_TYPES)
 		used = [r.instrument for r in self.items]
 		for h in self.hose_tests:
 			used += [h.instrument, h.crimp_instrument]
+		for g in self.pmg_tests:
+			used += [g.instrument, g.amps_instrument]
 		add_used_instruments(self, used)
 
 	def check_hold_points(self):
@@ -427,13 +522,18 @@ class QCInspection(Document):
 		return bool(frappe.get_cached_value("QC Stage", self.stage, "is_final_release"))
 
 	def get_failed_rows(self):
-		return [r for r in self.items if r.result == FAIL] + [h for h in self.hose_tests if h.result == FAIL]
+		return (
+			[r for r in self.items if r.result == FAIL]
+			+ [h for h in self.hose_tests if h.result == FAIL]
+			+ [g for g in self.pmg_tests if g.result == FAIL]
+		)
 
 	def create_non_conformance(self):
 		failed = [r for r in self.items if r.result == FAIL]
 		failed_hoses = [h for h in self.hose_tests if h.result == FAIL]
-		# A failed pressure/leak test on a hose is always critical.
-		critical = any(r.is_critical for r in failed) or bool(failed_hoses)
+		failed_pmgs = [g for g in self.pmg_tests if g.result == FAIL]
+		# A failed hose pressure test or a wrong relief/compensator setting is always critical.
+		critical = any(r.is_critical for r in failed) or bool(failed_hoses) or bool(failed_pmgs)
 
 		def reading(r):
 			if r.numeric:
@@ -479,6 +579,26 @@ class QCInspection(Document):
 				f"<p><b>{_('Failed hoses')}</b></p><table class='table table-bordered'><thead><tr>"
 				f"<th>{_('Hose Tag')}</th><th>{_('Crimp A / B')}</th><th>{_('Pressure (required)')}</th>"
 				f"<th>{_('Leak Check')}</th><th>{_('Finding')}</th></tr></thead><tbody>{hose_rows}</tbody></table>"
+			)
+		if failed_pmgs:
+			pmg_rows = "".join(
+				"<tr><td>{0}</td><td>{1} / {2}</td><td>{3} / {4}</td><td>{5}</td><td>{6}</td><td>{7}</td></tr>".format(
+					escape_html(cstr(g.pmg_tag)),
+					cstr(g.relief_as_set or ""),
+					cstr(g.relief_spec or ""),
+					cstr(g.compensator_as_set or ""),
+					cstr(g.compensator_spec or ""),
+					escape_html(cstr(g.nameplate_verified)),
+					escape_html(cstr(g.rotation_verified)),
+					escape_html(cstr(g.finding)),
+				)
+				for g in failed_pmgs
+			)
+			details += (
+				f"<p><b>{_('Failed pump / motor groups')}</b></p><table class='table table-bordered'><thead><tr>"
+				f"<th>{_('PMG')}</th><th>{_('Relief as-set / design')}</th><th>{_('Compensator as-set / design')}</th>"
+				f"<th>{_('Nameplates')}</th><th>{_('Rotation')}</th><th>{_('Finding')}</th></tr></thead>"
+				f"<tbody>{pmg_rows}</tbody></table>"
 			)
 		if self.remarks:
 			details += f"<p>{_('Remarks')}: {escape_html(self.remarks)}</p>"
@@ -546,6 +666,28 @@ def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 	return rows
 
 
+def build_pmg_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
+	"""One test row per pump/motor group on the unit, with its design settings."""
+	unit = frappe.get_doc("QC Unit", qc_unit)
+	if unit.product_type != "Power Unit":
+		return []
+	rows = []
+	for g in unit.pump_motor_groups:
+		if only_tags is not None and g.pmg_tag not in only_tags:
+			continue
+		rows.append(
+			{
+				"pmg_tag": g.pmg_tag,
+				"service": g.service,
+				"relief_spec": g.relief_setting_psi,
+				"compensator_spec": g.compensator_setting_psi,
+				"tolerance_psi": unit.setting_tolerance_psi,
+				"motor_fla": g.motor_fla,
+			}
+		)
+	return rows
+
+
 def build_items(template: str, qc_unit: str | None = None) -> list[dict]:
 	"""Template rows with spec-linked limits resolved from the QC Unit design data."""
 	doc = frappe.get_cached_doc("QC Inspection Template", template)
@@ -593,6 +735,9 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 		target.set("hose_tests", [])
 		if target.is_hose_test_stage():
 			target.set_hose_tests()
+		target.set("pmg_tests", [])
+		if target.is_pmg_test_stage():
+			target.set_pmg_tests()
 		target.inspected_by = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
 
 	return get_mapped_doc(
@@ -616,6 +761,7 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 					"test_report",
 					"items",
 					"hose_tests",
+					"pmg_tests",
 					"naming_series",
 				],
 			}

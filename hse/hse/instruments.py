@@ -14,6 +14,7 @@ from frappe.utils import cint, flt, getdate
 
 PRESSURE_TYPES = ("Pressure Gauge", "Pressure Transducer")
 CRIMP_TYPES = ("Caliper / Micrometer",)
+AMPS_TYPES = ("Clamp Meter", "Multimeter", "Power Quality Analyzer")
 
 
 def needs_instrument(row) -> bool:

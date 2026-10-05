@@ -11,6 +11,7 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	build_items,
 	evaluate_hose,
 	evaluate_numeric,
+	evaluate_pmg,
 )
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
@@ -24,6 +25,24 @@ HOSE_STAGES = [("_T Hose Test", 10, 0, 1), ("_T Hose Release", 20, 1, 0)]
 
 
 class UnitTestQCInspection(UnitTestCase):
+	def test_pmg_evaluation(self):
+		row = frappe._dict(
+			relief_spec=3000,
+			compensator_spec=2800,
+			tolerance_psi=50,
+			nameplate_verified="Yes",
+			rotation_verified="Yes",
+			relief_as_set=3020,
+			compensator_as_set=2790,
+		)
+		self.assertEqual(evaluate_pmg(row), PASS)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, relief_as_set=3100)), FAIL)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, compensator_as_set=0)), "")  # incomplete
+		self.assertEqual(evaluate_pmg(frappe._dict(row, rotation_verified="No")), FAIL)
+		# no tolerance: the inspector decides, unless an answer is "No"
+		self.assertIsNone(evaluate_pmg(frappe._dict(row, tolerance_psi=0)))
+		self.assertEqual(evaluate_pmg(frappe._dict(row, tolerance_psi=0, nameplate_verified="No")), FAIL)
+
 	def test_hose_evaluation(self):
 		row = frappe._dict(
 			crimp_min=0.990,
@@ -198,6 +217,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		if names:
 			frappe.db.delete("QC Inspection Reading", {"parent": ("in", names)})
 			frappe.db.delete("QC Hose Test", {"parent": ("in", names)})
+			frappe.db.delete("QC PMG Test", {"parent": ("in", names)})
 		frappe.db.delete("QC Inspection", {"qc_unit": unit})
 		frappe.db.delete("Non Conformance", {"qc_unit": unit})
 		frappe.delete_doc("QC Unit", unit, force=1)
@@ -449,3 +469,68 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(
 			all(h.instrument == "_T-G1" and h.crimp_instrument == "_T-CAL" for h in doc.hose_tests)
 		)
+
+	def set_pmgs(self, groups, tolerance=None, **kw):
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.update(kw)
+		unit.setting_tolerance_psi = tolerance
+		unit.set("pump_motor_groups", groups)
+		unit.save()
+		return unit
+
+	def test_pmg_tags_and_limit(self):
+		unit = self.set_pmgs(
+			[{"relief_setting_psi": 3000}, {"pmg_tag": "pilot", "relief_setting_psi": 1000}, {}]
+		)
+		self.assertEqual([g.pmg_tag for g in unit.pump_motor_groups], ["PMG-1", "PILOT", "PMG-3"])
+		self.assertEqual(unit.pmg_count, 3)
+		with self.assertRaises(frappe.ValidationError):
+			self.set_pmgs([{} for _ in range(11)])
+		with self.assertRaises(frappe.ValidationError):
+			self.set_pmgs([{"pmg_tag": "A"}, {"pmg_tag": "a"}])
+
+	def test_legacy_motor_fields_copied_to_pmg1(self):
+		unit = self.set_pmgs([], motor_hp=30, pump_type="Variable Piston")
+		self.assertEqual(len(unit.pump_motor_groups), 1)
+		self.assertEqual(unit.pump_motor_groups[0].motor_hp, 30)
+		self.assertEqual(unit.pump_motor_groups[0].pump_type, "Variable Piston")
+		unit = self.set_pmgs([], motor_hp=0, pump_type="PV270 axial piston")
+		self.assertIn("PV270", unit.pump_motor_groups[0].notes)
+
+	def test_pmg_tests_loaded_evaluated_and_failed(self):
+		self.set_pmgs(
+			[
+				{"relief_setting_psi": 3000, "compensator_setting_psi": 2800, "pump_type": "Variable Piston"},
+				{"relief_setting_psi": 2500, "pump_type": "Gear"},
+			],
+			tolerance=50,
+		)
+		frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 1)
+		try:
+			self.make("_T Assembly")
+			doc = self.make("_T Test", reading=3000, submit=False)
+			self.assertEqual([g.pmg_tag for g in doc.pmg_tests], ["PMG-1", "PMG-2"])
+			self.assertEqual(doc.pmg_tests[0].compensator_spec, 2800)
+			with self.assertRaises(frappe.ValidationError):
+				doc.submit()  # PMG entries missing
+			doc.reload()
+			for g, relief, comp in ((doc.pmg_tests[0], 3010, 2790), (doc.pmg_tests[1], 2600, 0)):
+				g.update(
+					{
+						"nameplate_verified": "Yes",
+						"rotation_verified": "Yes",
+						"relief_as_set": relief,
+						"compensator_as_set": comp,
+					}
+				)
+			doc.pmg_tests[1].finding = "Relief set high"
+			doc.save()
+			self.assertEqual([g.result for g in doc.pmg_tests], [PASS, FAIL])
+			self.assertEqual(doc.pmg_tests[0].instrument, "_T-G1")
+			doc.submit()
+			self.assertEqual(doc.status, "Rejected")
+			self.assertEqual(
+				frappe.db.get_value("Non Conformance", doc.non_conformance, "severity"), "Critical"
+			)
+		finally:
+			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)

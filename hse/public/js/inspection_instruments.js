@@ -4,6 +4,8 @@ const HSE_INSTRUMENT_READING_FIELDS = {
 		["items", "instrument"],
 		["hose_tests", "instrument"],
 		["hose_tests", "crimp_instrument"],
+		["pmg_tests", "instrument"],
+		["pmg_tests", "amps_instrument"],
 	],
 	"Asset Inspection": [["items", "instrument"]],
 };

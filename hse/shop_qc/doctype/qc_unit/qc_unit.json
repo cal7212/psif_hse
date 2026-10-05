@@ -50,6 +50,10 @@
   "target_cleanliness",
   "drawing_rev",
   "valve_settings",
+  "section_pmg",
+  "pump_motor_groups",
+  "pmg_count",
+  "setting_tolerance_psi",
   "section_hoses",
   "hoses",
   "hose_count",
@@ -270,28 +274,30 @@
   },
   {
    "depends_on": "eval:doc.product_type=='Power Unit'",
+   "description": "Legacy single-pump field (TrulinX sync). Copied to PMG-1; use the Pump / Motor Groups table.",
    "fieldname": "motor_hp",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Motor HP"
   },
   {
    "depends_on": "eval:doc.product_type=='Power Unit'",
    "fieldname": "voltage",
    "fieldtype": "Data",
-   "label": "Voltage"
+   "label": "Supply Voltage"
   },
   {
    "depends_on": "eval:doc.product_type=='Power Unit'",
    "fieldname": "phase",
    "fieldtype": "Select",
-   "label": "Phase",
+   "label": "Supply Phase",
    "options": "\n1\n3"
   },
   {
    "depends_on": "eval:doc.product_type=='Power Unit'",
    "fieldname": "hz",
    "fieldtype": "Select",
-   "label": "Hz",
+   "label": "Supply Hz",
    "options": "\n60\n50"
   },
   {
@@ -300,19 +306,22 @@
   },
   {
    "depends_on": "eval:doc.product_type=='Power Unit'",
+   "description": "Legacy single-pump field (TrulinX sync). Copied to PMG-1; use the Pump / Motor Groups table.",
    "fieldname": "pump_type",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Pump Type"
   },
   {
    "fieldname": "flow_gpm",
    "fieldtype": "Float",
-   "label": "Design Flow (GPM)"
+   "label": "Total Design Flow (GPM)"
   },
   {
+   "description": "Main system relief. Each pump/motor group's own relief and compensator settings go in the table below.",
    "fieldname": "relief_setting_psi",
    "fieldtype": "Float",
-   "label": "Relief Setting (psi)"
+   "label": "System Relief Setting (psi)"
   },
   {
    "fieldname": "max_operating_psi",
@@ -358,6 +367,31 @@
    "fieldname": "valve_settings",
    "fieldtype": "Small Text",
    "label": "Valve / Cartridge Settings"
+  },
+  {
+   "depends_on": "eval:doc.product_type=='Power Unit'",
+   "fieldname": "section_pmg",
+   "fieldtype": "Section Break",
+   "label": "Pump / Motor Groups"
+  },
+  {
+   "description": "One row per pump/motor group (up to 10): motor and pump nameplate data, relief and compensator settings.",
+   "fieldname": "pump_motor_groups",
+   "fieldtype": "Table",
+   "label": "Pump / Motor Groups",
+   "options": "QC Pump Motor Group"
+  },
+  {
+   "fieldname": "pmg_count",
+   "fieldtype": "Int",
+   "label": "PMG Count",
+   "read_only": 1
+  },
+  {
+   "description": "Allowed difference between design and as-set relief/compensator settings at test. Leave blank to judge each PMG manually.",
+   "fieldname": "setting_tolerance_psi",
+   "fieldtype": "Float",
+   "label": "Setting Tolerance \u00b1 (psi)"
   },
   {
    "depends_on": "eval:doc.product_type=='Hose Assembly'",
@@ -549,7 +583,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-02 20:30:00.000000",
+ "modified": "2026-10-05 10:45:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

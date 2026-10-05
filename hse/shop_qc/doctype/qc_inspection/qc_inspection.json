@@ -32,6 +32,8 @@
   "section_items",
   "instructions",
   "items",
+  "section_pmg_tests",
+  "pmg_tests",
   "section_hose_tests",
   "hose_tests",
   "section_sign",
@@ -234,6 +236,18 @@
    "reqd": 1
   },
   {
+   "depends_on": "eval:(doc.pmg_tests || []).length",
+   "fieldname": "section_pmg_tests",
+   "fieldtype": "Section Break",
+   "label": "Pump / Motor Group Tests"
+  },
+  {
+   "fieldname": "pmg_tests",
+   "fieldtype": "Table",
+   "label": "Pump / Motor Group Tests",
+   "options": "QC PMG Test"
+  },
+  {
    "depends_on": "eval:(doc.hose_tests||[]).length",
    "fieldname": "section_hose_tests",
    "fieldtype": "Section Break",
@@ -282,7 +296,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-02 23:45:00.000000",
+ "modified": "2026-10-05 10:45:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

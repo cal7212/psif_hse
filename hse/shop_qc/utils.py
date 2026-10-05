@@ -223,6 +223,7 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 	accepted = get_accepted_by_stage(qc_unit)
 	inspections = []
 	hose_results = {}
+	pmg_results = {}
 	for s in stages:
 		acc = accepted.get(s.name)
 		if not acc:
@@ -231,6 +232,8 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		inspections.append(doc)
 		for h in doc.hose_tests:
 			hose_results[h.hose_tag] = frappe._dict(h.as_dict(), inspection=doc.name, stage=s.name)
+		for g in doc.get("pmg_tests") or []:
+			pmg_results[g.pmg_tag] = frappe._dict(g.as_dict(), inspection=doc.name, stage=s.name)
 	instruments = {}
 	for doc in inspections:
 		for row in doc.get("instruments") or []:
@@ -246,6 +249,7 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		accepted=accepted,
 		inspections=inspections,
 		hose_results=hose_results,
+		pmg_results=pmg_results,
 		released=unit.status in ("Released", "Shipped"),
 		released_by_name=frappe.db.get_value("User", unit.released_by, "full_name")
 		if unit.released_by
