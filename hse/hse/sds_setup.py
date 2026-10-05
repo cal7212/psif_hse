@@ -43,10 +43,26 @@ def setup():
 
 def make_pictograms():
 	for name, code, hazards in GHS_PICTOGRAMS:
-		if not frappe.db.exists("GHS Pictogram", name):
-			frappe.get_doc(
-				{"doctype": "GHS Pictogram", "pictogram_name": name, "ghs_code": code, "hazards": hazards}
-			).insert(ignore_permissions=True)
+		# show the packaged UN pictogram on the record unless an image was uploaded
+		if frappe.db.exists("GHS Pictogram", name):
+			if not frappe.db.get_value("GHS Pictogram", name, "image"):
+				frappe.db.set_value(
+					"GHS Pictogram",
+					name,
+					"image",
+					f"/assets/hse/images/ghs/{code}.png",
+					update_modified=False,
+				)
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "GHS Pictogram",
+				"pictogram_name": name,
+				"ghs_code": code,
+				"hazards": hazards,
+				"image": f"/assets/hse/images/ghs/{code}.png",
+			}
+		).insert(ignore_permissions=True)
 
 
 def ensure_sds_permissions():
