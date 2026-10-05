@@ -87,9 +87,8 @@ class QCUnit(Document):
 				if self.pump_type in PUMP_TYPES:
 					first.pump_type = self.pump_type
 				elif self.pump_type not in cstr(first.notes):
-					first.notes = "\n".join(
-						filter(None, [first.notes, _("Pump type: {0}").format(self.pump_type)])
-					)
+					note = _("Pump type: {0}").format(self.pump_type)
+					first.notes = f"{first.notes}\n{note}" if first.notes else note
 
 		self.pmg_count = len(self.pump_motor_groups)
 		if self.pump_motor_groups and self.product_type != "Power Unit":
