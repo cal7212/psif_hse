@@ -242,3 +242,49 @@ function evaluate_hose_row(cdt, cdn) {
 	}
 	if (r.result !== result) frappe.model.set_value(cdt, cdn, "result", result);
 }
+
+frappe.ui.form.on("QC PMG Test", {
+	nameplate_verified: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	rotation_verified: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	relief_as_set: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	compensator_as_set: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	motor_amps(frm, cdt, cdn) {
+		const r = locals[cdt][cdn];
+		if (flt(r.motor_fla) && flt(r.motor_amps) > flt(r.motor_fla)) {
+			frappe.show_alert(
+				{
+					message: __("{0}: running amps {1} exceed nameplate FLA {2}.", [
+						r.pmg_tag,
+						r.motor_amps,
+						r.motor_fla,
+					]),
+					indicator: "orange",
+				},
+				7
+			);
+		}
+	},
+});
+
+// Mirrors evaluate_pmg() in qc_inspection.py; the server result on save is final.
+function evaluate_pmg_row(cdt, cdn) {
+	const r = locals[cdt][cdn];
+	if (r.result === "N/A") return;
+	let result = null; // null = leave the inspector's choice
+	if (r.nameplate_verified === "No" || r.rotation_verified === "No") {
+		result = "Fail";
+	} else if (flt(r.tolerance_psi)) {
+		const pairs = [
+			[flt(r.relief_spec), flt(r.relief_as_set)],
+			[flt(r.compensator_spec), flt(r.compensator_as_set)],
+		];
+		const complete =
+			r.nameplate_verified && r.rotation_verified && pairs.every(([s, a]) => !s || a);
+		result = complete
+			? pairs.every(([s, a]) => !s || Math.abs(a - s) <= flt(r.tolerance_psi))
+				? "Pass"
+				: "Fail"
+			: "";
+	}
+	if (result !== null && r.result !== result) frappe.model.set_value(cdt, cdn, "result", result);
+}

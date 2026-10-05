@@ -7,6 +7,8 @@ from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
 REPAIR = "Repair"
+MAX_PMG = 10
+PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
 
 
 class QCUnit(Document):
@@ -30,6 +32,7 @@ class QCUnit(Document):
 		self.validate_unique_serial()
 		self.set_test_pressures()
 		self.validate_hoses()
+		self.validate_pump_motor_groups()
 		self.validate_status_change()
 
 	def normalise_ids(self):
@@ -72,6 +75,57 @@ class QCUnit(Document):
 				h.test_pressure_psi = round(flt(h.working_pressure_psi) * mult, 0)
 			if not cint(h.hold_time_sec) and cint(shop.default_hold_time_sec):
 				h.hold_time_sec = cint(shop.default_hold_time_sec)
+
+	def validate_pump_motor_groups(self):
+		# The TrulinX sync sends one motor HP / pump type per work order: keep it in PMG-1.
+		if self.product_type == "Power Unit" and (flt(self.motor_hp) or self.pump_type):
+			if not self.pump_motor_groups:
+				self.append("pump_motor_groups", {})
+			first = self.pump_motor_groups[0]
+			first.motor_hp = first.motor_hp or self.motor_hp
+			if self.pump_type and not first.pump_type:
+				if self.pump_type in PUMP_TYPES:
+					first.pump_type = self.pump_type
+				elif self.pump_type not in cstr(first.notes):
+					note = _("Pump type: {0}").format(self.pump_type)
+					first.notes = f"{first.notes}\n{note}" if first.notes else note
+
+		self.pmg_count = len(self.pump_motor_groups)
+		if self.pump_motor_groups and self.product_type != "Power Unit":
+			frappe.throw(_("Pump / motor groups are only used when Product Type is Power Unit."))
+		if self.pmg_count > MAX_PMG:
+			frappe.throw(_("A power unit can have at most {0} pump / motor groups.").format(MAX_PMG))
+
+		used = {cstr(r.pmg_tag).strip().upper() for r in self.pump_motor_groups if cstr(r.pmg_tag).strip()}
+		seen = set()
+		for r in self.pump_motor_groups:
+			tag = cstr(r.pmg_tag).strip().upper()
+			if not tag:
+				n = r.idx
+				while f"PMG-{n}" in used:
+					n += 1
+				tag = f"PMG-{n}"
+				used.add(tag)
+			if tag in seen:
+				frappe.throw(_("PMG tag {0} is used more than once.").format(tag))
+			seen.add(tag)
+			r.pmg_tag = tag
+			r.motor_voltage = r.motor_voltage or self.voltage
+			r.motor_phase = r.motor_phase or self.phase
+			r.motor_hz = r.motor_hz or self.hz
+			for field in ("relief_setting_psi", "compensator_setting_psi", "motor_hp", "motor_fla"):
+				if flt(r.get(field)) < 0:
+					frappe.throw(_("{0}: {1} cannot be negative.").format(tag, r.meta.get_label(field)))
+			if flt(r.compensator_setting_psi) and flt(r.relief_setting_psi):
+				if flt(r.compensator_setting_psi) >= flt(r.relief_setting_psi):
+					frappe.msgprint(
+						_(
+							"{0}: compensator setting ({1} psi) is at or above the relief setting ({2} psi). "
+							"Check the design values."
+						).format(tag, r.compensator_setting_psi, r.relief_setting_psi),
+						indicator="orange",
+						alert=True,
+					)
 
 	def validate_hoses(self):
 		self.hose_count = len(self.hoses)

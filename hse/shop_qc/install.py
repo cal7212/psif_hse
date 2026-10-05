@@ -161,6 +161,10 @@ def make_failure_causes():
 			)
 
 
+# Stages that load one test row per pump/motor group on a power unit
+PMG_TEST_STAGES = ("Pressure & Function Test", "Repair - Test")
+
+
 def make_default_stages():
 	for (shop, job_type), stages in DEFAULT_STAGES.items():
 		if shop and not frappe.db.exists("Build Shop", shop):
@@ -181,6 +185,7 @@ def make_default_stages():
 					"hold_point": hold,
 					"is_final_release": final,
 					"hose_test": hose,
+					"pmg_test": 1 if name in PMG_TEST_STAGES else 0,
 				}
 			).insert(ignore_permissions=True)
 

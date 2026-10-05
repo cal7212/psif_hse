@@ -1,0 +1,228 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 10:45:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "pmg_tag",
+  "service",
+  "sb_motor",
+  "motor_manufacturer",
+  "motor_model",
+  "motor_serial",
+  "motor_frame",
+  "motor_enclosure",
+  "cb_motor",
+  "motor_hp",
+  "motor_rpm",
+  "motor_voltage",
+  "motor_phase",
+  "motor_hz",
+  "motor_fla",
+  "service_factor",
+  "sb_pump",
+  "pump_manufacturer",
+  "pump_model",
+  "pump_serial",
+  "pump_type",
+  "cb_pump",
+  "displacement",
+  "displacement_uom",
+  "pump_rotation",
+  "design_flow_gpm",
+  "sb_settings",
+  "relief_setting_psi",
+  "cb_settings",
+  "compensator_setting_psi",
+  "notes"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "description": "Filled in as PMG-1, PMG-2 ... when left blank.",
+   "fieldname": "pmg_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "PMG Tag"
+  },
+  {
+   "columns": 2,
+   "description": "e.g. Main circuit, Pilot, Kidney loop",
+   "fieldname": "service",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Service"
+  },
+  {
+   "fieldname": "sb_motor",
+   "fieldtype": "Section Break",
+   "label": "Motor Nameplate"
+  },
+  {
+   "fieldname": "motor_manufacturer",
+   "fieldtype": "Data",
+   "label": "Motor Manufacturer"
+  },
+  {
+   "fieldname": "motor_model",
+   "fieldtype": "Data",
+   "label": "Motor Model / Catalog No."
+  },
+  {
+   "fieldname": "motor_serial",
+   "fieldtype": "Data",
+   "label": "Motor Serial No"
+  },
+  {
+   "fieldname": "motor_frame",
+   "fieldtype": "Data",
+   "label": "Frame"
+  },
+  {
+   "fieldname": "motor_enclosure",
+   "fieldtype": "Select",
+   "label": "Enclosure",
+   "options": "\nTEFC\nODP\nTENV\nExplosion Proof\nOther"
+  },
+  {
+   "fieldname": "cb_motor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "fieldname": "motor_hp",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "HP"
+  },
+  {
+   "fieldname": "motor_rpm",
+   "fieldtype": "Int",
+   "label": "RPM"
+  },
+  {
+   "description": "Blank = unit supply voltage",
+   "fieldname": "motor_voltage",
+   "fieldtype": "Data",
+   "label": "Voltage"
+  },
+  {
+   "fieldname": "motor_phase",
+   "fieldtype": "Select",
+   "label": "Phase",
+   "options": "\n1\n3"
+  },
+  {
+   "fieldname": "motor_hz",
+   "fieldtype": "Select",
+   "label": "Hz",
+   "options": "\n60\n50"
+  },
+  {
+   "fieldname": "motor_fla",
+   "fieldtype": "Float",
+   "label": "Full Load Amps"
+  },
+  {
+   "fieldname": "service_factor",
+   "fieldtype": "Float",
+   "label": "Service Factor"
+  },
+  {
+   "fieldname": "sb_pump",
+   "fieldtype": "Section Break",
+   "label": "Pump Nameplate"
+  },
+  {
+   "fieldname": "pump_manufacturer",
+   "fieldtype": "Data",
+   "label": "Pump Manufacturer"
+  },
+  {
+   "fieldname": "pump_model",
+   "fieldtype": "Data",
+   "label": "Pump Model"
+  },
+  {
+   "fieldname": "pump_serial",
+   "fieldtype": "Data",
+   "label": "Pump Serial No"
+  },
+  {
+   "columns": 2,
+   "fieldname": "pump_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Pump Type",
+   "options": "\nGear\nVane\nFixed Piston\nVariable Piston\nScrew\nOther"
+  },
+  {
+   "fieldname": "cb_pump",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "displacement",
+   "fieldtype": "Float",
+   "label": "Displacement"
+  },
+  {
+   "fieldname": "displacement_uom",
+   "fieldtype": "Select",
+   "label": "Displacement Unit",
+   "options": "\ncc/rev\nin\u00b3/rev"
+  },
+  {
+   "fieldname": "pump_rotation",
+   "fieldtype": "Select",
+   "label": "Rotation (from shaft end)",
+   "options": "\nCW\nCCW"
+  },
+  {
+   "fieldname": "design_flow_gpm",
+   "fieldtype": "Float",
+   "label": "Design Flow (GPM)"
+  },
+  {
+   "fieldname": "sb_settings",
+   "fieldtype": "Section Break",
+   "label": "Design Settings"
+  },
+  {
+   "columns": 2,
+   "fieldname": "relief_setting_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Relief Valve Setting (psi)"
+  },
+  {
+   "fieldname": "cb_settings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "description": "Pressure-compensated pumps only. Leave blank for fixed pumps.",
+   "fieldname": "compensator_setting_psi",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Compensator Setting (psi)"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 10:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Pump Motor Group",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

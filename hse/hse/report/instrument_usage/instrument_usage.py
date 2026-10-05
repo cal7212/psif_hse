@@ -15,6 +15,8 @@ SOURCES = {
 			("QC Inspection Reading", "instrument"),
 			("QC Hose Test", "instrument"),
 			("QC Hose Test", "crimp_instrument"),
+			("QC PMG Test", "instrument"),
+			("QC PMG Test", "amps_instrument"),
 		],
 		"qc_unit",
 		"stage",

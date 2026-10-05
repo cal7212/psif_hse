@@ -1,0 +1,148 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 10:45:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "pmg_tag",
+  "service",
+  "relief_spec",
+  "compensator_spec",
+  "tolerance_psi",
+  "motor_fla",
+  "cb_a",
+  "nameplate_verified",
+  "rotation_verified",
+  "relief_as_set",
+  "compensator_as_set",
+  "motor_amps",
+  "instrument",
+  "amps_instrument",
+  "result",
+  "finding"
+ ],
+ "fields": [
+  {
+   "columns": 1,
+   "fieldname": "pmg_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "PMG",
+   "read_only": 1
+  },
+  {
+   "fieldname": "service",
+   "fieldtype": "Data",
+   "label": "Service",
+   "read_only": 1
+  },
+  {
+   "fieldname": "relief_spec",
+   "fieldtype": "Float",
+   "label": "Relief Design (psi)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "compensator_spec",
+   "fieldtype": "Float",
+   "label": "Compensator Design (psi)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tolerance_psi",
+   "fieldtype": "Float",
+   "label": "Tolerance \u00b1 (psi)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "motor_fla",
+   "fieldtype": "Float",
+   "label": "Motor FLA",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cb_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 1,
+   "description": "Motor and pump nameplates match the unit record.",
+   "fieldname": "nameplate_verified",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Nameplates Match",
+   "options": "\nYes\nNo"
+  },
+  {
+   "columns": 1,
+   "fieldname": "rotation_verified",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Rotation Correct",
+   "options": "\nYes\nNo"
+  },
+  {
+   "columns": 1,
+   "fieldname": "relief_as_set",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Relief As-Set (psi)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "compensator_as_set",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Compensator As-Set (psi)"
+  },
+  {
+   "description": "Highest phase, at full-load test pressure",
+   "fieldname": "motor_amps",
+   "fieldtype": "Float",
+   "label": "Running Amps"
+  },
+  {
+   "columns": 1,
+   "fieldname": "instrument",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pressure Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
+   "fieldname": "amps_instrument",
+   "fieldtype": "Link",
+   "label": "Amps Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
+   "columns": 1,
+   "description": "Set automatically when the unit has a setting tolerance; otherwise select it.",
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Result",
+   "options": "\nPass\nFail\nN/A"
+  },
+  {
+   "columns": 2,
+   "fieldname": "finding",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Finding"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 10:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC PMG Test",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
