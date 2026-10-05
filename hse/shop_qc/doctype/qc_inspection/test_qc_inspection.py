@@ -635,6 +635,20 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 0)
 
 	def test_document_templates(self):
+		names = ("_T HPU Quality Docs", "_T HPU Quality Docs 2")
+		try:
+			self.check_document_templates()
+		finally:
+			for name in names:
+				frappe.delete_doc("QC Document Template", name, force=1, ignore_missing=True)
+			unit = frappe.get_doc("QC Unit", WO)
+			unit.quality_document_template = None
+			unit.construction_document_template = None
+			unit.set("quality_documents", [])
+			unit.set("construction_documents", [])
+			unit.save()
+
+	def check_document_templates(self):
 		tmpl = frappe.get_doc(
 			{
 				"doctype": "QC Document Template",
