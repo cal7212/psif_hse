@@ -81,8 +81,10 @@
   "work_performed",
   "tab_requirements",
   "section_cdocs",
+  "construction_document_template",
   "construction_documents",
   "section_qdocs",
+  "quality_document_template",
   "quality_documents",
   "section_materials",
   "mat_primary_items",
@@ -627,6 +629,13 @@
    "label": "Construction Documentation"
   },
   {
+   "description": "Pick a template to load its document list. Defaults to the template marked Default for this product type.",
+   "fieldname": "construction_document_template",
+   "fieldtype": "Link",
+   "label": "Construction Document Template",
+   "options": "QC Document Template"
+  },
+  {
    "description": "Drawings and procedures this build is made to. Rows are added automatically.",
    "fieldname": "construction_documents",
    "fieldtype": "Table",
@@ -637,6 +646,13 @@
    "fieldname": "section_qdocs",
    "fieldtype": "Section Break",
    "label": "Quality Documents"
+  },
+  {
+   "description": "Pick a template to load its document list.",
+   "fieldname": "quality_document_template",
+   "fieldtype": "Link",
+   "label": "Quality Document Template",
+   "options": "QC Document Template"
   },
   {
    "description": "Documents the customer requires in the quality package.",
@@ -1063,7 +1079,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-05 12:00:00.000000",
+ "modified": "2026-10-05 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

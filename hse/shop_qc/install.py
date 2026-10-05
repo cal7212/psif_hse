@@ -236,9 +236,31 @@ def after_install():
 	after_migrate()
 
 
+def make_document_templates():
+	"""Standard construction and quality document templates, created once per category."""
+	from hse.shop_qc.doctype.qc_unit.qc_unit import CONSTRUCTION_DOCUMENTS, QUALITY_DOCUMENTS
+
+	for name, category, documents in (
+		("Standard Construction Documents", "Construction", CONSTRUCTION_DOCUMENTS),
+		("Standard Quality Documents", "Quality", QUALITY_DOCUMENTS),
+	):
+		if frappe.db.exists("QC Document Template", {"category": category}):
+			continue
+		frappe.get_doc(
+			{
+				"doctype": "QC Document Template",
+				"template_name": name,
+				"category": category,
+				"is_default": 1,
+				"documents": [{"document": d} for d in documents],
+			}
+		).insert(ignore_permissions=True)
+
+
 def after_migrate():
 	make_role()
 	make_custom_fields()
 	make_shops()
 	make_failure_causes()
 	make_default_stages()
+	make_document_templates()

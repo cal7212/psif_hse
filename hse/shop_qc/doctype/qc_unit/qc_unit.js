@@ -9,8 +9,64 @@ const STAGE_COLORS = {
 	"Not Started": "light-gray",
 };
 
+// Load a QC Document Template into a document table. Keeps the reference and attachment
+// already entered for any document that is still on the list.
+function hse_load_document_template(frm, link, table) {
+	const template = frm.doc[link];
+	if (!template) return;
+	const load = () =>
+		frappe
+			.xcall("hse.shop_qc.doctype.qc_unit.qc_unit.get_document_template_rows", { template })
+			.then((rows) => {
+				const kept = {};
+				(frm.doc[table] || []).forEach(
+					(r) => (kept[(r.document || "").toLowerCase()] = r)
+				);
+				frm.clear_table(table);
+				rows.forEach((row) => {
+					const old = kept[row.document.toLowerCase()];
+					frm.add_child(table, {
+						document: row.document,
+						required: (old && old.required) || row.required,
+						reference: (old && old.reference) || row.reference,
+						attachment: old && old.attachment,
+					});
+				});
+				frm.refresh_field(table);
+			});
+	if ((frm.doc[table] || []).length) {
+		frappe.confirm(
+			__(
+				"Replace the {0} rows with template {1}? References and attachments already entered are kept.",
+				[__(frappe.meta.get_label(frm.doctype, table)), template]
+			),
+			load
+		);
+	} else {
+		load();
+	}
+}
+
 frappe.ui.form.on("QC Unit", {
+	construction_document_template(frm) {
+		hse_load_document_template(
+			frm,
+			"construction_document_template",
+			"construction_documents"
+		);
+	},
+
+	quality_document_template(frm) {
+		hse_load_document_template(frm, "quality_document_template", "quality_documents");
+	},
+
 	setup(frm) {
+		for (const [link, category] of [
+			["construction_document_template", "Construction"],
+			["quality_document_template", "Quality"],
+		]) {
+			frm.set_query(link, () => ({ filters: { category, disabled: 0 } }));
+		}
 		frm.set_query("failure_cause", () => ({ filters: { disabled: 0 } }));
 		frm.set_query("shop", () => ({ filters: { disabled: 0 } }));
 	},

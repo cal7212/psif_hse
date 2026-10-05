@@ -633,3 +633,59 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			self.assertEqual(doc.status, "Accepted")
 		finally:
 			frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 0)
+
+	def test_document_templates(self):
+		names = ("_T HPU Quality Docs", "_T HPU Quality Docs 2")
+		try:
+			self.check_document_templates()
+		finally:
+			for name in names:
+				frappe.delete_doc("QC Document Template", name, force=1, ignore_missing=True)
+			unit = frappe.get_doc("QC Unit", WO)
+			unit.quality_document_template = None
+			unit.construction_document_template = None
+			unit.set("quality_documents", [])
+			unit.set("construction_documents", [])
+			unit.save()
+
+	def check_document_templates(self):
+		tmpl = frappe.get_doc(
+			{
+				"doctype": "QC Document Template",
+				"template_name": "_T HPU Quality Docs",
+				"category": "Quality",
+				"product_type": "Power Unit",
+				"is_default": 1,
+				"documents": [
+					{"document": "Material Test Reports", "required": "Yes"},
+					{"document": "Hydrostatic Test Chart", "required": "Yes", "reference": "QP-12"},
+				],
+			}
+		).insert()
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.set("quality_documents", [])
+		unit.quality_document_template = None
+		unit.save()
+		self.assertEqual(unit.quality_document_template, tmpl.name)
+		self.assertEqual(
+			[r.document for r in unit.quality_documents], ["Material Test Reports", "Hydrostatic Test Chart"]
+		)
+		self.assertEqual(unit.quality_documents[1].reference, "QP-12")
+		# a second default for the same category and product type replaces the first
+		frappe.get_doc(
+			{
+				"doctype": "QC Document Template",
+				"template_name": "_T HPU Quality Docs 2",
+				"category": "Quality",
+				"product_type": "Power Unit",
+				"is_default": 1,
+				"documents": [{"document": "Certificate of Conformance"}],
+			}
+		).insert()
+		self.assertEqual(frappe.db.get_value("QC Document Template", tmpl.name, "is_default"), 0)
+		# a quality template cannot be used for the construction list
+		unit.reload()
+		unit.construction_document_template = tmpl.name
+		unit.set("construction_documents", [])
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()
