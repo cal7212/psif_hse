@@ -70,3 +70,22 @@ class IntegrationTestGHSLabel(IntegrationTestCase):
 		g = get_ghs_label_data(sds.name)
 		self.assertEqual(g.missing, [])
 		self.assertEqual(g.signal, "")
+
+	def test_long_statements_fall_back_to_workplace_label(self):
+		long_p = " ".join(
+			f"P{300 + i} Precautionary statement number {i} for the long label test." for i in range(40)
+		)
+		sds = self.make_sds(precautionary_statements=long_p)
+		g = get_ghs_label_data(sds.name, "2x4")
+		self.assertEqual(g.missing, [])
+		self.assertTrue(g.workplace)
+		html = frappe.get_print("SDS", sds.name, print_format="GHS Label 2x4", no_letterhead=1)
+		self.assertIn("Section 2", html)
+		self.assertNotIn("P339", html)
+		# the 4x6 label carries the full text
+		g = get_ghs_label_data(sds.name, "4x6")
+		self.assertFalse(g.workplace)
+		self.assertEqual(g.missing, [])
+		html = frappe.get_print("SDS", sds.name, print_format="GHS Label 4x6", no_letterhead=1)
+		self.assertIn("P339", html)
+		self.assertIn("page-height: 152.4mm", html)

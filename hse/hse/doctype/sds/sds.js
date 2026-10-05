@@ -34,15 +34,24 @@ frappe.ui.form.on("SDS", {
 		if (frm.doc.attach_sds) {
 			frm.add_custom_button(__("Open SDS"), () => window.open(frm.doc.attach_sds, "_blank"));
 		}
-		frm.add_custom_button(__("GHS Label (2x4)"), () => {
-			const params = new URLSearchParams({
-				doctype: frm.doctype,
-				name: frm.doc.name,
-				format: "GHS Label 2x4",
-				no_letterhead: 1,
-			});
-			window.open(`/api/method/frappe.utils.print_format.download_pdf?${params}`, "_blank");
-		});
+		for (const size of ["2x4", "4x6"]) {
+			frm.add_custom_button(
+				__("{0} Label", [size]),
+				() => {
+					const params = new URLSearchParams({
+						doctype: frm.doctype,
+						name: frm.doc.name,
+						format: `GHS Label ${size}`,
+						no_letterhead: 1,
+					});
+					window.open(
+						`/api/method/frappe.utils.print_format.download_pdf?${params}`,
+						"_blank"
+					);
+				},
+				__("GHS Label")
+			);
+		}
 
 		if (frm.doc.status === "Active" && !frm.doc.superseded_by) {
 			frm.add_custom_button(
