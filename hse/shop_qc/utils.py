@@ -224,6 +224,7 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 	inspections = []
 	hose_results = {}
 	pmg_results = {}
+	circuit = frappe._dict(devices=[], accumulators=[], proof_tests=[], coating_layers=[])
 	for s in stages:
 		acc = accepted.get(s.name)
 		if not acc:
@@ -234,6 +235,13 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 			hose_results[h.hose_tag] = frappe._dict(h.as_dict(), inspection=doc.name, stage=s.name)
 		for g in doc.get("pmg_tests") or []:
 			pmg_results[g.pmg_tag] = frappe._dict(g.as_dict(), inspection=doc.name, stage=s.name)
+		for table, key in (
+			("device_tests", "devices"),
+			("accumulator_tests", "accumulators"),
+			("proof_tests", "proof_tests"),
+			("coating_layers", "coating_layers"),
+		):
+			circuit[key] += [frappe._dict(r.as_dict(), stage=s.name) for r in doc.get(table) or []]
 	instruments = {}
 	for doc in inspections:
 		for row in doc.get("instruments") or []:
@@ -250,6 +258,21 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		inspections=inspections,
 		hose_results=hose_results,
 		pmg_results=pmg_results,
+		circuit=circuit,
+		non_conformances=frappe.get_all(
+			"Non Conformance",
+			filters={"qc_unit": qc_unit, "status": ("!=", "Cancelled")},
+			fields=[
+				"name",
+				"subject",
+				"status",
+				"creation",
+				"corrective_action",
+				"verification_date",
+				"modified",
+			],
+			order_by="creation asc",
+		),
 		released=unit.status in ("Released", "Shipped"),
 		released_by_name=frappe.db.get_value("User", unit.released_by, "full_name")
 		if unit.released_by

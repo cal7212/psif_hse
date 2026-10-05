@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "creation": "2026-10-05 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "layer",
+  "product_type",
+  "brand",
+  "product_code",
+  "mil_thickness",
+  "recoat_time",
+  "cure_time",
+  "applied"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "layer",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Layer",
+   "options": "\nSurface Conditioning\nBase Coat / Primer\nIntermediate Coat\nTop Coat\nSealer",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "product_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Product Type"
+  },
+  {
+   "columns": 1,
+   "fieldname": "brand",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Brand"
+  },
+  {
+   "columns": 1,
+   "fieldname": "product_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Product Code"
+  },
+  {
+   "columns": 1,
+   "fieldname": "mil_thickness",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Mil Thickness"
+  },
+  {
+   "columns": 1,
+   "fieldname": "recoat_time",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Recoat Time"
+  },
+  {
+   "columns": 1,
+   "fieldname": "cure_time",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cure Time"
+  },
+  {
+   "columns": 1,
+   "fieldname": "applied",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Applied",
+   "options": "\nYes\nN/A"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "QC Coating Layer",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

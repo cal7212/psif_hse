@@ -4,6 +4,30 @@
   "stage": "Frame & Weld",
   "items": [
    {
+    "check_item": "Design reviewed",
+    "criteria": "Size, performance specifications, arrangement, dimensions and settings reviewed against the order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Construction documentation",
+    "criteria": "Drawings, schematics and procedures listed on the unit are present, legible and current revision",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Layout",
+    "criteria": "Components located for ease of plumbing, transportation and maintenance",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
     "check_item": "Welds visually inspected",
     "criteria": "Per drawing weld symbols; no cracks, porosity, undercut or incomplete fusion (AWS D1.1 visual acceptance or company standard)",
     "is_critical": 0,
@@ -50,6 +74,22 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Welding to code",
+    "criteria": "Welds to the specified code, process, material and inspection method; free of spatter, slag and irregularities",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fabrication",
+    "criteria": "Weldments square, level, plumb and structurally sound; free of burrs and deformities",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
     "requires_photo": 0
    }
   ],
@@ -103,6 +143,14 @@
    {
     "check_item": "Vibration isolators / mounts",
     "criteria": "Installed per drawing",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fasteners",
+    "criteria": "Appropriate material, size, grade and torque; marked tight",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 0,
@@ -178,6 +226,54 @@
     "numeric": 0,
     "record_text": 0,
     "requires_photo": 0
+   },
+   {
+    "check_item": "Connectors",
+    "criteria": "Proper connection type, material, pressure rating and torque; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Tubing",
+    "criteria": "Correct material, size, wall thickness, bend radius and flare; routed and clamped securely",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Hose",
+    "criteria": "Correct size, pressure rating and fluid compatibility; bend radius, natural lay and routing",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Hose ends",
+    "criteria": "Correct size and pressure rating; insertion depth and crimp diameter verified; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Flanges",
+    "criteria": "Suitable for pressure; gasket / O-ring present; fastener size and length correct; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fluid conductors",
+    "criteria": "Correct material and pressure rating; fluid velocity / pressure drop acceptable; secured",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
    }
   ],
   "product_type": "Power Unit"
@@ -243,9 +339,151 @@
     "numeric": 0,
     "record_text": 0,
     "requires_photo": 0
+   },
+   {
+    "check_item": "Wire sizing",
+    "criteria": "Wire sized for current, voltage, length of run, protection and environment; high and low voltage segregated",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Panels",
+    "criteria": "Mounted securely; high / low voltage devices segregated; spare terminals provided; terminations secure",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Instrumentation",
+    "criteria": "Appropriate for operating range and voltage; good condition; identifiable and accessible",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Labels / tags",
+    "criteria": "Correct size, per schematic, device designation and function accurate, spelling correct, neatly applied",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
    }
   ],
   "product_type": "Power Unit"
+ },
+ {
+  "template_name": "HPU - Coating",
+  "stage": "Coating",
+  "items": [
+   {
+    "check_item": "Reservoir cleaned and inspected",
+    "criteria": "Reservoir interior cleaned and inspected before coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cover gaskets removed",
+    "criteria": "Reservoir cover gaskets removed before coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Surfaces cleaned and degreased",
+    "criteria": "All surfaces to be coated cleaned and degreased",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fittings and fasteners torque sealed",
+    "criteria": "Torque seal applied to fittings and fasteners before coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Plumbing level and square",
+    "criteria": "Plumbing level and square before coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Welds visually acceptable",
+    "criteria": "Welds visually acceptable before coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Surface imperfections corrected",
+    "criteria": "Surface imperfections corrected",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Exposed threads protected",
+    "criteria": "Exposed threads protected from coating",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Machined surfaces masked",
+    "criteria": "Machined surfaces masked",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Equipment labels masked",
+    "criteria": "Equipment labels and nameplates masked",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Surface preparation confirmed",
+    "criteria": "Surface preparation meets the specified preparation level",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Environmental conditions suitable",
+    "criteria": "Temperature, humidity and dew point within the coating manufacturer's limits",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Coating finish",
+    "criteria": "Proper surface preparation, brand, type and application method; no runs, overspray or misses; consistent",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   }
+  ]
  },
  {
   "template_name": "HPU - Flush & Cleanliness",
@@ -296,25 +534,167 @@
   "product_type": "Power Unit"
  },
  {
-  "template_name": "HPU - Pressure & Function Test",
-  "stage": "Pressure & Function Test",
+  "template_name": "HPU - Pre-Test Preparation",
+  "stage": "Pre-Test Preparation",
   "items": [
    {
-    "check_item": "Motor rotation",
-    "criteria": "Rotation matches pump arrow",
+    "check_item": "Fluid brand",
+    "criteria": "Record the fluid brand in the reservoir",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fluid type",
+    "criteria": "Record the fluid type; matches the order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fluid viscosity",
+    "criteria": "Record the viscosity grade; matches the order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fluid ISO level",
+    "criteria": "Record the ISO 4406 cleanliness code and date checked",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cover gaskets installed and secured",
+    "criteria": "Reservoir cover gaskets installed and secured",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 0,
     "requires_photo": 0
    },
    {
-    "check_item": "No-load current (A)",
-    "criteria": "Record each phase; balanced",
-    "is_critical": 0,
+    "check_item": "Fluid level sufficient",
+    "criteria": "Reservoir fluid level sufficient for start-up",
+    "is_critical": 1,
     "numeric": 0,
-    "record_text": 1,
+    "record_text": 0,
     "requires_photo": 0
    },
+   {
+    "check_item": "Suction valves open",
+    "criteria": "All suction valves open",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "All ports connected / capped",
+    "criteria": "All ports connected or capped",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Extra return drops",
+    "criteria": "Extra return drops installed or plugged",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "No overspray, runs, misses",
+    "criteria": "Coating has no overspray, runs or misses",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Motor rotation arrow applied",
+    "criteria": "Motor rotation arrow applied",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Pump case filled",
+    "criteria": "Pump case filled before start-up",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Accumulators pre-charged",
+    "criteria": "Accumulators pre-charged to the design value before start-up",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Relief valves at minimum setting",
+    "criteria": "Relief valves backed off to minimum before start-up",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Motor voltage confirmed",
+    "criteria": "Motor nameplate voltage confirmed against supply",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Wire sizes confirmed",
+    "criteria": "Wire sizes confirmed against the electrical schematic",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Motor leads wired correctly",
+    "criteria": "Motor leads wired for the supply voltage",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Motor rotation direction",
+    "criteria": "Motor rotation direction verified (bump test) before running",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Point-to-point inspection complete",
+    "criteria": "Point-to-point wiring inspection complete",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "HPU - Pressure & Function Test",
+  "stage": "Pressure & Function Test",
+  "items": [
    {
     "check_item": "Relief valve setting (psi)",
     "criteria": "Design relief setting -3% / +3%",
@@ -354,14 +734,6 @@
     "requires_photo": 0
    },
    {
-    "check_item": "Full-load current (A)",
-    "criteria": "Not to exceed motor nameplate FLA x service factor",
-    "is_critical": 0,
-    "numeric": 0,
-    "record_text": 1,
-    "requires_photo": 0
-   },
-   {
     "check_item": "Fluid temperature rise (deg F)",
     "criteria": "Rise during test run",
     "is_critical": 0,
@@ -386,6 +758,14 @@
     "record_text": 0,
     "requires_photo": 0,
     "max_value": 85
+   },
+   {
+    "check_item": "Test report complete",
+    "criteria": "Test record present and current; settings and results recorded for every circuit",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
    }
   ],
   "product_type": "Power Unit"
@@ -395,20 +775,100 @@
   "stage": "Final Release",
   "items": [
    {
+    "check_item": "Fluid removed from system",
+    "criteria": "Fluid drained from the system for shipment",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "PSIF nameplate affixed",
+    "criteria": "PSIF nameplate affixed with serial number",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Devices labeled",
+    "criteria": "Devices labeled per schematic",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports identified",
+    "criteria": "Ports identified / tagged",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Motor directional arrows applied",
+    "criteria": "Motor directional arrows applied",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Safety placards affixed",
+    "criteria": "Safety placards affixed",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ship loose items included",
+    "criteria": "Ship loose items included per the ship loose items list",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Unused components reconciled",
+    "criteria": "Unused components reconciled against the BOM",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Non-conformances resolved",
+    "criteria": "All non-conformances resolved and verified",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Quality package",
+    "criteria": "Quality package present and current; non-conformities noted and resolved",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Packaging requirements observed",
+    "criteria": "Packaging, protection and crating per the order: ports capped, no hazardous material, secured for transport",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
     "check_item": "Nameplate and serial number",
     "criteria": "Nameplate installed; serial matches QC Unit record",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
     "requires_photo": 1
-   },
-   {
-    "check_item": "Fluid level",
-    "criteria": "At operating level, or shipped dry per order",
-    "is_critical": 0,
-    "numeric": 0,
-    "record_text": 0,
-    "requires_photo": 0
    },
    {
     "check_item": "Ports capped, loose parts secured for shipping",

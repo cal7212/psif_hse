@@ -9,6 +9,57 @@ from frappe.utils import cint, cstr, flt
 REPAIR = "Repair"
 MAX_PMG = 10
 PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
+SYSTEM_TYPES = ("Power Unit", "Manifold", "Valve Stand")
+# PSIF System Construction Test Record: construction documentation and quality documents.
+CONSTRUCTION_DOCUMENTS = (
+	"Hydraulic Schematic",
+	"Electrical Schematic",
+	"Pneumatic Schematic",
+	"Fabrication Drawing",
+	"Mechanical Drawing",
+	"Assembly Drawing",
+	"General Arrangement",
+	"Piping & Instrument Diagram",
+	"Weld Specification",
+	"Assembly Instructions",
+	"Test Specification / F.A.T.",
+	"Pipe Spool Drawing",
+	"Bill of Materials",
+	"Prior Project Photos",
+	"Test Procedure",
+	"Coating Specification",
+	"Quality Specification",
+	"Ship Loose Items List",
+)
+QUALITY_DOCUMENTS = (
+	"Material Test Reports",
+	"Safety Data Sheets",
+	"Certificate of Conformance",
+	"Calibration Certification",
+	"Test Performance Records",
+	"First Article Reports",
+	"Dimensional Inspection",
+	"Serial Number Records",
+	"Test Procedure (F.A.T.)",
+	"Standard Package - Data Sheets, Manual, Drawings",
+)
+REVIEW_AREAS = (
+	"Design",
+	"Documentation",
+	"Layout",
+	"Quality",
+	"Logistics",
+	"Scheduling",
+	"Fabrication",
+	"Plumbing",
+	"Wiring",
+	"Coatings",
+	"Testing",
+	"Non-Conformances",
+	"Other",
+)
+CC_PER_GAL = 3785.41
+IN3_PER_GAL = 231.0
 
 
 class QCUnit(Document):
@@ -33,7 +84,44 @@ class QCUnit(Document):
 		self.set_test_pressures()
 		self.validate_hoses()
 		self.validate_pump_motor_groups()
+		self.validate_circuit_items()
+		self.set_order_documents()
+		self.set_post_shipment_review()
 		self.validate_status_change()
+
+	def set_order_documents(self):
+		if self.product_type not in SYSTEM_TYPES:
+			return
+		for table, names in (
+			("construction_documents", CONSTRUCTION_DOCUMENTS),
+			("quality_documents", QUALITY_DOCUMENTS),
+		):
+			if not self.get(table):
+				for name in names:
+					self.append(table, {"document": name})
+
+	def set_post_shipment_review(self):
+		if self.status == "Shipped" and not self.post_shipment_reviews:
+			for area in REVIEW_AREAS:
+				self.append("post_shipment_reviews", {"area": area})
+
+	def validate_circuit_items(self):
+		tags = {r.pmg_tag for r in self.pump_motor_groups}
+		for table in ("circuit_devices", "accumulators"):
+			for r in self.get(table):
+				r.pmg_tag = cstr(r.pmg_tag).strip().upper() or None
+				if r.pmg_tag and r.pmg_tag not in tags:
+					frappe.throw(
+						_("{0} row {1}: circuit {2} is not one of this unit's pump / motor groups.").format(
+							_(self.meta.get_label(table)), r.idx, r.pmg_tag
+						)
+					)
+		for r in self.accumulators:
+			if flt(r.precharge_psi) < 0 or flt(r.volume_gal) < 0:
+				frappe.throw(_("Accumulators row {0}: values cannot be negative.").format(r.idx))
+		for r in self.proof_test_items:
+			if flt(r.p1_psi) < 0 or flt(r.p2_psi) < 0:
+				frappe.throw(_("Proof Test Items row {0}: pressures cannot be negative.").format(r.idx))
 
 	def normalise_ids(self):
 		self.trulinx_work_order = normalise_wo(self.trulinx_work_order) or None
@@ -113,6 +201,8 @@ class QCUnit(Document):
 			r.motor_voltage = r.motor_voltage or self.voltage
 			r.motor_phase = r.motor_phase or self.phase
 			r.motor_hz = r.motor_hz or self.hz
+			if not flt(r.design_flow_gpm):
+				r.design_flow_gpm = theoretical_flow(r)
 			for field in ("relief_setting_psi", "compensator_setting_psi", "motor_hp", "motor_fla"):
 				if flt(r.get(field)) < 0:
 					frappe.throw(_("{0}: {1} cannot be negative.").format(tag, r.meta.get_label(field)))
@@ -158,6 +248,14 @@ class QCUnit(Document):
 	def validate_status_change(self):
 		if self.status in ("Released", "Shipped") and (self.open_non_conformances or 0) > 0:
 			frappe.throw(_("Cannot release a unit with open Non Conformances."))
+
+
+def theoretical_flow(r) -> float:
+	"""Displacement x rated RPM, in GPM. 0 when either is missing."""
+	per_gal = {"cc/rev": CC_PER_GAL, "in³/rev": IN3_PER_GAL}.get(r.displacement_uom)
+	if not per_gal or not flt(r.displacement) or not flt(r.motor_rpm):
+		return 0
+	return flt(flt(r.displacement) * flt(r.motor_rpm) / per_gal, 2)
 
 
 def normalise_wo(value) -> str:
