@@ -164,6 +164,7 @@ class QCInspection(Document):
 		if not self.items:
 			self.set_items_from_template()
 		self.load_stage_tests()
+		self.refresh_hose_specs()
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
 		self.evaluate_pmg_tests()
@@ -279,6 +280,19 @@ class QCInspection(Document):
 
 	def is_pmg_test_stage(self) -> bool:
 		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, "pmg_test"))
+
+	def refresh_hose_specs(self):
+		"""While in draft, keep each hose row's limits in step with the unit, so a spec
+		entered or corrected on the unit after the rows were loaded is picked up on save."""
+		if self.docstatus != 0 or not self.hose_tests or not self.qc_unit:
+			return
+		specs = {r["hose_tag"]: r for r in build_hose_tests(self.qc_unit)}
+		for row in self.hose_tests:
+			spec = specs.get(row.hose_tag)
+			if not spec:
+				continue
+			for field in HOSE_SPEC_FIELDS:
+				row.set(field, spec.get(field))
 
 	def set_pmg_tests(self):
 		tags = None
@@ -960,6 +974,16 @@ def build_items(template: str, qc_unit: str | None = None) -> list[dict]:
 	return rows
 
 
+HOSE_SPEC_FIELDS = (
+	"part_number",
+	"spec_basis",
+	"spec_reference",
+	"crimp_min",
+	"crimp_max",
+	"test_pressure_spec",
+	"hold_spec_min",
+	"cleanliness_spec",
+)
 STAGE_TABLES = (
 	"hose_tests",
 	"pmg_tests",

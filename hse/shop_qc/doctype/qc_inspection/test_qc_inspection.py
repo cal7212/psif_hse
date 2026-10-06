@@ -836,3 +836,14 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			dict(good, cleanliness_spec="18/16/13", crimp_min=0.99, crimp_max=1.01, test_pressure_spec=6000)
 		)
 		self.assertIsNone(evaluate_hose(row))
+
+	def test_draft_hose_rows_follow_unit_spec(self):
+		unit = self.make_hose_unit()
+		doc = self.make("_T Hose Test", unit=HOSE_WO, submit=False)
+		self.assertFalse(doc.hose_tests[0].cleanliness_spec)
+		unit.reload()
+		unit.target_cleanliness = "18/16/13"
+		unit.save()
+		doc.reload()
+		doc.save()
+		self.assertEqual(doc.hose_tests[0].cleanliness_spec, "18/16/13")
