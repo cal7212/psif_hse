@@ -259,7 +259,9 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		accepted=accepted,
 		inspections=inspections,
 		hose_results=hose_results,
-		hose_specs={h.hose_tag: hose_spec(h) for h in unit.get("hoses") or []},
+		hose_specs={
+			h.hose_tag: hose_spec(h, unit.get("target_cleanliness")) for h in unit.get("hoses") or []
+		},
 		pmg_results=pmg_results,
 		circuit=circuit,
 		non_conformances=frappe.get_all(

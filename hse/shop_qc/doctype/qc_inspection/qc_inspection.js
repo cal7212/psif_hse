@@ -239,7 +239,37 @@ frappe.ui.form.on("QC Hose Test", {
 	pressure_reached: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
 	hold_actual_min: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
 	leak_check: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
+	cleanliness_actual: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn, "cleanliness_actual"),
 });
+
+// ISO 4406 code as scale numbers (null = "-"), or null if blank or not a code.
+function parse_iso_code(value) {
+	const text = (value || "").replace(/\s/g, "");
+	if (!text) return null;
+	const parts = text.split("/");
+	if (parts.length < 2 || parts.length > 3) return null;
+	const codes = [];
+	for (const p of parts) {
+		if (p === "-" || p === "*") codes.push(null);
+		else if (/^\d+$/.test(p) && parseInt(p, 10) <= 30) codes.push(parseInt(p, 10));
+		else return null;
+	}
+	return codes.some((c) => c !== null) ? codes : null;
+}
+
+// Mirrors cleanliness_status() / iso_within() in Python.
+function hose_cleanliness_status(r) {
+	const req = parse_iso_code(r.cleanliness_spec);
+	const act = parse_iso_code(r.cleanliness_actual);
+	if (!req || !act) return "";
+	const a = act.slice().reverse();
+	const q = req.slice().reverse();
+	for (let i = 0; i < q.length; i++) {
+		if (q[i] === null) continue;
+		if (i >= a.length || a[i] === null || a[i] > q[i]) return "Out of Spec";
+	}
+	return "In Spec";
+}
 
 // Mirrors crimp_status() in qc_inspection.py.
 function hose_crimp_status(r) {
@@ -257,14 +287,16 @@ function hose_crimp_status(r) {
 function evaluate_hose_row(cdt, cdn, changed) {
 	const r = locals[cdt][cdn];
 	const crimp = hose_crimp_status(r);
+	const clean = hose_cleanliness_status(r);
 	let result = "";
-	if (crimp === "Out of Spec") {
+	if (crimp === "Out of Spec" || clean === "Out of Spec") {
 		result = "Fail";
 	} else {
 		const crimp_spec = flt(r.crimp_min) || flt(r.crimp_max);
 		const complete =
 			r.leak_check &&
 			flt(r.pressure_reached) &&
+			(!(r.cleanliness_spec || "").trim() || clean) &&
 			(!crimp_spec || crimp) &&
 			(!flt(r.hold_spec_min) || flt(r.hold_actual_min));
 		if (complete) {
@@ -275,7 +307,29 @@ function evaluate_hose_row(cdt, cdn, changed) {
 		}
 	}
 	if (r.crimp_status !== crimp) frappe.model.set_value(cdt, cdn, "crimp_status", crimp);
+	if (r.cleanliness_status !== clean) {
+		frappe.model.set_value(cdt, cdn, "cleanliness_status", clean);
+	}
 	if (r.result !== result) frappe.model.set_value(cdt, cdn, "result", result);
+	if (changed === "cleanliness_actual") {
+		if (r.cleanliness_actual && !parse_iso_code(r.cleanliness_actual)) {
+			frappe.msgprint(
+				__("{0} is not an ISO 4406 code. Use the form 18/16/13 (or 16/13).", [
+					r.cleanliness_actual,
+				])
+			);
+		} else if (clean === "Out of Spec") {
+			frappe.msgprint({
+				title: __("Cleanliness out of spec"),
+				message: __(
+					"Hose {0}: ISO {1} does not meet the required {2}. The hose fails: enter a finding. A Critical Non Conformance is raised when this inspection is submitted.",
+					[r.hose_tag, r.cleanliness_actual, r.cleanliness_spec]
+				),
+				indicator: "red",
+			});
+		}
+		return;
+	}
 	const value = changed && flt(r[changed]);
 	if (value && (value < flt(r.crimp_min) || value > flt(r.crimp_max))) {
 		frappe.msgprint({
