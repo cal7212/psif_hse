@@ -208,10 +208,14 @@ function fill_crimp_from_chart(cdt, cdn) {
 				crimp_diameter_spec: spec.crimp_diameter,
 				crimp_tolerance: spec.crimp_tolerance,
 				die_size: spec.die_size,
-				crimp_spec_source:
-					spec.source && spec.revision
-						? `${spec.source} / ${spec.revision}`
-						: spec.source || spec.revision || "",
+				crimp_spec_source: [
+					spec.source,
+					spec.revision,
+					spec.matched_series ? __("{0} series", [spec.matched_series]) : "",
+				]
+					.join(" / ")
+					.replace(/^( \/ )+|( \/ )+$/g, "")
+					.replace(/( \/ )+/g, " / "),
 			});
 		});
 }

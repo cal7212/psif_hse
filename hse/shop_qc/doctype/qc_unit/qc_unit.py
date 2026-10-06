@@ -315,7 +315,8 @@ CUSTOMER_SPEC = "Customer Spec"
 def apply_crimp_chart(h):
 	"""Fill crimp diameter, tolerance and die size from the Hose Crimp Spec chart.
 
-	The chart entry is looked up from Hose Type + Dash Size + End A fitting. Values are
+	The chart entry is looked up from Hose Type + Dash Size + End A fitting (exact part number,
+	else its coupling series). Values are
 	copied when the row first matches an entry (or its key changes to a different entry),
 	so a later manual override on the row is kept until the key changes again."""
 	from hse.shop_qc.doctype.hose_crimp_spec.hose_crimp_spec import find_crimp_spec, normalise_fitting
@@ -338,7 +339,10 @@ def apply_crimp_chart(h):
 		h.crimp_diameter_spec = spec.crimp_diameter
 		h.crimp_tolerance = spec.crimp_tolerance
 		h.die_size = spec.die_size
-	h.crimp_spec_source = " / ".join(x for x in (cstr(spec.source), cstr(spec.revision)) if x) or None
+	source = " / ".join(x for x in (cstr(spec.source), cstr(spec.revision)) if x)
+	if spec.matched_series:
+		source = " / ".join(x for x in (source, _("{0} series").format(spec.matched_series)) if x)
+	h.crimp_spec_source = source or None
 	if normalise_fitting(h.fitting_b) != normalise_fitting(h.fitting_a):
 		other = find_crimp_spec(h.hose_type, h.hose_size, h.fitting_b)
 		if other and (

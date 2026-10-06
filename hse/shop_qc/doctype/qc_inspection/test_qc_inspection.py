@@ -901,3 +901,40 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		unit.save()
 		self.assertFalse(unit.hoses[0].crimp_spec)
 		self.assertEqual(unit.hoses[0].crimp_diameter_spec, 1.19)
+
+	def test_crimp_chart_matches_coupling_series(self):
+		from hse.shop_qc.doctype.hose_crimp_spec.hose_crimp_spec import find_crimp_spec, series_prefix
+
+		self.assertEqual(
+			[series_prefix(k) for k in ("T2000", "TP000", "TW4000", "66000N", "1G000", "1100", "7200-M")],
+			["T2", "TP", "TW4", "66", "1G", "11", "72"],
+		)
+		self.assertIsNone(series_prefix("T2040-1212"))
+		self.make_crimp_chart()
+		series = {}
+		for key, crimp in (("_T2000", 1.291), ("_T7000", 1.398)):
+			series[key] = frappe.get_doc(
+				{
+					"doctype": "Hose Crimp Spec",
+					"hose_type": "_T-HT1",
+					"dash_size": "-12",
+					"fitting_part_number": key,
+					"crimp_diameter": crimp,
+					"crimp_tolerance": 0.008,
+					"source": "_T Chart",
+					"revision": "3",
+				}
+			).insert()
+		spec = find_crimp_spec("_T-HT1", "12", "_t2040-1212")
+		self.assertEqual((spec.name, spec.matched_series), (series["_T2000"].name, "_T2000"))
+		self.assertEqual(find_crimp_spec("_T-HT1", "-12", "_T7340-1212").name, series["_T7000"].name)
+		# an exact part-number entry wins over the series
+		self.assertIsNone(find_crimp_spec("_T-HT1", "-12", "_T-FIT12").matched_series)
+		self.assertIsNone(find_crimp_spec("_T-HT1", "-12", "_T9040-1212"))
+		unit = self.make_hose_unit()
+		unit.hoses[0].update({"hose_type": "_T-HT1", "hose_size": "-12", "fitting_a": "_T2040-1212"})
+		unit.save()
+		h = unit.hoses[0]
+		self.assertEqual(h.crimp_spec, series["_T2000"].name)
+		self.assertEqual(h.crimp_diameter_spec, 1.291)
+		self.assertEqual(h.crimp_spec_source, "_T Chart / 3 / _T2000 series")
