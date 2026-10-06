@@ -245,6 +245,9 @@ class QCUnit(Document):
 			if flt(h.crimp_tolerance) < 0:
 				frappe.throw(_("Row {0}: Crimp tolerance must be positive.").format(h.idx))
 			h.hose_size, h.nominal_id_in = normalise_dash(h.hose_size)
+			if cstr(h.fitting_a).strip() and not cstr(h.fitting_b).strip():
+				h.fitting_b = h.fitting_a
+			apply_crimp_chart(h)
 			for field in ("crimp_diameter_spec", "customer_crimp_diameter"):
 				warning = crimp_diameter_warning(h, field)
 				if warning:
@@ -307,6 +310,48 @@ class QCUnit(Document):
 
 PSIF_SPEC = "PSIF Standard"
 CUSTOMER_SPEC = "Customer Spec"
+
+
+def apply_crimp_chart(h):
+	"""Fill crimp diameter, tolerance and die size from the Hose Crimp Spec chart.
+
+	The chart entry is looked up from Hose Type + Dash Size + End A fitting. Values are
+	copied when the row first matches an entry (or its key changes to a different entry),
+	so a later manual override on the row is kept until the key changes again."""
+	from hse.shop_qc.doctype.hose_crimp_spec.hose_crimp_spec import find_crimp_spec, normalise_fitting
+
+	spec = find_crimp_spec(h.hose_type, h.hose_size, h.fitting_a)
+	if not spec:
+		if h.crimp_spec:
+			h.crimp_spec = h.crimp_spec_source = None
+		if h.hose_type and h.hose_size and h.fitting_a:
+			frappe.msgprint(
+				_(
+					"Hose {0}: no crimp chart entry for {1} {2} {3}. Enter the crimp diameter, tolerance and die size."
+				).format(h.hose_tag, h.hose_type, h.hose_size, h.fitting_a),
+				indicator="orange",
+				alert=True,
+			)
+		return
+	if h.crimp_spec != spec.name or not flt(h.crimp_diameter_spec):
+		h.crimp_spec = spec.name
+		h.crimp_diameter_spec = spec.crimp_diameter
+		h.crimp_tolerance = spec.crimp_tolerance
+		h.die_size = spec.die_size
+	h.crimp_spec_source = " / ".join(x for x in (cstr(spec.source), cstr(spec.revision)) if x) or None
+	if normalise_fitting(h.fitting_b) != normalise_fitting(h.fitting_a):
+		other = find_crimp_spec(h.hose_type, h.hose_size, h.fitting_b)
+		if other and (
+			flt(other.crimp_diameter) != flt(spec.crimp_diameter)
+			or flt(other.crimp_tolerance) != flt(spec.crimp_tolerance)
+		):
+			frappe.msgprint(
+				_(
+					"Hose {0}: End B fitting {1} has a different crimp spec ({2} +/- {3} in) from End A. Both ends are judged against the End A spec."
+				).format(h.hose_tag, h.fitting_b, other.crimp_diameter, other.crimp_tolerance or 0),
+				indicator="orange",
+				alert=True,
+			)
 
 
 def normalise_dash(value) -> tuple[str, float]:
