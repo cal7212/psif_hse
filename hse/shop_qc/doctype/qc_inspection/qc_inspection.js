@@ -159,6 +159,28 @@ frappe.ui.form.on("QC Inspection", {
 	template(frm) {
 		frm.trigger("render_instructions");
 		frm.trigger("load_items");
+		frm.trigger("load_stage_tests");
+	},
+
+	// Hose, PMG, circuit, proof and coating rows, shown before the first save.
+	load_stage_tests(frm) {
+		if (frm.doc.docstatus !== 0 || !frm.doc.qc_unit || !frm.doc.stage) return;
+		frappe
+			.xcall(`${QCI_METHOD}.get_stage_test_rows`, {
+				qc_unit: frm.doc.qc_unit,
+				stage: frm.doc.stage,
+				is_reinspection: frm.doc.is_reinspection ? 1 : 0,
+				reinspection_of: frm.doc.reinspection_of || null,
+			})
+			.then((tables) => {
+				for (const [table, rows] of Object.entries(tables || {})) {
+					if ((frm.doc[table] || []).length && !frm.is_new()) continue;
+					frm.clear_table(table);
+					for (const row of rows) Object.assign(frm.add_child(table), row);
+					frm.refresh_field(table);
+				}
+				frm.refresh_fields();
+			});
 	},
 
 	load_items(frm) {
