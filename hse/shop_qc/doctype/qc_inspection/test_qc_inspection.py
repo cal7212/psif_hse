@@ -16,6 +16,7 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	evaluate_numeric,
 	evaluate_pmg,
 	evaluate_proof,
+	get_stage_test_rows,
 )
 from hse.shop_qc.doctype.qc_unit.qc_unit import crimp_diameter_warning, hose_spec, normalise_dash
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
@@ -763,3 +764,10 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(
 			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=0.5), "crimp_diameter_spec")
 		)
+
+	def test_stage_rows_before_first_save(self):
+		self.make_hose_unit()
+		tables = get_stage_test_rows(HOSE_WO, "_T Hose Test")
+		self.assertEqual(sorted(r["hose_tag"] for r in tables["hose_tests"]), ["_TH-1", "_TH-2"])
+		self.assertEqual(tables["hose_tests"][0]["spec_basis"], "PSIF Standard")
+		self.assertEqual(tables["pmg_tests"], [])

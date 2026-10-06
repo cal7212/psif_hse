@@ -152,6 +152,17 @@ class QCInspection(Document):
 		self.validate_reinspection()
 		if not self.items:
 			self.set_items_from_template()
+		self.load_stage_tests()
+		self.evaluate_numeric_readings()
+		self.evaluate_hose_tests()
+		self.evaluate_pmg_tests()
+		self.evaluate_circuit_tests()
+		self.sync_instruments()
+		if self.docstatus == 0:
+			self.status = "Pending"
+
+	def load_stage_tests(self):
+		"""Fill the stage's test tables from the unit when they are empty."""
 		if not self.hose_tests and self.is_hose_test_stage():
 			self.set_hose_tests()
 		if not self.pmg_tests and self.is_pmg_test_stage():
@@ -163,13 +174,6 @@ class QCInspection(Document):
 		if not self.coating_layers and self.is_flag_stage("coating_record"):
 			for layer in COATING_LAYERS:
 				self.append("coating_layers", {"layer": layer})
-		self.evaluate_numeric_readings()
-		self.evaluate_hose_tests()
-		self.evaluate_pmg_tests()
-		self.evaluate_circuit_tests()
-		self.sync_instruments()
-		if self.docstatus == 0:
-			self.status = "Pending"
 
 	def validate_unit(self):
 		status = frappe.db.get_value("QC Unit", self.qc_unit, "status")
@@ -934,6 +938,37 @@ def build_items(template: str, qc_unit: str | None = None) -> list[dict]:
 				)
 		rows.append(row)
 	return rows
+
+
+STAGE_TABLES = (
+	"hose_tests",
+	"pmg_tests",
+	"device_tests",
+	"accumulator_tests",
+	"proof_tests",
+	"coating_layers",
+)
+
+
+@frappe.whitelist()
+def get_stage_test_rows(
+	qc_unit: str, stage: str, is_reinspection: int = 0, reinspection_of: str | None = None
+) -> dict:
+	"""Test rows a new inspection of this stage starts with, so the form can show them before
+	the first save. Uses the same loaders as validate()."""
+	frappe.has_permission("QC Inspection", "create", throw=True)
+	frappe.has_permission("QC Unit", "read", qc_unit, throw=True)
+	doc = frappe.new_doc("QC Inspection")
+	doc.update(
+		{
+			"qc_unit": qc_unit,
+			"stage": stage,
+			"is_reinspection": cint(is_reinspection),
+			"reinspection_of": reinspection_of,
+		}
+	)
+	doc.load_stage_tests()
+	return {table: [row.as_dict(no_default_fields=True) for row in doc.get(table)] for table in STAGE_TABLES}
 
 
 @frappe.whitelist()
