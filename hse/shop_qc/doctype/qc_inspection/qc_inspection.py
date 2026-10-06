@@ -10,6 +10,7 @@ from frappe.utils import cint, cstr, escape_html, flt, getdate
 
 from hse.hse.instruments import (
 	AMPS_TYPES,
+	CLEANLINESS_TYPES,
 	CRIMP_TYPES,
 	PRESSURE_TYPES,
 	add_used_instruments,
@@ -19,7 +20,7 @@ from hse.hse.instruments import (
 	needs_instrument,
 	pick,
 )
-from hse.shop_qc.doctype.qc_unit.qc_unit import hose_spec
+from hse.shop_qc.doctype.qc_unit.qc_unit import format_iso_code, hose_spec, iso_within
 from hse.shop_qc.utils import (
 	LOCKED_STATUSES,
 	count_open_ncs,
@@ -75,13 +76,23 @@ def crimp_status(row) -> str:
 	return CRIMP_IN if len(measured) == 2 else ""
 
 
+def cleanliness_status(row) -> str:
+	"""In Spec / Out of Spec once the actual ISO 4406 code is entered against a requirement."""
+	if not cstr(row.cleanliness_spec).strip() or not cstr(row.cleanliness_actual).strip():
+		return ""
+	return CRIMP_IN if iso_within(row.cleanliness_actual, row.cleanliness_spec) else CRIMP_OUT
+
+
 def evaluate_hose(row) -> str | None:
 	"""Pass/Fail for one hose once every required entry is made; None while incomplete.
-	An out-of-spec crimp fails the hose straight away."""
+	An out-of-spec crimp or cleanliness fails the hose straight away."""
 	crimp = crimp_status(row)
-	if crimp == CRIMP_OUT:
+	clean = cleanliness_status(row)
+	if CRIMP_OUT in (crimp, clean):
 		return FAIL
 	if not row.leak_check or not flt(row.pressure_reached):
+		return None
+	if cstr(row.cleanliness_spec).strip() and not clean:
 		return None
 	if (flt(row.crimp_min) or flt(row.crimp_max)) and not crimp:
 		return None
@@ -339,7 +350,9 @@ class QCInspection(Document):
 
 	def evaluate_hose_tests(self):
 		for row in self.hose_tests:
+			row.cleanliness_actual = format_iso_code(row.cleanliness_actual)
 			row.crimp_status = crimp_status(row)
+			row.cleanliness_status = cleanliness_status(row)
 			row.result = evaluate_hose(row)
 
 	def evaluate_numeric_readings(self):
@@ -398,7 +411,7 @@ class QCInspection(Document):
 			elif not row.result:
 				errors.append(
 					_(
-						"Hose {0}: enter both crimp diameters, the pressure reached, the hold time and the leak check."
+						"Hose {0}: enter both crimp diameters, the pressure reached, the hold time, the leak check and the ISO cleanliness when required."
 					).format(row.hose_tag)
 				)
 			elif row.result == FAIL and not cstr(row.finding).strip():
@@ -550,6 +563,8 @@ class QCInspection(Document):
 				h.instrument = pick(names, types, PRESSURE_TYPES)
 			if not h.crimp_instrument and (flt(h.crimp_min) or flt(h.crimp_max)):
 				h.crimp_instrument = pick(names, types, CRIMP_TYPES)
+			if not h.particle_counter and h.cleanliness_actual:
+				h.particle_counter = pick(names, types, CLEANLINESS_TYPES)
 		for g in self.pmg_tests:
 			if not g.instrument and (flt(g.relief_as_set) or flt(g.compensator_as_set)):
 				g.instrument = pick(names, types, PRESSURE_TYPES)
@@ -563,7 +578,7 @@ class QCInspection(Document):
 				row.instrument = pick(names, types, PRESSURE_TYPES)
 		used = [r.instrument for r in self.items]
 		for h in self.hose_tests:
-			used += [h.instrument, h.crimp_instrument]
+			used += [h.instrument, h.crimp_instrument, h.particle_counter]
 		for g in self.pmg_tests:
 			used += [g.instrument, g.amps_instrument]
 		used += [r.instrument for r in self.accumulator_tests] + [r.instrument for r in self.proof_tests]
@@ -768,7 +783,7 @@ class QCInspection(Document):
 		)
 		if failed_hoses:
 			hose_rows = "".join(
-				"<tr><td>{0}</td><td>{1}</td><td>{2} / {3} ({4} - {5}) {6}</td><td>{7} ({8})</td><td>{9} ({10})</td><td>{11}</td><td>{12}</td></tr>".format(
+				"<tr><td>{0}</td><td>{1}</td><td>{2} / {3} ({4} - {5}) {6}</td><td>{7} ({8})</td><td>{9} ({10})</td><td>{11}</td><td>{13} ({14}) {15}</td><td>{12}</td></tr>".format(
 					escape_html(cstr(h.hose_tag)),
 					escape_html(" ".join(x for x in (cstr(h.spec_basis), cstr(h.spec_reference)) if x)),
 					cstr(h.crimp_a or ""),
@@ -782,6 +797,9 @@ class QCInspection(Document):
 					cstr(h.hold_spec_min or ""),
 					escape_html(cstr(h.leak_check)),
 					escape_html(cstr(h.finding)),
+					escape_html(cstr(h.cleanliness_actual)),
+					escape_html(cstr(h.cleanliness_spec)),
+					escape_html(_(h.cleanliness_status) if h.cleanliness_status else ""),
 				)
 				for h in failed_hoses
 			)
@@ -789,7 +807,8 @@ class QCInspection(Document):
 				f"<p><b>{_('Failed hoses')}</b></p><table class='table table-bordered'><thead><tr>"
 				f"<th>{_('Hose Tag')}</th><th>{_('Spec')}</th><th>{_('Crimp A / B (limits)')}</th>"
 				f"<th>{_('Pressure psi (required)')}</th><th>{_('Hold min (required)')}</th>"
-				f"<th>{_('Leak Check')}</th><th>{_('Finding')}</th></tr></thead><tbody>{hose_rows}</tbody></table>"
+				f"<th>{_('Leak Check')}</th><th>{_('ISO Cleanliness (required)')}</th>"
+				f"<th>{_('Finding')}</th></tr></thead><tbody>{hose_rows}</tbody></table>"
 			)
 		if failed_pmgs:
 			pmg_rows = "".join(
@@ -878,7 +897,7 @@ def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 	for h in unit.hoses:
 		if only_tags is not None and h.hose_tag not in only_tags:
 			continue
-		spec = hose_spec(h)
+		spec = hose_spec(h, unit.target_cleanliness)
 		diameter, tol = spec.crimp_diameter, spec.crimp_tolerance
 		rows.append(
 			{
@@ -890,6 +909,7 @@ def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 				"crimp_max": round(diameter + tol, 4) if diameter else None,
 				"test_pressure_spec": spec.test_pressure,
 				"hold_spec_min": spec.hold_min,
+				"cleanliness_spec": spec.cleanliness,
 			}
 		)
 	return rows

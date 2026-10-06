@@ -18,7 +18,13 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	evaluate_proof,
 	get_stage_test_rows,
 )
-from hse.shop_qc.doctype.qc_unit.qc_unit import crimp_diameter_warning, hose_spec, normalise_dash
+from hse.shop_qc.doctype.qc_unit.qc_unit import (
+	crimp_diameter_warning,
+	format_iso_code,
+	hose_spec,
+	iso_within,
+	normalise_dash,
+)
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
 PROC = "_Test QC Procedure"
@@ -771,3 +777,62 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(sorted(r["hose_tag"] for r in tables["hose_tests"]), ["_TH-1", "_TH-2"])
 		self.assertEqual(tables["hose_tests"][0]["spec_basis"], "PSIF Standard")
 		self.assertEqual(tables["pmg_tests"], [])
+
+	def test_iso_cleanliness_codes(self):
+		self.assertEqual(format_iso_code(" 18 / 16 / 13 "), "18/16/13")
+		self.assertEqual(format_iso_code(""), "")
+		self.assertTrue(iso_within("17/15/12", "18/16/13"))
+		self.assertTrue(iso_within("18/16/13", "18/16/13"))
+		self.assertFalse(iso_within("19/15/12", "18/16/13"))
+		self.assertFalse(iso_within("17/15/14", "18/16/13"))
+		# two-part requirement: 6 and 14 micron scales only
+		self.assertTrue(iso_within("21/16/13", "16/13"))
+		self.assertTrue(iso_within("19/15/12", "-/16/13"))
+		self.assertFalse(iso_within("", "18/16/13"))
+		for bad in ("18-16-13", "ISO 18", "40/16/13", "18"):
+			with self.assertRaises(frappe.ValidationError):
+				format_iso_code(bad)
+
+	def test_hose_cleanliness_spec_and_fail(self):
+		unit = self.make_hose_unit()
+		unit.target_cleanliness = "19/17/14"
+		unit.hoses[0].update(
+			{
+				"spec_basis": "Customer Spec",
+				"spec_reference": "CUST-ISO Rev A",
+				"customer_cleanliness": "16/14/11",
+			}
+		)
+		unit.hoses[1].cleanliness_spec = "18 / 16 / 13"
+		unit.save()
+		self.assertEqual(unit.hoses[1].cleanliness_spec, "18/16/13")
+		self.assertEqual(hose_spec(unit.hoses[0], unit.target_cleanliness).cleanliness, "16/14/11")
+		rows = {r["hose_tag"]: r for r in build_hose_tests(HOSE_WO)}
+		self.assertEqual(rows["_TH-1"]["cleanliness_spec"], "16/14/11")
+		self.assertEqual(rows["_TH-2"]["cleanliness_spec"], "18/16/13")
+		good = {
+			"crimp_a": 1.0,
+			"crimp_b": 1.0,
+			"pressure_reached": 6100,
+			"hold_actual_min": 10,
+			"leak_check": "No Leak",
+		}
+		doc = self.make(
+			"_T Hose Test",
+			unit=HOSE_WO,
+			submit=False,
+			hose_values={
+				"_TH-1": dict(good, cleanliness_actual="17/14/11", finding="4 um count high"),
+				"_TH-2": dict(good, cleanliness_actual="17/15/12"),
+			},
+		)
+		rows = {h.hose_tag: h for h in doc.hose_tests}
+		self.assertEqual(rows["_TH-1"].cleanliness_status, "Out of Spec")
+		self.assertEqual(rows["_TH-1"].result, FAIL)
+		self.assertEqual(rows["_TH-2"].cleanliness_status, "In Spec")
+		self.assertEqual(rows["_TH-2"].result, PASS)
+		# a required code with no actual leaves the hose incomplete
+		row = frappe._dict(
+			dict(good, cleanliness_spec="18/16/13", crimp_min=0.99, crimp_max=1.01, test_pressure_spec=6000)
+		)
+		self.assertIsNone(evaluate_hose(row))

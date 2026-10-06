@@ -23,12 +23,14 @@
   "column_break_psif",
   "crimp_diameter_spec",
   "crimp_tolerance",
+  "cleanliness_spec",
   "section_customer",
   "customer_test_pressure_psi",
   "customer_hold_time_min",
   "column_break_customer",
   "customer_crimp_diameter",
-  "customer_crimp_tolerance"
+  "customer_crimp_tolerance",
+  "customer_cleanliness"
  ],
  "fields": [
   {
@@ -147,6 +149,12 @@
    "precision": "4"
   },
   {
+   "fieldname": "cleanliness_spec",
+   "fieldtype": "Data",
+   "label": "ISO 4406 Cleanliness",
+   "description": "Required code, e.g. 18/16/13. Blank uses the unit's Target Cleanliness."
+  },
+  {
    "depends_on": "eval:doc.spec_basis=='Customer Spec'",
    "description": "Leave a value blank to use the PSIF value for it.",
    "fieldname": "section_customer",
@@ -184,11 +192,17 @@
    "label": "Customer Crimp Tolerance +/- (in)",
    "non_negative": 1,
    "precision": "4"
+  },
+  {
+   "fieldname": "customer_cleanliness",
+   "fieldtype": "Data",
+   "label": "Customer ISO 4406 Cleanliness",
+   "description": "e.g. 16/14/11. Blank uses the PSIF value."
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-06 11:40:00.000000",
+ "modified": "2026-10-06 13:30:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Hose Assembly",

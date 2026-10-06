@@ -249,6 +249,22 @@ class QCUnit(Document):
 				warning = crimp_diameter_warning(h, field)
 				if warning:
 					frappe.msgprint(warning, indicator="orange", alert=True)
+			for field in ("cleanliness_spec", "customer_cleanliness"):
+				h.set(field, format_iso_code(h.get(field)))
+			if (
+				h.customer_cleanliness
+				and (h.cleanliness_spec or self.target_cleanliness)
+				and not iso_within(h.customer_cleanliness, h.cleanliness_spec or self.target_cleanliness)
+			):
+				frappe.msgprint(
+					_(
+						"Hose {0}: the customer cleanliness {1} is less strict than the PSIF standard {2}. The customer value will be used."
+					).format(
+						h.hose_tag, h.customer_cleanliness, h.cleanliness_spec or self.target_cleanliness
+					),
+					indicator="orange",
+					alert=True,
+				)
 			if not h.spec_basis:
 				h.spec_basis = PSIF_SPEC
 			if h.spec_basis == CUSTOMER_SPEC:
@@ -315,12 +331,65 @@ def crimp_diameter_warning(h, field: str) -> str | None:
 	return None
 
 
-def hose_spec(h) -> frappe._dict:
-	"""Governing test limits for one hose: customer values replace PSIF values where entered."""
+ISO_MAX_CODE = 30
+
+
+def parse_iso_code(value) -> list | None:
+	"""ISO 4406 code as a list of scale numbers ('-' = not specified), or None when blank.
+	Accepts 18/16/13, 16/13 and -/16/13. Raises on anything else."""
+	text = cstr(value).replace(" ", "")
+	if not text:
+		return None
+	parts = text.split("/")
+	codes = []
+	for part in parts:
+		if part in ("-", "*"):
+			codes.append(None)
+		elif part.isdigit() and int(part) <= ISO_MAX_CODE:
+			codes.append(int(part))
+		else:
+			codes = []
+			break
+	if len(parts) not in (2, 3) or not codes or all(c is None for c in codes):
+		frappe.throw(
+			_("'{0}' is not an ISO 4406 code. Use the form 18/16/13 (or 16/13).").format(value),
+			title=_("ISO Cleanliness"),
+		)
+	return codes
+
+
+def format_iso_code(value) -> str:
+	codes = parse_iso_code(value)
+	return "/".join("-" if c is None else str(c) for c in codes) if codes else ""
+
+
+def iso_within(actual, required) -> bool:
+	"""True when every scale the requirement sets is at or below it in the actual code.
+	Codes are compared from the right (14 um, 6 um, then 4 um)."""
+	act, req = parse_iso_code(actual), parse_iso_code(required)
+	if not req:
+		return True
+	if not act:
+		return False
+	act, req = list(reversed(act)), list(reversed(req))
+	for i, limit in enumerate(req):
+		if limit is None:
+			continue
+		if i >= len(act) or act[i] is None or act[i] > limit:
+			return False
+	return True
+
+
+def hose_spec(h, unit_cleanliness: str | None = None) -> frappe._dict:
+	"""Governing test limits for one hose: customer values replace PSIF values where entered.
+	PSIF cleanliness falls back to the unit's Target Cleanliness."""
 	customer = h.get("spec_basis") == CUSTOMER_SPEC
 
 	def pick(cust, psif):
 		return flt(h.get(cust)) if customer and flt(h.get(cust)) else flt(h.get(psif))
+
+	psif_clean = cstr(h.get("cleanliness_spec")).strip() or cstr(unit_cleanliness).strip()
+	cust_clean = cstr(h.get("customer_cleanliness")).strip()
 
 	return frappe._dict(
 		basis=h.get("spec_basis") or PSIF_SPEC,
@@ -329,6 +398,7 @@ def hose_spec(h) -> frappe._dict:
 		crimp_tolerance=pick("customer_crimp_tolerance", "crimp_tolerance"),
 		test_pressure=pick("customer_test_pressure_psi", "test_pressure_psi"),
 		hold_min=pick("customer_hold_time_min", "hold_time_min"),
+		cleanliness=cust_clean if customer and cust_clean else psif_clean,
 	)
 
 
