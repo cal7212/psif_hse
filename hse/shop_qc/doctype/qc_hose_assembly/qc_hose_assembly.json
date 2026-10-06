@@ -8,6 +8,7 @@
  "field_order": [
   "hose_tag",
   "part_number",
+  "hose_type",
   "hose_size",
   "nominal_id_in",
   "length_in",
@@ -23,6 +24,9 @@
   "column_break_psif",
   "crimp_diameter_spec",
   "crimp_tolerance",
+  "die_size",
+  "crimp_spec",
+  "crimp_spec_source",
   "cleanliness_spec",
   "section_customer",
   "customer_test_pressure_psi",
@@ -42,11 +46,19 @@
    "reqd": 1
   },
   {
-   "columns": 2,
+   "columns": 1,
    "fieldname": "part_number",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Part Number"
+  },
+  {
+   "fieldname": "hose_type",
+   "fieldtype": "Link",
+   "options": "Hose Type",
+   "label": "Hose Type",
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "columns": 1,
@@ -77,7 +89,7 @@
    "label": "End A Fitting Part No."
   },
   {
-   "description": "Fitting crimped on end B. The test's Actual Crimp End B is measured on this fitting.",
+   "description": "Fitting crimped on end B. Defaults to the End A fitting when left blank. The test's Actual Crimp End B is measured on this fitting.",
    "fieldname": "fitting_b",
    "fieldtype": "Data",
    "label": "End B Fitting Part No."
@@ -135,7 +147,7 @@
   },
   {
    "columns": 1,
-   "description": "Measured crimp diameter (ferrule OD after crimping) in inches, from the crimp chart. Not the dash size.",
+   "description": "Measured crimp diameter (ferrule OD after crimping) in inches. Filled from the Hose Crimp Spec chart when Hose Type, Dash Size and End A fitting match an entry; can be overridden. Not the dash size.",
    "fieldname": "crimp_diameter_spec",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -147,6 +159,25 @@
    "fieldtype": "Float",
    "label": "Crimp Tolerance +/- (in)",
    "precision": "4"
+  },
+  {
+   "fieldname": "die_size",
+   "fieldtype": "Data",
+   "label": "Die Size"
+  },
+  {
+   "fieldname": "crimp_spec",
+   "fieldtype": "Link",
+   "options": "Hose Crimp Spec",
+   "label": "Crimp Chart Entry",
+   "read_only": 1,
+   "description": "Set when the crimp values come from the Hose Crimp Spec chart (Hose Type + Dash Size + End A fitting)."
+  },
+  {
+   "fieldname": "crimp_spec_source",
+   "fieldtype": "Data",
+   "label": "Crimp Chart Source / Rev",
+   "read_only": 1
   },
   {
    "fieldname": "cleanliness_spec",
@@ -202,7 +233,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-06 13:30:00.000000",
+ "modified": "2026-10-06 14:30:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Hose Assembly",

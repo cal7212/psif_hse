@@ -1,0 +1,173 @@
+{
+ "actions": [],
+ "creation": "2026-10-06 14:30:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-10-06 14:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Shop QC",
+ "name": "Hose Crimp Spec",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "HCS-.#####",
+ "naming_rule": "Expression (old style)",
+ "title_field": "title",
+ "show_title_field_in_link": 0,
+ "search_fields": "hose_type,dash_size,fitting_part_number",
+ "fields": [
+  {
+   "fieldname": "hose_type",
+   "fieldtype": "Link",
+   "options": "Hose Type",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Hose Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dash_size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Dash Size",
+   "reqd": 1,
+   "description": "e.g. -12 (12 or #12 are accepted and stored as -12)."
+  },
+  {
+   "fieldname": "fitting_part_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Fitting Part Number",
+   "reqd": 1,
+   "description": "Full fitting part number as it appears on the hose row."
+  },
+  {
+   "fieldname": "column_break_key",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crimp_diameter",
+   "fieldtype": "Float",
+   "precision": "4",
+   "in_list_view": 1,
+   "label": "Crimp Diameter (in)",
+   "reqd": 1,
+   "description": "Measured ferrule OD after crimping."
+  },
+  {
+   "fieldname": "crimp_tolerance",
+   "fieldtype": "Float",
+   "precision": "4",
+   "in_list_view": 1,
+   "label": "Crimp Tolerance +/- (in)"
+  },
+  {
+   "fieldname": "die_size",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die Size"
+  },
+  {
+   "fieldname": "section_source",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source",
+   "description": "Crimp chart or document the values come from."
+  },
+  {
+   "fieldname": "revision",
+   "fieldtype": "Data",
+   "label": "Source Rev"
+  },
+  {
+   "fieldname": "column_break_src",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "read_only": 1,
+   "label": "Title"
+  }
+ ],
+ "field_order": [
+  "hose_type",
+  "dash_size",
+  "fitting_part_number",
+  "column_break_key",
+  "crimp_diameter",
+  "crimp_tolerance",
+  "die_size",
+  "section_source",
+  "source",
+  "revision",
+  "column_break_src",
+  "disabled",
+  "notes",
+  "title"
+ ]
+}

@@ -917,6 +917,8 @@ def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 			{
 				"hose_tag": h.hose_tag,
 				"part_number": h.part_number,
+				"hose_type": h.hose_type,
+				"die_size": h.die_size,
 				"spec_basis": spec.basis,
 				"spec_reference": spec.reference,
 				"crimp_min": round(diameter - tol, 4) if diameter else None,
@@ -976,6 +978,8 @@ def build_items(template: str, qc_unit: str | None = None) -> list[dict]:
 
 HOSE_SPEC_FIELDS = (
 	"part_number",
+	"hose_type",
+	"die_size",
 	"spec_basis",
 	"spec_reference",
 	"crimp_min",

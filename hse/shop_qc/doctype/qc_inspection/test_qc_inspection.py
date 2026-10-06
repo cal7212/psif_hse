@@ -847,3 +847,57 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		doc.reload()
 		doc.save()
 		self.assertEqual(doc.hose_tests[0].cleanliness_spec, "18/16/13")
+
+	def make_crimp_chart(self):
+		if not frappe.db.exists("Hose Type", "_T-HT1"):
+			frappe.get_doc({"doctype": "Hose Type", "hose_type": "_T-HT1"}).insert()
+		frappe.db.delete("Hose Crimp Spec", {"hose_type": "_T-HT1"})
+		return frappe.get_doc(
+			{
+				"doctype": "Hose Crimp Spec",
+				"hose_type": "_T-HT1",
+				"dash_size": "12",
+				"fitting_part_number": "_t-fit 12",
+				"crimp_diameter": 1.18,
+				"crimp_tolerance": 0.005,
+				"die_size": "D-12",
+				"source": "_T Chart",
+				"revision": "3",
+			}
+		).insert()
+
+	def test_crimp_chart_fills_hose_row(self):
+		spec = self.make_crimp_chart()
+		self.assertEqual((spec.dash_size, spec.fitting_part_number), ("-12", "_T-FIT12"))
+		with self.assertRaises(frappe.DuplicateEntryError):
+			frappe.get_doc(
+				{
+					"doctype": "Hose Crimp Spec",
+					"hose_type": "_T-HT1",
+					"dash_size": "-12",
+					"fitting_part_number": "_T-FIT12",
+					"crimp_diameter": 1.2,
+				}
+			).insert()
+		unit = self.make_hose_unit()
+		h = unit.hoses[0]
+		h.update({"hose_type": "_T-HT1", "hose_size": "12", "fitting_a": "_T-FIT12", "fitting_b": ""})
+		unit.save()
+		h = unit.hoses[0]
+		self.assertEqual(h.fitting_b, "_T-FIT12")
+		self.assertEqual(h.crimp_spec, spec.name)
+		self.assertEqual((h.crimp_diameter_spec, h.crimp_tolerance, h.die_size), (1.18, 0.005, "D-12"))
+		self.assertEqual(h.crimp_spec_source, "_T Chart / 3")
+		rows = {r["hose_tag"]: r for r in build_hose_tests(HOSE_WO)}
+		self.assertEqual(rows["_TH-1"]["die_size"], "D-12")
+		self.assertEqual(rows["_TH-1"]["hose_type"], "_T-HT1")
+		self.assertEqual(rows["_TH-1"]["crimp_min"], 1.175)
+		# a manual override is kept while the chart key is unchanged
+		unit.hoses[0].crimp_diameter_spec = 1.19
+		unit.save()
+		self.assertEqual(unit.hoses[0].crimp_diameter_spec, 1.19)
+		# no chart entry: the link is cleared and manual values stay
+		unit.hoses[0].fitting_a = "_T-OTHER"
+		unit.save()
+		self.assertFalse(unit.hoses[0].crimp_spec)
+		self.assertEqual(unit.hoses[0].crimp_diameter_spec, 1.19)

@@ -167,3 +167,51 @@ frappe.ui.form.on("QC Unit", {
 		});
 	},
 });
+
+// Hose rows: End B defaults to End A, and crimp values come from the Hose Crimp Spec chart.
+// The server repeats both on save (apply_crimp_chart in qc_unit.py).
+frappe.ui.form.on("QC Hose Assembly", {
+	fitting_a(frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (row.fitting_a && !row.fitting_b) {
+			frappe.model.set_value(cdt, cdn, "fitting_b", row.fitting_a);
+		}
+		fill_crimp_from_chart(cdt, cdn);
+	},
+	hose_type: (frm, cdt, cdn) => fill_crimp_from_chart(cdt, cdn),
+	hose_size: (frm, cdt, cdn) => fill_crimp_from_chart(cdt, cdn),
+});
+
+function fill_crimp_from_chart(cdt, cdn) {
+	const row = locals[cdt][cdn];
+	if (!row.hose_type || !row.hose_size || !row.fitting_a) return;
+	frappe
+		.xcall("hse.shop_qc.doctype.hose_crimp_spec.hose_crimp_spec.get_crimp_spec", {
+			hose_type: row.hose_type,
+			dash_size: row.hose_size,
+			fitting: row.fitting_a,
+		})
+		.then((spec) => {
+			if (!spec) {
+				frappe.show_alert({
+					message: __("No crimp chart entry for {0} {1} {2}. Enter the crimp values.", [
+						row.hose_type,
+						row.hose_size,
+						row.fitting_a,
+					]),
+					indicator: "orange",
+				});
+				return;
+			}
+			frappe.model.set_value(cdt, cdn, {
+				crimp_spec: spec.name,
+				crimp_diameter_spec: spec.crimp_diameter,
+				crimp_tolerance: spec.crimp_tolerance,
+				die_size: spec.die_size,
+				crimp_spec_source:
+					spec.source && spec.revision
+						? `${spec.source} / ${spec.revision}`
+						: spec.source || spec.revision || "",
+			});
+		});
+}
