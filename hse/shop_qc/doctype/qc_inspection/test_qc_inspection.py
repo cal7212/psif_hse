@@ -17,7 +17,7 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	evaluate_pmg,
 	evaluate_proof,
 )
-from hse.shop_qc.doctype.qc_unit.qc_unit import hose_spec
+from hse.shop_qc.doctype.qc_unit.qc_unit import crimp_diameter_warning, hose_spec, normalise_dash
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
 PROC = "_Test QC Procedure"
@@ -748,3 +748,18 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertFalse(frappe.db.get_value("QC Hose Test", rows["_TH-1"].name, "non_conformance"))
 		details = frappe.db.get_value("Non Conformance", doc.non_conformance, "details")
 		self.assertIn("Out of Spec", details)
+
+	def test_dash_size_and_crimp_warning(self):
+		self.assertEqual(normalise_dash("12"), ("-12", 0.75))
+		self.assertEqual(normalise_dash("-8"), ("-8", 0.5))
+		self.assertEqual(normalise_dash("custom"), ("custom", 0.0))
+		hose = frappe._dict(hose_tag="0001", hose_size="-12", nominal_id_in=0.75)
+		self.assertIsNone(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=1.21), "crimp_diameter_spec")
+		)
+		self.assertTrue(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=12.002), "crimp_diameter_spec")
+		)
+		self.assertTrue(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=0.5), "crimp_diameter_spec")
+		)

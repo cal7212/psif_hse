@@ -9,6 +9,7 @@ are read here and converted once. Rows that already have a minutes value are lef
 import frappe
 
 from hse.shop_qc.doctype.qc_inspection.qc_inspection import crimp_status
+from hse.shop_qc.doctype.qc_unit.qc_unit import normalise_dash
 
 CONVERSIONS = (
 	("QC Hose Assembly", "hold_time_sec", "hold_time_min"),
@@ -35,6 +36,14 @@ def execute():
 			{"spec_basis": ("in", ("", None))},
 			"spec_basis",
 			"PSIF Standard",
+			update_modified=False,
+		)
+	for row in frappe.get_all("QC Hose Assembly", fields=["name", "hose_size"]):
+		dash, nominal_id = normalise_dash(row.hose_size)
+		frappe.db.set_value(
+			"QC Hose Assembly",
+			row.name,
+			{"hose_size": dash, "nominal_id_in": nominal_id},
 			update_modified=False,
 		)
 	# Existing test rows: record the basis and the crimp status they were judged against.

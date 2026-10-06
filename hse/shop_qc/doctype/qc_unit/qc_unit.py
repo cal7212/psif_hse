@@ -244,6 +244,11 @@ class QCUnit(Document):
 			seen.add(h.hose_tag)
 			if flt(h.crimp_tolerance) < 0:
 				frappe.throw(_("Row {0}: Crimp tolerance must be positive.").format(h.idx))
+			h.hose_size, h.nominal_id_in = normalise_dash(h.hose_size)
+			for field in ("crimp_diameter_spec", "customer_crimp_diameter"):
+				warning = crimp_diameter_warning(h, field)
+				if warning:
+					frappe.msgprint(warning, indicator="orange", alert=True)
 			if not h.spec_basis:
 				h.spec_basis = PSIF_SPEC
 			if h.spec_basis == CUSTOMER_SPEC:
@@ -286,6 +291,28 @@ class QCUnit(Document):
 
 PSIF_SPEC = "PSIF Standard"
 CUSTOMER_SPEC = "Customer Spec"
+
+
+def normalise_dash(value) -> tuple[str, float]:
+	"""'12', '-12' or '#12' -> ('-12', 0.75). Anything else is kept as entered, with no nominal ID."""
+	text = cstr(value).strip()
+	digits = text.lstrip("-#").strip()
+	if digits.isdigit() and cint(digits):
+		return f"-{cint(digits)}", round(cint(digits) / 16, 4)
+	return text, 0.0
+
+
+def crimp_diameter_warning(h, field: str) -> str | None:
+	"""A crimp diameter is a measured ferrule OD: larger than the hose ID and not a dash number.
+	Only warns; the limits come from the crimp chart."""
+	diameter, nominal_id = flt(h.get(field)), flt(h.get("nominal_id_in"))
+	if not (diameter and nominal_id):
+		return None
+	if diameter <= nominal_id or diameter > 3 * nominal_id + 1:
+		return _(
+			"Hose {0}: crimp diameter {1} in looks wrong for a {2} hose ({3} in ID). Enter the measured crimp diameter in inches from the crimp chart, not the dash size."
+		).format(h.hose_tag, diameter, h.hose_size, nominal_id)
+	return None
 
 
 def hose_spec(h) -> frappe._dict:
