@@ -8,20 +8,24 @@
  "field_order": [
   "hose_tag",
   "part_number",
+  "spec_basis",
+  "spec_reference",
   "crimp_min",
   "crimp_max",
   "test_pressure_spec",
-  "hold_time_spec",
+  "hold_spec_min",
   "column_break_ht",
   "instrument",
   "crimp_instrument",
   "crimp_a",
   "crimp_b",
+  "crimp_status",
   "pressure_reached",
-  "hold_time_actual",
+  "hold_actual_min",
   "leak_check",
   "result",
-  "finding"
+  "finding",
+  "non_conformance"
  ],
  "fields": [
   {
@@ -37,6 +41,18 @@
    "fieldname": "part_number",
    "fieldtype": "Data",
    "label": "Part Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "spec_basis",
+   "fieldtype": "Data",
+   "label": "Spec Basis",
+   "read_only": 1
+  },
+  {
+   "fieldname": "spec_reference",
+   "fieldtype": "Data",
+   "label": "Spec Reference / Rev",
    "read_only": 1
   },
   {
@@ -60,9 +76,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "hold_time_spec",
-   "fieldtype": "Int",
-   "label": "Required Hold (sec)",
+   "fieldname": "hold_spec_min",
+   "fieldtype": "Float",
+   "label": "Required Hold (min)",
+   "precision": "2",
    "read_only": 1
   },
   {
@@ -84,19 +101,29 @@
   },
   {
    "columns": 1,
+   "description": "Measured crimp diameter on the End A fitting.",
    "fieldname": "crimp_a",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Crimp Diameter End A (in)",
+   "label": "Actual Crimp End A (in)",
    "precision": "4"
   },
   {
    "columns": 1,
+   "description": "Measured crimp diameter on the End B fitting.",
    "fieldname": "crimp_b",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Crimp Diameter End B (in)",
+   "label": "Actual Crimp End B (in)",
    "precision": "4"
+  },
+  {
+   "fieldname": "crimp_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Crimp",
+   "options": "\nIn Spec\nOut of Spec",
+   "read_only": 1
   },
   {
    "columns": 1,
@@ -106,14 +133,16 @@
    "label": "Pressure Reached (psi)"
   },
   {
-   "columns": 1,
-   "fieldname": "hold_time_actual",
-   "fieldtype": "Int",
+   "fieldname": "hold_actual_min",
+   "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Hold Time (sec)"
+   "label": "Hold Time (min)",
+   "non_negative": 1,
+   "precision": "2"
   },
   {
    "columns": 1,
+   "description": "No Leak = no leaks or weeping at either fitting or along the hose for the full hold.",
    "fieldname": "leak_check",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -135,11 +164,18 @@
    "fieldtype": "Small Text",
    "in_list_view": 1,
    "label": "Finding"
+  },
+  {
+   "fieldname": "non_conformance",
+   "fieldtype": "Link",
+   "label": "Non Conformance",
+   "options": "Non Conformance",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-02 23:45:00.000000",
+ "modified": "2026-10-06 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Hose Test",

@@ -13,11 +13,21 @@
   "fitting_a",
   "fitting_b",
   "column_break_hose",
+  "spec_basis",
+  "spec_reference",
+  "section_psif",
   "working_pressure_psi",
   "test_pressure_psi",
-  "hold_time_sec",
+  "hold_time_min",
+  "column_break_psif",
   "crimp_diameter_spec",
-  "crimp_tolerance"
+  "crimp_tolerance",
+  "section_customer",
+  "customer_test_pressure_psi",
+  "customer_hold_time_min",
+  "column_break_customer",
+  "customer_crimp_diameter",
+  "customer_crimp_tolerance"
  ],
  "fields": [
   {
@@ -46,22 +56,44 @@
    "columns": 1,
    "fieldname": "length_in",
    "fieldtype": "Float",
-   "in_list_view": 1,
    "label": "Length (in)"
   },
   {
+   "description": "Fitting crimped on end A. The test's Actual Crimp End A is measured on this fitting.",
    "fieldname": "fitting_a",
    "fieldtype": "Data",
-   "label": "Fitting End A"
+   "label": "End A Fitting Part No."
   },
   {
+   "description": "Fitting crimped on end B. The test's Actual Crimp End B is measured on this fitting.",
    "fieldname": "fitting_b",
    "fieldtype": "Data",
-   "label": "Fitting End B"
+   "label": "End B Fitting Part No."
   },
   {
    "fieldname": "column_break_hose",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "PSIF Standard",
+   "description": "Which specification this hose is built and tested to. Customer Spec values replace the PSIF values where entered.",
+   "fieldname": "spec_basis",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Spec Basis",
+   "options": "PSIF Standard\nCustomer Spec"
+  },
+  {
+   "description": "Document number and revision of the governing spec (customer spec, or PSIF crimp chart / procedure).",
+   "fieldname": "spec_reference",
+   "fieldtype": "Data",
+   "label": "Spec Reference / Rev",
+   "mandatory_depends_on": "eval:doc.spec_basis=='Customer Spec'"
+  },
+  {
+   "fieldname": "section_psif",
+   "fieldtype": "Section Break",
+   "label": "PSIF Standard"
   },
   {
    "columns": 1,
@@ -78,11 +110,16 @@
    "label": "Test Pressure (psi)"
   },
   {
-   "columns": 1,
-   "fieldname": "hold_time_sec",
-   "fieldtype": "Int",
+   "fieldname": "hold_time_min",
+   "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Hold Time (sec)"
+   "label": "Hold Time (min)",
+   "non_negative": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_psif",
+   "fieldtype": "Column Break"
   },
   {
    "columns": 1,
@@ -97,11 +134,49 @@
    "fieldtype": "Float",
    "label": "Crimp Tolerance +/- (in)",
    "precision": "4"
+  },
+  {
+   "depends_on": "eval:doc.spec_basis=='Customer Spec'",
+   "description": "Leave a value blank to use the PSIF value for it.",
+   "fieldname": "section_customer",
+   "fieldtype": "Section Break",
+   "label": "Customer Spec"
+  },
+  {
+   "fieldname": "customer_test_pressure_psi",
+   "fieldtype": "Float",
+   "label": "Customer Test Pressure (psi)",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "customer_hold_time_min",
+   "fieldtype": "Float",
+   "label": "Customer Hold Time (min)",
+   "non_negative": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_customer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_crimp_diameter",
+   "fieldtype": "Float",
+   "label": "Customer Crimp Diameter (in)",
+   "non_negative": 1,
+   "precision": "4"
+  },
+  {
+   "fieldname": "customer_crimp_tolerance",
+   "fieldtype": "Float",
+   "label": "Customer Crimp Tolerance +/- (in)",
+   "non_negative": 1,
+   "precision": "4"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-02 20:30:00.000000",
+ "modified": "2026-10-06 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Hose Assembly",

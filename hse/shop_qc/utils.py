@@ -217,6 +217,8 @@ def certificate_format_for(job_type: str | None, product_type: str | None) -> st
 
 def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 	"""Jinja helper: everything a QC certificate prints for a unit."""
+	from hse.shop_qc.doctype.qc_unit.qc_unit import hose_spec
+
 	unit = frappe.get_doc("QC Unit", qc_unit)
 	shop = frappe.get_cached_doc("Build Shop", unit.shop) if unit.shop else frappe._dict()
 	stages = get_stages(qc_unit)
@@ -257,6 +259,7 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		accepted=accepted,
 		inspections=inspections,
 		hose_results=hose_results,
+		hose_specs={h.hose_tag: hose_spec(h) for h in unit.get("hoses") or []},
 		pmg_results=pmg_results,
 		circuit=circuit,
 		non_conformances=frappe.get_all(

@@ -18,7 +18,7 @@
   "section_test",
   "test_pressure_multiplier",
   "column_break_test",
-  "default_hold_time_sec"
+  "default_hold_time_min"
  ],
  "fields": [
   {
@@ -87,14 +87,15 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "default_hold_time_sec",
-   "fieldtype": "Int",
-   "label": "Default Hold Time (seconds)",
-   "non_negative": 1
+   "fieldname": "default_hold_time_min",
+   "fieldtype": "Float",
+   "label": "Default Hold Time (minutes)",
+   "non_negative": 1,
+   "precision": "2"
   }
  ],
  "links": [],
- "modified": "2026-10-02 20:30:00.000000",
+ "modified": "2026-10-06 11:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "Build Shop",
