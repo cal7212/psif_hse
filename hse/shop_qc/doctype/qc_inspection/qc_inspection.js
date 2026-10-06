@@ -212,35 +212,66 @@ frappe.ui.form.on("QC Inspection Reading", {
 });
 
 frappe.ui.form.on("QC Hose Test", {
-	crimp_a: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
-	crimp_b: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
+	crimp_a: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn, "crimp_a"),
+	crimp_b: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn, "crimp_b"),
 	pressure_reached: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
-	hold_time_actual: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
+	hold_actual_min: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
 	leak_check: (frm, cdt, cdn) => evaluate_hose_row(cdt, cdn),
 });
 
-// Mirrors evaluate_hose() in qc_inspection.py; the server result on save is final.
-function evaluate_hose_row(cdt, cdn) {
-	const r = locals[cdt][cdn];
-	const crimp_spec = flt(r.crimp_min) || flt(r.crimp_max);
-	let result = "";
-	const complete =
-		r.leak_check &&
-		flt(r.pressure_reached) &&
-		(!crimp_spec || (flt(r.crimp_a) && flt(r.crimp_b))) &&
-		(!cint(r.hold_time_spec) || cint(r.hold_time_actual));
-	if (complete) {
-		let ok =
-			r.leak_check === "No Leak" && flt(r.pressure_reached) >= flt(r.test_pressure_spec);
-		if (cint(r.hold_time_spec)) ok = ok && cint(r.hold_time_actual) >= cint(r.hold_time_spec);
-		if (crimp_spec) {
-			[flt(r.crimp_a), flt(r.crimp_b)].forEach((v) => {
-				ok = ok && v >= flt(r.crimp_min) && v <= flt(r.crimp_max);
-			});
-		}
-		result = ok ? "Pass" : "Fail";
+// Mirrors crimp_status() in qc_inspection.py.
+function hose_crimp_status(r) {
+	if (!flt(r.crimp_min) && !flt(r.crimp_max)) return "";
+	let measured = 0;
+	for (const v of [flt(r.crimp_a), flt(r.crimp_b)]) {
+		if (!v) continue;
+		if (v < flt(r.crimp_min) || v > flt(r.crimp_max)) return "Out of Spec";
+		measured += 1;
 	}
+	return measured === 2 ? "In Spec" : "";
+}
+
+// Mirrors evaluate_hose() in qc_inspection.py; the server result on save is final.
+function evaluate_hose_row(cdt, cdn, changed) {
+	const r = locals[cdt][cdn];
+	const crimp = hose_crimp_status(r);
+	let result = "";
+	if (crimp === "Out of Spec") {
+		result = "Fail";
+	} else {
+		const crimp_spec = flt(r.crimp_min) || flt(r.crimp_max);
+		const complete =
+			r.leak_check &&
+			flt(r.pressure_reached) &&
+			(!crimp_spec || crimp) &&
+			(!flt(r.hold_spec_min) || flt(r.hold_actual_min));
+		if (complete) {
+			let ok =
+				r.leak_check === "No Leak" && flt(r.pressure_reached) >= flt(r.test_pressure_spec);
+			if (flt(r.hold_spec_min)) ok = ok && flt(r.hold_actual_min) >= flt(r.hold_spec_min);
+			result = ok ? "Pass" : "Fail";
+		}
+	}
+	if (r.crimp_status !== crimp) frappe.model.set_value(cdt, cdn, "crimp_status", crimp);
 	if (r.result !== result) frappe.model.set_value(cdt, cdn, "result", result);
+	const value = changed && flt(r[changed]);
+	if (value && (value < flt(r.crimp_min) || value > flt(r.crimp_max))) {
+		frappe.msgprint({
+			title: __("Crimp out of spec"),
+			message: __(
+				"Hose {0} {1}: {2} in is outside {3} - {4} in ({5}). The hose fails: enter a finding. A Critical Non Conformance is raised when this inspection is submitted.",
+				[
+					r.hose_tag,
+					changed === "crimp_a" ? __("End A") : __("End B"),
+					value,
+					flt(r.crimp_min),
+					flt(r.crimp_max),
+					r.spec_basis || __("PSIF Standard"),
+				]
+			),
+			indicator: "red",
+		});
+	}
 }
 
 frappe.ui.form.on("QC PMG Test", {

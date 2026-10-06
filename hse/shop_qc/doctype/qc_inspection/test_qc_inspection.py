@@ -8,13 +8,16 @@ from frappe.tests import IntegrationTestCase, UnitTestCase
 from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	FAIL,
 	PASS,
+	build_hose_tests,
 	build_items,
+	crimp_status,
 	evaluate_accumulator,
 	evaluate_hose,
 	evaluate_numeric,
 	evaluate_pmg,
 	evaluate_proof,
 )
+from hse.shop_qc.doctype.qc_unit.qc_unit import crimp_diameter_warning, hose_spec, normalise_dash
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
 PROC = "_Test QC Procedure"
@@ -63,17 +66,23 @@ class UnitTestQCInspection(UnitTestCase):
 			crimp_min=0.990,
 			crimp_max=1.010,
 			test_pressure_spec=6000,
-			hold_time_spec=30,
+			hold_spec_min=10,
 			crimp_a=1.000,
 			crimp_b=1.005,
 			pressure_reached=6050,
-			hold_time_actual=30,
+			hold_actual_min=10,
 			leak_check="No Leak",
 		)
 		self.assertEqual(evaluate_hose(row), PASS)
+		self.assertEqual(crimp_status(row), "In Spec")
+		# one end out of spec fails at once, before the pressure test is entered
+		early = frappe._dict(row, crimp_b=1.020, pressure_reached=0, leak_check=None)
+		self.assertEqual(crimp_status(early), "Out of Spec")
+		self.assertEqual(evaluate_hose(early), FAIL)
+		self.assertEqual(crimp_status(frappe._dict(row, crimp_b=0)), "")
 		self.assertEqual(evaluate_hose(frappe._dict(row, crimp_b=1.020)), FAIL)
 		self.assertEqual(evaluate_hose(frappe._dict(row, pressure_reached=5900)), FAIL)
-		self.assertEqual(evaluate_hose(frappe._dict(row, hold_time_actual=20)), FAIL)
+		self.assertEqual(evaluate_hose(frappe._dict(row, hold_actual_min=9.5)), FAIL)
 		self.assertEqual(evaluate_hose(frappe._dict(row, leak_check="Leak")), FAIL)
 		self.assertIsNone(evaluate_hose(frappe._dict(row, leak_check=None)))
 		self.assertIsNone(evaluate_hose(frappe._dict(row, crimp_a=0)))
@@ -120,7 +129,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 						"shop_name": shop,
 						"inspection_prefix": prefix,
 						"test_pressure_multiplier": mult,
-						"default_hold_time_sec": 30,
+						"default_hold_time_min": 10,
 					}
 				).insert()
 		for iid, itype, due in (
@@ -375,13 +384,13 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		unit = self.make_hose_unit()
 		self.assertEqual(unit.hose_count, 2)
 		self.assertEqual(unit.hoses[0].test_pressure_psi, 6000)  # 3000 x multiplier 2
-		self.assertEqual(unit.hoses[0].hold_time_sec, 30)
+		self.assertEqual(unit.hoses[0].hold_time_min, 10)
 		self.assertEqual([s.name for s in get_stages(HOSE_WO)], ["_T Hose Test", "_T Hose Release"])
 		good = {
 			"crimp_a": 1.0,
 			"crimp_b": 1.0,
 			"pressure_reached": 6100,
-			"hold_time_actual": 30,
+			"hold_actual_min": 10,
 			"leak_check": "No Leak",
 		}
 		bad = dict(good, leak_check="Leak")
@@ -484,7 +493,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			"crimp_a": 1.0,
 			"crimp_b": 1.0,
 			"pressure_reached": 6100,
-			"hold_time_actual": 30,
+			"hold_actual_min": 10,
 			"leak_check": "No Leak",
 		}
 		doc = self.make("_T Hose Test", unit=HOSE_WO, hose_values={"_TH-1": good, "_TH-2": good})
@@ -689,3 +698,68 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		unit.set("construction_documents", [])
 		with self.assertRaises(frappe.ValidationError):
 			unit.save()
+
+	def test_hose_customer_spec(self):
+		unit = self.make_hose_unit()
+		unit.hoses[0].update(
+			{
+				"spec_basis": "Customer Spec",
+				"spec_reference": "CUST-HS-100 Rev C",
+				"customer_test_pressure_psi": 7500,
+				"customer_crimp_diameter": 1.05,
+				"customer_hold_time_min": 15,
+			}
+		)
+		unit.save()
+		spec = hose_spec(unit.hoses[0])
+		self.assertEqual(spec.basis, "Customer Spec")
+		self.assertEqual(spec.test_pressure, 7500)
+		self.assertEqual(spec.crimp_diameter, 1.05)
+		self.assertEqual(spec.crimp_tolerance, 0.01)  # blank customer tolerance: PSIF value applies
+		self.assertEqual(spec.hold_min, 15)
+		rows = {r["hose_tag"]: r for r in build_hose_tests(HOSE_WO)}
+		self.assertEqual(rows["_TH-1"]["crimp_min"], 1.04)
+		self.assertEqual(rows["_TH-1"]["spec_reference"], "CUST-HS-100 Rev C")
+		self.assertEqual(rows["_TH-2"]["spec_basis"], "PSIF Standard")
+		self.assertEqual(rows["_TH-2"]["test_pressure_spec"], 6000)
+		# customer spec needs a reference
+		unit.hoses[0].spec_reference = ""
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()
+
+	def test_out_of_spec_crimp_links_nc(self):
+		self.make_hose_unit()
+		good = {
+			"crimp_a": 1.0,
+			"crimp_b": 1.0,
+			"pressure_reached": 6100,
+			"hold_actual_min": 10,
+			"leak_check": "No Leak",
+		}
+		bad = dict(good, crimp_b=1.03, finding="End B over-crimped")
+		doc = self.make("_T Hose Test", unit=HOSE_WO, hose_values={"_TH-1": good, "_TH-2": bad})
+		rows = {h.hose_tag: h for h in doc.hose_tests}
+		self.assertEqual(rows["_TH-2"].crimp_status, "Out of Spec")
+		self.assertEqual(rows["_TH-2"].result, FAIL)
+		self.assertTrue(doc.non_conformance)
+		self.assertEqual(
+			frappe.db.get_value("QC Hose Test", rows["_TH-2"].name, "non_conformance"), doc.non_conformance
+		)
+		self.assertFalse(frappe.db.get_value("QC Hose Test", rows["_TH-1"].name, "non_conformance"))
+		details = frappe.db.get_value("Non Conformance", doc.non_conformance, "details")
+		self.assertIn("Out of Spec", details)
+
+	def test_dash_size_and_crimp_warning(self):
+		self.assertEqual(normalise_dash("12"), ("-12", 0.75))
+		self.assertEqual(normalise_dash("-8"), ("-8", 0.5))
+		self.assertEqual(normalise_dash("custom"), ("custom", 0.0))
+		hose = frappe._dict(hose_tag="0001", hose_size="-12", nominal_id_in=0.75)
+		self.assertIsNone(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=1.21), "crimp_diameter_spec")
+		)
+		self.assertTrue(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=12.002), "crimp_diameter_spec")
+		)
+		self.assertTrue(
+			crimp_diameter_warning(frappe._dict(hose, crimp_diameter_spec=0.5), "crimp_diameter_spec")
+		)

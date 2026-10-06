@@ -162,7 +162,7 @@ class QCUnit(Document):
 			return frappe._dict()
 		return frappe._dict(
 			frappe.db.get_value(
-				"Build Shop", self.shop, ["test_pressure_multiplier", "default_hold_time_sec"], as_dict=True
+				"Build Shop", self.shop, ["test_pressure_multiplier", "default_hold_time_min"], as_dict=True
 			)
 			or {}
 		)
@@ -176,8 +176,8 @@ class QCUnit(Document):
 		for h in self.hoses:
 			if mult and not flt(h.test_pressure_psi) and flt(h.working_pressure_psi):
 				h.test_pressure_psi = round(flt(h.working_pressure_psi) * mult, 0)
-			if not cint(h.hold_time_sec) and cint(shop.default_hold_time_sec):
-				h.hold_time_sec = cint(shop.default_hold_time_sec)
+			if not flt(h.hold_time_min) and flt(shop.default_hold_time_min):
+				h.hold_time_min = flt(shop.default_hold_time_min)
 
 	def validate_pump_motor_groups(self):
 		# The TrulinX sync sends one motor HP / pump type per work order: keep it in PMG-1.
@@ -244,6 +244,30 @@ class QCUnit(Document):
 			seen.add(h.hose_tag)
 			if flt(h.crimp_tolerance) < 0:
 				frappe.throw(_("Row {0}: Crimp tolerance must be positive.").format(h.idx))
+			h.hose_size, h.nominal_id_in = normalise_dash(h.hose_size)
+			for field in ("crimp_diameter_spec", "customer_crimp_diameter"):
+				warning = crimp_diameter_warning(h, field)
+				if warning:
+					frappe.msgprint(warning, indicator="orange", alert=True)
+			if not h.spec_basis:
+				h.spec_basis = PSIF_SPEC
+			if h.spec_basis == CUSTOMER_SPEC:
+				if not cstr(h.spec_reference).strip():
+					frappe.throw(
+						_("Hose {0}: enter the customer spec reference and revision.").format(h.hose_tag)
+					)
+				for psif, cust, label in (
+					("test_pressure_psi", "customer_test_pressure_psi", _("test pressure")),
+					("hold_time_min", "customer_hold_time_min", _("hold time")),
+				):
+					if flt(h.get(cust)) and flt(h.get(psif)) and flt(h.get(cust)) < flt(h.get(psif)):
+						frappe.msgprint(
+							_(
+								"Hose {0}: the customer {1} ({2}) is lower than the PSIF standard ({3}). The customer value will be used."
+							).format(h.hose_tag, label, flt(h.get(cust)), flt(h.get(psif))),
+							indicator="orange",
+							alert=True,
+						)
 		if seen:
 			other = frappe.get_all(
 				"QC Hose Assembly",
@@ -263,6 +287,49 @@ class QCUnit(Document):
 	def validate_status_change(self):
 		if self.status in ("Released", "Shipped") and (self.open_non_conformances or 0) > 0:
 			frappe.throw(_("Cannot release a unit with open Non Conformances."))
+
+
+PSIF_SPEC = "PSIF Standard"
+CUSTOMER_SPEC = "Customer Spec"
+
+
+def normalise_dash(value) -> tuple[str, float]:
+	"""'12', '-12' or '#12' -> ('-12', 0.75). Anything else is kept as entered, with no nominal ID."""
+	text = cstr(value).strip()
+	digits = text.lstrip("-#").strip()
+	if digits.isdigit() and cint(digits):
+		return f"-{cint(digits)}", round(cint(digits) / 16, 4)
+	return text, 0.0
+
+
+def crimp_diameter_warning(h, field: str) -> str | None:
+	"""A crimp diameter is a measured ferrule OD: larger than the hose ID and not a dash number.
+	Only warns; the limits come from the crimp chart."""
+	diameter, nominal_id = flt(h.get(field)), flt(h.get("nominal_id_in"))
+	if not (diameter and nominal_id):
+		return None
+	if diameter <= nominal_id or diameter > 3 * nominal_id + 1:
+		return _(
+			"Hose {0}: crimp diameter {1} in looks wrong for a {2} hose ({3} in ID). Enter the measured crimp diameter in inches from the crimp chart, not the dash size."
+		).format(h.hose_tag, diameter, h.hose_size, nominal_id)
+	return None
+
+
+def hose_spec(h) -> frappe._dict:
+	"""Governing test limits for one hose: customer values replace PSIF values where entered."""
+	customer = h.get("spec_basis") == CUSTOMER_SPEC
+
+	def pick(cust, psif):
+		return flt(h.get(cust)) if customer and flt(h.get(cust)) else flt(h.get(psif))
+
+	return frappe._dict(
+		basis=h.get("spec_basis") or PSIF_SPEC,
+		reference=h.get("spec_reference"),
+		crimp_diameter=pick("customer_crimp_diameter", "crimp_diameter_spec"),
+		crimp_tolerance=pick("customer_crimp_tolerance", "crimp_tolerance"),
+		test_pressure=pick("customer_test_pressure_psi", "test_pressure_psi"),
+		hold_min=pick("customer_hold_time_min", "hold_time_min"),
+	)
 
 
 def default_document_template(category: str, product_type: str | None) -> str | None:

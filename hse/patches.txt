@@ -13,3 +13,4 @@ hse.patches.shop_qc_sample_templates_v2
 hse.patches.instruments_backfill
 hse.patches.shop_qc_pump_motor_groups
 hse.patches.shop_qc_construction_test_record
+hse.patches.shop_qc_hose_minutes_and_spec
