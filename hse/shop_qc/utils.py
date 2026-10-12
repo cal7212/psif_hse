@@ -202,17 +202,23 @@ def get_certificate_format(qc_unit: str) -> str:
 	"""Print format for the unit's QC certificate."""
 	frappe.has_permission("QC Unit", "read", qc_unit, throw=True)
 	ctx = get_unit_context(qc_unit)
-	return certificate_format_for(ctx.job_type, ctx.product_type)
+	return certificate_format_for(ctx.job_type, ctx.product_type, ctx.shop)
 
 
-def certificate_format_for(job_type: str | None, product_type: str | None) -> str:
+LIGHT_ASSEMBLY_SHOP = "Light Assembly"
+
+
+def certificate_format_for(job_type: str | None, product_type: str | None, shop: str | None = None) -> str:
 	if job_type == "Repair":
 		return "QC Repair Report"
 	if product_type == "Hose Assembly":
 		return "Hose Assembly Test Certificate"
 	if product_type in ("Manifold", "Valve Stand"):
 		return "Manifold QC Certificate"
-	# Power Units and other new builds: one combined construction record and certificate.
+	if shop == LIGHT_ASSEMBLY_SHOP:
+		# Short QC certificate, titled from the shop's Certificate Title.
+		return "Power Unit QC Certificate"
+	# HPU and other new builds: one combined construction record and certificate.
 	return "System Construction Test Record"
 
 
