@@ -212,7 +212,8 @@ def certificate_format_for(job_type: str | None, product_type: str | None) -> st
 		return "Hose Assembly Test Certificate"
 	if product_type in ("Manifold", "Valve Stand"):
 		return "Manifold QC Certificate"
-	return "Power Unit QC Certificate"
+	# Power Units and other new builds: one combined construction record and certificate.
+	return "System Construction Test Record"
 
 
 def get_qc_certificate_data(qc_unit: str) -> frappe._dict:

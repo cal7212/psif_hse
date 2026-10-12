@@ -112,7 +112,7 @@ class UnitTestQCInspection(UnitTestCase):
 			certificate_format_for("New Build", "Hose Assembly"), "Hose Assembly Test Certificate"
 		)
 		self.assertEqual(certificate_format_for("New Build", "Valve Stand"), "Manifold QC Certificate")
-		self.assertEqual(certificate_format_for("New Build", "Power Unit"), "Power Unit QC Certificate")
+		self.assertEqual(certificate_format_for("New Build", "Power Unit"), "System Construction Test Record")
 
 	def test_numeric_limits(self):
 		self.assertEqual(evaluate_numeric(3000, 2910, 3090), PASS)

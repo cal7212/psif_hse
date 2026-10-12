@@ -85,6 +85,7 @@ frappe.ui.form.on("QC Inspection", {
 					}
 				});
 			});
+			frm.add_custom_button(__("Mark N/A"), () => mark_items_na(frm));
 			frm.add_custom_button(__("Reload Checklist"), () => frm.trigger("load_items"));
 		}
 	},
@@ -394,4 +395,42 @@ function evaluate_pmg_row(cdt, cdn) {
 			: "";
 	}
 	if (result !== null && r.result !== result) frappe.model.set_value(cdt, cdn, "result", result);
+}
+
+function mark_items_na(frm) {
+	// Ticked checklist rows, or every row that has no result yet.
+	const ticked = frm.fields_dict.items.grid.get_selected_children() || [];
+	const rows = [];
+	(ticked.length ? ticked : frm.doc.items || []).forEach((row) => {
+		if (ticked.length || !row.result) rows.push(row);
+	});
+	if (!rows.length) {
+		frappe.msgprint(
+			__("Every checklist item already has a result. Tick the rows to mark N/A.")
+		);
+		return;
+	}
+	const scope = ticked.length
+		? __("{0} ticked item(s)", [rows.length])
+		: __("{0} item(s) with no result", [rows.length]);
+	frappe.prompt(
+		{
+			fieldname: "reason",
+			fieldtype: "Small Text",
+			label: __("Reason not required"),
+			reqd: 1,
+			description: __(
+				"Written to the Finding of each item, e.g. No accumulator on this build."
+			),
+		},
+		({ reason }) => {
+			rows.forEach((row) => {
+				frappe.model.set_value(row.doctype, row.name, { result: "N/A", finding: reason });
+			});
+			frm.fields_dict.items.grid.refresh();
+			frappe.show_alert({ message: __("Marked {0} N/A", [scope]), indicator: "blue" });
+		},
+		__("Mark {0} N/A", [scope]),
+		__("Mark N/A")
+	);
 }
