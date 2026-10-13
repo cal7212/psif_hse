@@ -78,7 +78,11 @@ app_license = "mit"
 
 # add methods and filters to jinja environment
 jinja = {
-	"methods": ["hse.shop_qc.utils.get_qc_certificate_data", "hse.hse.sds_label.get_ghs_label_data"],
+	"methods": [
+		"hse.shop_qc.utils.get_qc_certificate_data",
+		"hse.shop_qc.utils.qc_photo_appendix",
+		"hse.hse.sds_label.get_ghs_label_data",
+	],
 }
 # jinja = {
 # 	"methods": "hse.utils.jinja_methods",

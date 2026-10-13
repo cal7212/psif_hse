@@ -1,0 +1,35 @@
+{#- Photo appendix for QC print formats. Rendered by hse.shop_qc.utils.qc_photo_appendix. -#}
+<style>
+	.qc-photos { font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 10px; page-break-before: always; }
+	.qc-photos h2 { font-size: 15px; font-weight: bold; margin: 0 0 2px 0; }
+	.qc-photos .sub { margin-bottom: 8px; color: #333; }
+	.qc-photos table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+	.print-format .qc-photos td, .qc-photos td { width: 50%; padding: 4px !important; vertical-align: top; text-align: center; border: 1px solid #999; }
+	.qc-photos tr { page-break-inside: avoid; }
+	.qc-photos img { max-width: 100%; max-height: 250px; }
+	.qc-photos .cap { text-align: left; margin-top: 3px; line-height: 1.25; }
+	.qc-photos .cap b { font-size: 10px; }
+	.qc-photos .fail { color: #b00; font-weight: bold; }
+</style>
+<div class="qc-photos">
+	<h2>{{ _("Photo Appendix") }}</h2>
+	<div class="sub">{{ _("QC Unit") }} {{ unit.name | e }}{% if unit.model %} &middot; {{ unit.model | e }}{% endif %}{% if unit.serial_no %} &middot; {{ _("S/N") }} {{ unit.serial_no | e }}{% endif %} &middot; {{ _("{0} photo(s)").format(photos | length) }}</div>
+	<table>
+	{%- for row in photos | batch(2) %}
+		<tr>
+		{%- for p in row %}
+			<td>
+				<img src="{{ p.url | e }}">
+				<div class="cap">
+					<b>{{ p.no }}. {{ p.title | e }}</b>
+					{%- if p.result %} &middot; <span class="{{ 'fail' if p.result == 'Fail' else '' }}">{{ _(p.result) }}</span>{% endif %}
+					{%- if p.detail %}<br>{{ p.detail | e }}{% endif %}
+					{%- if p.source %}<br>{{ p.source | e }}{% endif %}
+				</div>
+			</td>
+		{%- endfor %}
+		{%- if row | length < 2 %}<td style="border:none"></td>{% endif %}
+		</tr>
+	{%- endfor %}
+	</table>
+</div>

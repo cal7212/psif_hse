@@ -221,6 +221,7 @@
   "released_by",
   "released_on",
   "qc_flag",
+  "print_photos",
   "section_post_ship",
   "post_shipment_reviews",
   "review_date",
@@ -1483,6 +1484,13 @@
    "read_only": 1
   },
   {
+   "default": "0",
+   "description": "Add a photo appendix (as-received photo, checklist photos and image test reports) to every QC print format for this unit.",
+   "fieldname": "print_photos",
+   "fieldtype": "Check",
+   "label": "Print Photos"
+  },
+  {
    "collapsible": 1,
    "depends_on": "eval:['Shipped','Released'].includes(doc.status) || (doc.post_shipment_reviews || []).length",
    "fieldname": "section_post_ship",
@@ -1550,7 +1558,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-13 09:00:00.000000",
+ "modified": "2026-10-13 20:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
