@@ -115,14 +115,14 @@ def get_custom_fields():
 			},
 			{
 				"fieldname": "verified_by",
-				"label": "Verified By",
+				"label": "Inspected By",
 				"fieldtype": "Link",
 				"options": "Employee",
 				"insert_after": "interim_control",
 			},
 			{
 				"fieldname": "verification_date",
-				"label": "Verification Date",
+				"label": "Inspected Date",
 				"fieldtype": "Date",
 				"insert_after": "verified_by",
 			},

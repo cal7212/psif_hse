@@ -180,5 +180,9 @@ def after_install():
 
 
 def after_migrate():
+	from hse.quality_metrics.ncr import backfill_ncr, setup_ncr
+
 	make_custom_fields()
 	backfill_resolved_on()
+	setup_ncr(MODULE)
+	backfill_ncr()
