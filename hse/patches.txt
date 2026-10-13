@@ -16,3 +16,4 @@ hse.patches.shop_qc_construction_test_record
 hse.patches.shop_qc_hose_minutes_and_spec
 hse.patches.shop_qc_disable_power_unit_certificate
 hse.patches.shop_qc_enable_light_assembly_certificate
+hse.patches.shop_qc_repair_shop
