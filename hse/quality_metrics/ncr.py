@@ -317,6 +317,8 @@ def fill_from_origin(doc) -> None:
 		doc.ncr_date = getdate(doc.creation) if doc.get("creation") else nowdate()
 	if not doc.get("initiator"):
 		doc.initiator = doc.owner or frappe.session.user
+	if doc.get("initiator") and not doc.get("initiator_name"):
+		doc.initiator_name = frappe.db.get_value("User", doc.initiator, "full_name")
 	if not doc.get("source"):
 		doc.source = guess_source(doc)
 	if doc.get("qc_unit"):
@@ -357,14 +359,31 @@ def guess_source(doc) -> str | None:
 	return None
 
 
-BACKFILL_FIELDS = ("ncr_date", "initiator", "source", "job_no", "contract", "drawing_no", "lot_qty")
+BACKFILL_FIELDS = (
+	"ncr_date",
+	"initiator",
+	"initiator_name",
+	"source",
+	"job_no",
+	"contract",
+	"drawing_no",
+	"lot_qty",
+)
 
 
 def backfill_ncr() -> None:
 	"""Existing NCRs: date from creation, initiator from owner, and header fields from the QC unit.
 
-	Only rows without an NCR Date are touched, so this runs once per record."""
-	for name in frappe.get_all("Non Conformance", filters={"ncr_date": ("is", "not set")}, pluck="name"):
+	Only rows without an NCR Date or Initiator Name are touched, so this runs once per record."""
+	names = set(frappe.get_all("Non Conformance", filters={"ncr_date": ("is", "not set")}, pluck="name"))
+	names |= set(
+		frappe.get_all(
+			"Non Conformance",
+			filters={"initiator": ("is", "set"), "initiator_name": ("is", "not set")},
+			pluck="name",
+		)
+	)
+	for name in sorted(names):
 		doc = frappe.get_doc("Non Conformance", name)
 		before = {f: doc.get(f) for f in BACKFILL_FIELDS}
 		fill_from_origin(doc)
