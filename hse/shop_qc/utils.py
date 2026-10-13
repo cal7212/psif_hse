@@ -375,7 +375,7 @@ def qc_photo_appendix(doc) -> str:
 	photos = get_qc_photos(doc.name)
 	if not photos:
 		return ""
-	return frappe.render_template(
-		"hse/templates/print/qc_photo_appendix.html",
-		{"unit": doc, "photos": photos, "_": _},
+	# Fixed app template; no user input reaches the template source.
+	return frappe.get_template("hse/templates/print/qc_photo_appendix.html").render(
+		{"unit": doc, "photos": photos, "_": _}
 	)
