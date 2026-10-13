@@ -147,12 +147,26 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 			{
 				"details": "<p>Ground lug loose</p>",
 				"capa_required": 1,
+				"capa_no": f"_T-CAPA-{frappe.generate_hash(length=6)}",
 				"capa_initiated_date": "2026-10-01",
 				"capa_related_ncrs": [{"non_conformance": other.name}],
 			}
 		)
 		nc.save()
-		self.assertTrue(nc.capa_no.startswith("CAPA-"))
+		self.assertTrue(nc.capa_no.startswith("_T-CAPA-"))
+		# log numbers are unique across NCRs
+		other.reload()
+		other.update({"capa_required": 1, "capa_no": nc.capa_no})
+		self.assertRaises(frappe.ValidationError, other.save)
+		other.reload()
+		other.capa_required = 1
+		self.assertRaises(frappe.ValidationError, other.save)  # CAPA # required
+		other.reload()
+		ncr_no = f"_T-NCR-{frappe.generate_hash(length=6)}"
+		frappe.db.set_value("Non Conformance", nc.name, "ncr_no", ncr_no, update_modified=False)
+		other.ncr_no = f" {ncr_no} "
+		self.assertRaises(frappe.ValidationError, other.save)
+		other.reload()
 		self.assertEqual(nc.capa_status, "Open")
 		self.assertEqual(nc.capa_source, "NCR Trend")
 		self.assertEqual(nc.capa_scar_reference, nc.capa_no)

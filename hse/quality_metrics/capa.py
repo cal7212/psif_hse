@@ -3,7 +3,7 @@
 """QM-128 Corrective Action & Preventative Action (CAPA) on the Non Conformance doctype.
 
 A CAPA tab on the NCR holds the QM-128 report fields and a 5 Whys root-cause analysis.
-Ticking CAPA Required numbers the CAPA, stamps who and when, and fills blanks from the NCR;
+Ticking CAPA Required needs the CAPA # from the internal log, stamps who and when, and fills blanks from the NCR;
 due dates follow the QM-128 rule (containment 7 days, correction 30, closure 60, unless an
 approved extension moves correction and closure). Closing the CAPA needs a root cause, a
 corrective action and an Effective verification.
@@ -11,11 +11,9 @@ corrective action and an Effective verification.
 
 import frappe
 from frappe import _
-from frappe.model.naming import make_autoname
 from frappe.utils import add_days, cstr, getdate, nowdate, strip_html
 
 CAPA_PRINT_FORMAT = "QM-128 CAPA Report"
-CAPA_SERIES = "CAPA-.YYYY.-.####"
 CAPA_STATUSES = (
 	"Open",
 	"Containment",
@@ -85,11 +83,12 @@ def get_custom_fields() -> list[dict]:
 			"fieldname": "capa_no",
 			"label": "CAPA #",
 			"fieldtype": "Data",
-			"read_only": 1,
-			"unique": 1,
 			"no_copy": 1,
 			"in_standard_filter": 1,
+			"search_index": 1,
 			"insert_after": "capa_header_section",
+			"mandatory_depends_on": CAPA_DEP,
+			"description": "Number from the internal CAPA log.",
 		},
 		{
 			"fieldname": "capa_status",
@@ -369,8 +368,11 @@ def validate(doc, method=None):
 
 
 def start_capa(doc) -> None:
+	from hse.quality_metrics.ncr import validate_log_number
+
+	validate_log_number(doc, "capa_no", _("CAPA #"))
 	if not doc.get("capa_no"):
-		doc.capa_no = make_autoname(CAPA_SERIES, "Non Conformance", doc)
+		frappe.throw(_("Enter the CAPA # from the internal CAPA log."), title=_("CAPA # Required"))
 	if not doc.get("capa_status"):
 		doc.capa_status = "Open"
 	if not doc.get("capa_initiated_by"):
