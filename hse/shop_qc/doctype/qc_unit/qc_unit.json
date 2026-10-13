@@ -67,18 +67,88 @@
   "section_hoses",
   "hoses",
   "hose_count",
+  "tab_repair_eval",
+  "section_eval_info",
+  "contact_name",
+  "quote_number",
+  "technician",
+  "evaluation_date",
+  "cb_eval_info",
+  "manufacturer",
+  "customer_item_no",
+  "customer_reference",
   "section_repair",
   "received_date",
   "reported_problem",
-  "as_received_condition",
   "as_received_photo",
   "column_break_repair",
   "warranty_status",
   "failure_cause",
   "disposition",
-  "section_repair_work",
+  "section_eval_findings",
+  "as_received_condition",
   "failure_analysis",
+  "cb_eval_findings",
+  "condition_evaluation",
+  "repair_recommendation",
+  "section_repair_parts",
+  "repair_parts",
+  "section_accessory_items",
+  "accessory_items",
+  "section_labor",
+  "labor_inspection_hr",
+  "labor_repair_hr",
+  "cb_labor_1",
+  "labor_assembly_hr",
+  "labor_testing_hr",
+  "cb_labor_2",
+  "labor_total_hr",
+  "section_additional",
+  "additional_information",
+  "section_repair_work",
   "work_performed",
+  "tab_repair_costing",
+  "section_pricing",
+  "parts_total",
+  "parts_burden_pct",
+  "parts_burden",
+  "parts_freight_pct",
+  "parts_freight",
+  "parts_expendables_pct",
+  "parts_expendables",
+  "parts_cost_total",
+  "parts_margin_pct",
+  "parts_margin",
+  "parts_sell_price",
+  "cb_pricing_acc",
+  "accessories_total",
+  "accessories_burden_pct",
+  "accessories_burden",
+  "accessories_freight_pct",
+  "accessories_freight",
+  "accessories_expendables_pct",
+  "accessories_expendables",
+  "accessories_cost_total",
+  "accessories_margin_pct",
+  "accessories_margin",
+  "accessories_sell_price",
+  "cb_pricing_labor",
+  "labor_inspection_cost_hr",
+  "labor_rep_assy_hr",
+  "labor_testing_cost_hr",
+  "labor_cost_rate",
+  "labor_cost",
+  "labor_sell_rate",
+  "labor_sell_price",
+  "cb_pricing_new",
+  "psif_part_number",
+  "new_unit_price",
+  "new_unit_accessories_price",
+  "repair_price",
+  "repair_accessories_price",
+  "repair_pct_of_new",
+  "repair_accessories_pct_of_new",
+  "costing_defaults_loaded",
   "tab_requirements",
   "section_cdocs",
   "construction_document_template",
@@ -176,7 +246,8 @@
    "in_standard_filter": 1,
    "label": "Shop",
    "options": "Build Shop",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Choose the Repair shop for RGA work; it sets Job Type to Repair."
   },
   {
    "default": "Power Unit",
@@ -185,8 +256,9 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Product Type",
-   "options": "Power Unit\nManifold\nValve Stand\nHose Assembly\nOther",
-   "reqd": 1
+   "options": "Power Unit\nManifold\nValve Stand\nHose Assembly\nComponent\nOther",
+   "reqd": 1,
+   "description": "Component: repairs worked at the component level (motor, pump, valve, cylinder ...), even when the item came from a power unit."
   },
   {
    "fieldname": "column_break_job",
@@ -494,7 +566,7 @@
    "description": "Allowed difference between design and as-set relief/compensator settings at test. Leave blank to judge each PMG manually.",
    "fieldname": "setting_tolerance_psi",
    "fieldtype": "Float",
-   "label": "Setting Tolerance \u00b1 (psi)"
+   "label": "Setting Tolerance ± (psi)"
   },
   {
    "collapsible": 1,
@@ -550,10 +622,61 @@
    "read_only": 1
   },
   {
+   "fieldname": "tab_repair_eval",
+   "fieldtype": "Tab Break",
+   "label": "Repair Evaluation",
+   "depends_on": "eval:doc.job_type=='Repair'"
+  },
+  {
+   "fieldname": "section_eval_info",
+   "fieldtype": "Section Break",
+   "label": "Evaluation Information",
+   "description": "Customer, RGA, S.O., W.O., item description, model and serial are on the Details tab."
+  },
+  {
+   "fieldname": "contact_name",
+   "fieldtype": "Data",
+   "label": "Contact Name"
+  },
+  {
+   "fieldname": "quote_number",
+   "fieldtype": "Data",
+   "label": "PSIF Quote #"
+  },
+  {
+   "fieldname": "technician",
+   "fieldtype": "Data",
+   "label": "Technician"
+  },
+  {
+   "fieldname": "evaluation_date",
+   "fieldtype": "Date",
+   "label": "Evaluation Date"
+  },
+  {
+   "fieldname": "cb_eval_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manufacturer",
+   "fieldtype": "Data",
+   "label": "Manufacturer"
+  },
+  {
+   "fieldname": "customer_item_no",
+   "fieldtype": "Data",
+   "label": "Customer Item #"
+  },
+  {
+   "fieldname": "customer_reference",
+   "fieldtype": "Data",
+   "label": "Customer Reference #"
+  },
+  {
    "depends_on": "eval:doc.job_type=='Repair'",
    "fieldname": "section_repair",
    "fieldtype": "Section Break",
-   "label": "Repair / RGA"
+   "label": "Receipt"
   },
   {
    "fieldname": "received_date",
@@ -566,11 +689,6 @@
    "fieldtype": "Small Text",
    "label": "Customer Reported Problem",
    "mandatory_depends_on": "eval:doc.job_type=='Repair'"
-  },
-  {
-   "fieldname": "as_received_condition",
-   "fieldtype": "Small Text",
-   "label": "As-Received Condition"
   },
   {
    "fieldname": "as_received_photo",
@@ -601,16 +719,120 @@
    "options": "\nRepair\nReplace\nReturn As-Is\nScrap"
   },
   {
-   "collapsible": 0,
-   "depends_on": "eval:doc.job_type=='Repair'",
-   "fieldname": "section_repair_work",
+   "fieldname": "section_eval_findings",
    "fieldtype": "Section Break",
-   "label": "Repair Findings"
+   "label": "Evaluation"
+  },
+  {
+   "fieldname": "as_received_condition",
+   "fieldtype": "Text",
+   "label": "Receipt Inspection",
+   "description": "Condition as received: packaging, damage, missing items, fluid."
   },
   {
    "fieldname": "failure_analysis",
    "fieldtype": "Text",
-   "label": "Failure Analysis / Root Cause"
+   "label": "Failure Assessment",
+   "description": "Cause of failure / root cause."
+  },
+  {
+   "fieldname": "cb_eval_findings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "condition_evaluation",
+   "fieldtype": "Text",
+   "label": "Condition Evaluation",
+   "description": "Tests and checks performed and what was found."
+  },
+  {
+   "fieldname": "repair_recommendation",
+   "fieldtype": "Text",
+   "label": "Repair Recommendation"
+  },
+  {
+   "fieldname": "section_repair_parts",
+   "fieldtype": "Section Break",
+   "label": "Repair Parts"
+  },
+  {
+   "fieldname": "repair_parts",
+   "fieldtype": "Table",
+   "label": "Repair Parts",
+   "options": "QC Repair Part"
+  },
+  {
+   "fieldname": "section_accessory_items",
+   "fieldtype": "Section Break",
+   "label": "Accessory Items"
+  },
+  {
+   "fieldname": "accessory_items",
+   "fieldtype": "Table",
+   "label": "Accessory Items",
+   "options": "QC Repair Part"
+  },
+  {
+   "fieldname": "section_labor",
+   "fieldtype": "Section Break",
+   "label": "Labor Requirement (hours)"
+  },
+  {
+   "fieldname": "labor_inspection_hr",
+   "fieldtype": "Float",
+   "label": "Inspection",
+   "precision": "2"
+  },
+  {
+   "fieldname": "labor_repair_hr",
+   "fieldtype": "Float",
+   "label": "Repair",
+   "precision": "2"
+  },
+  {
+   "fieldname": "cb_labor_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "labor_assembly_hr",
+   "fieldtype": "Float",
+   "label": "Assembly",
+   "precision": "2"
+  },
+  {
+   "fieldname": "labor_testing_hr",
+   "fieldtype": "Float",
+   "label": "Testing",
+   "precision": "2"
+  },
+  {
+   "fieldname": "cb_labor_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "labor_total_hr",
+   "fieldtype": "Float",
+   "label": "Total",
+   "precision": "2",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "section_additional",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "additional_information",
+   "fieldtype": "Text",
+   "label": "Additional Information"
+  },
+  {
+   "collapsible": 0,
+   "depends_on": "eval:doc.job_type=='Repair'",
+   "fieldname": "section_repair_work",
+   "fieldtype": "Section Break",
+   "label": "Repair Work"
   },
   {
    "fieldname": "work_performed",
@@ -618,7 +840,256 @@
    "label": "Work Performed"
   },
   {
-   "depends_on": "eval:doc.product_type!='Hose Assembly'",
+   "fieldname": "tab_repair_costing",
+   "fieldtype": "Tab Break",
+   "label": "Repair Costing",
+   "depends_on": "eval:doc.job_type=='Repair'"
+  },
+  {
+   "fieldname": "section_pricing",
+   "fieldtype": "Section Break",
+   "label": "Pricing Information",
+   "description": "Line costs are entered on the Repair Evaluation tab. Percentages and rates start from the Repair shop's costing defaults and can be changed here."
+  },
+  {
+   "fieldname": "parts_total",
+   "fieldtype": "Currency",
+   "label": "Repair Parts",
+   "read_only": 1,
+   "description": "Sum of Extended Cost"
+  },
+  {
+   "fieldname": "parts_burden_pct",
+   "fieldtype": "Percent",
+   "label": "Burden %"
+  },
+  {
+   "fieldname": "parts_burden",
+   "fieldtype": "Currency",
+   "label": "Burden",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parts_freight_pct",
+   "fieldtype": "Percent",
+   "label": "Inbound Freight %"
+  },
+  {
+   "fieldname": "parts_freight",
+   "fieldtype": "Currency",
+   "label": "Inbound Freight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parts_expendables_pct",
+   "fieldtype": "Percent",
+   "label": "Expendables %"
+  },
+  {
+   "fieldname": "parts_expendables",
+   "fieldtype": "Currency",
+   "label": "Expendables",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parts_cost_total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "parts_margin_pct",
+   "fieldtype": "Percent",
+   "label": "Margin %"
+  },
+  {
+   "fieldname": "parts_margin",
+   "fieldtype": "Currency",
+   "label": "Margin",
+   "read_only": 1
+  },
+  {
+   "fieldname": "parts_sell_price",
+   "fieldtype": "Currency",
+   "label": "Sell Price",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "cb_pricing_acc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "accessories_total",
+   "fieldtype": "Currency",
+   "label": "Accessory Items",
+   "read_only": 1,
+   "description": "Sum of Extended Cost"
+  },
+  {
+   "fieldname": "accessories_burden_pct",
+   "fieldtype": "Percent",
+   "label": "Burden %"
+  },
+  {
+   "fieldname": "accessories_burden",
+   "fieldtype": "Currency",
+   "label": "Burden",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accessories_freight_pct",
+   "fieldtype": "Percent",
+   "label": "Inbound Freight %"
+  },
+  {
+   "fieldname": "accessories_freight",
+   "fieldtype": "Currency",
+   "label": "Inbound Freight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accessories_expendables_pct",
+   "fieldtype": "Percent",
+   "label": "Expendables %"
+  },
+  {
+   "fieldname": "accessories_expendables",
+   "fieldtype": "Currency",
+   "label": "Expendables",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accessories_cost_total",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "accessories_margin_pct",
+   "fieldtype": "Percent",
+   "label": "Margin %"
+  },
+  {
+   "fieldname": "accessories_margin",
+   "fieldtype": "Currency",
+   "label": "Margin",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accessories_sell_price",
+   "fieldtype": "Currency",
+   "label": "Sell Price",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "cb_pricing_labor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "labor_inspection_cost_hr",
+   "fieldtype": "Float",
+   "label": "Inspection Labor (hr)",
+   "read_only": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "labor_rep_assy_hr",
+   "fieldtype": "Float",
+   "label": "Rep & Assy Labor (hr)",
+   "read_only": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "labor_testing_cost_hr",
+   "fieldtype": "Float",
+   "label": "Testing Labor (hr)",
+   "read_only": 1,
+   "precision": "2"
+  },
+  {
+   "fieldname": "labor_cost_rate",
+   "fieldtype": "Currency",
+   "label": "Cost Rate (per hr)"
+  },
+  {
+   "fieldname": "labor_cost",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "labor_sell_rate",
+   "fieldtype": "Currency",
+   "label": "Sell Rate (per hr)"
+  },
+  {
+   "fieldname": "labor_sell_price",
+   "fieldtype": "Currency",
+   "label": "Sell Price",
+   "read_only": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "cb_pricing_new",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "psif_part_number",
+   "fieldtype": "Data",
+   "label": "PSIF Part #"
+  },
+  {
+   "fieldname": "new_unit_price",
+   "fieldtype": "Currency",
+   "label": "New Unit Price"
+  },
+  {
+   "fieldname": "new_unit_accessories_price",
+   "fieldtype": "Currency",
+   "label": "New Unit & Accessories"
+  },
+  {
+   "fieldname": "repair_price",
+   "fieldtype": "Currency",
+   "label": "Repair Price",
+   "read_only": 1,
+   "bold": 1,
+   "description": "Repair parts sell price + labor sell price"
+  },
+  {
+   "fieldname": "repair_accessories_price",
+   "fieldtype": "Currency",
+   "label": "Repair & Accessories",
+   "read_only": 1,
+   "bold": 1,
+   "description": "Repair price + accessory items sell price"
+  },
+  {
+   "fieldname": "repair_pct_of_new",
+   "fieldtype": "Percent",
+   "label": "Repair % of New",
+   "read_only": 1
+  },
+  {
+   "fieldname": "repair_accessories_pct_of_new",
+   "fieldtype": "Percent",
+   "label": "Repair & Accessory % New",
+   "read_only": 1
+  },
+  {
+   "fieldname": "costing_defaults_loaded",
+   "fieldtype": "Check",
+   "label": "Costing Defaults Loaded",
+   "hidden": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.product_type!='Hose Assembly' && doc.job_type!='Repair'",
    "fieldname": "tab_requirements",
    "fieldtype": "Tab Break",
    "label": "Construction Requirements"
@@ -1079,7 +1550,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-05 14:00:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

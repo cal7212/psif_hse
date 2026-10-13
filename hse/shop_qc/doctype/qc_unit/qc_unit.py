@@ -6,6 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
+from hse.shop_qc.repair_costing import SHOP_DEFAULTS, calc_repair_costing, load_shop_defaults
+
 REPAIR = "Repair"
 MAX_PMG = 10
 PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
@@ -71,6 +73,7 @@ class QCUnit(Document):
 	def autoname(self):
 		# New builds are named by TrulinX work order; repairs by RGA number.
 		self.normalise_ids()
+		self.set_repair_shop_job_type()
 		if self.job_type == REPAIR:
 			if not self.rga_number:
 				frappe.throw(_("Enter the RGA Number for a repair."))
@@ -84,6 +87,7 @@ class QCUnit(Document):
 	def validate(self):
 		self.normalise_ids()
 		self.serial_no = cstr(self.serial_no).strip() or None
+		self.set_repair_shop_job_type()
 		self.validate_job_type_change()
 		self.validate_unique_serial()
 		self.set_test_pressures()
@@ -92,7 +96,36 @@ class QCUnit(Document):
 		self.validate_circuit_items()
 		self.set_order_documents()
 		self.set_post_shipment_review()
+		self.set_repair_costing()
 		self.validate_status_change()
+
+	def is_repair_shop(self) -> bool:
+		return bool(self.shop and cint(frappe.db.get_value("Build Shop", self.shop, "is_repair_shop")))
+
+	def set_repair_shop_job_type(self):
+		"""Everything received into the Repair shop is a repair, normally at component level."""
+		if not self.is_repair_shop():
+			return
+		self.job_type = REPAIR
+
+	def set_repair_costing(self):
+		if self.job_type != REPAIR:
+			return
+		if not self.costing_defaults_loaded and self.shop:
+			values = frappe.db.get_value("Build Shop", self.shop, list(SHOP_DEFAULTS), as_dict=True) or {}
+			load_shop_defaults(self, values)
+		for table in ("repair_parts", "accessory_items"):
+			for r in self.get(table):
+				if flt(r.qty) < 0 or flt(r.list_price) < 0 or flt(r.multiplier) < 0:
+					frappe.throw(
+						_("{0} row {1}: quantity, list price and multiplier cannot be negative.").format(
+							_(self.meta.get_label(table)), r.idx
+						)
+					)
+		for f in ("parts_margin_pct", "accessories_margin_pct"):
+			if flt(self.get(f)) >= 100:
+				frappe.throw(_("{0} must be less than 100%.").format(_(self.meta.get_label(f))))
+		calc_repair_costing(self)
 
 	def set_order_documents(self):
 		"""Load each document list from its template (or the default template) when it is empty."""

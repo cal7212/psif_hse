@@ -15,7 +15,9 @@ SHOPS = [
 	("HPU", "HBI", "HPU Quality Control Certificate"),
 	("Light Assembly", "LAI", "Light Assembly Quality Control Certificate"),
 	("Hose", "HOS", "Hose Assembly Test Certificate"),
+	("Repair", "RPR", "Repair QC Report"),
 ]
+REPAIR_SHOP = "Repair"  # RGA work of every product type; units here are always Job Type Repair
 
 FAILURE_CAUSES = [
 	"Contamination",
@@ -151,6 +153,7 @@ def make_shops():
 				"shop_name": name,
 				"inspection_prefix": prefix,
 				"certificate_title": title,
+				"is_repair_shop": int(name == REPAIR_SHOP),
 			}
 		).insert(ignore_permissions=True)
 

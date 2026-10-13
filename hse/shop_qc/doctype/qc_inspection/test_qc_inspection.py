@@ -25,6 +25,7 @@ from hse.shop_qc.doctype.qc_unit.qc_unit import (
 	iso_within,
 	normalise_dash,
 )
+from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
 from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
 
 PROC = "_Test QC Procedure"
@@ -32,11 +33,54 @@ WO = "_TEST-WO-1"
 HOSE_WO = "_TEST-HOSE-WO-1"
 SHOP = "_T Shop"
 HOSE_SHOP = "_T Hose Shop"
+REPAIR_SHOP = "_T Repair Shop"
+COSTING_DEFAULTS = {
+	"default_burden_pct": 5,
+	"default_inbound_freight_pct": 5,
+	"default_expendables_pct": 3,
+	"default_margin_pct": 40,
+	"default_labor_cost_rate": 65,
+	"default_labor_sell_rate": 125,
+}
 STAGES = [("_T Assembly", 10, 0), ("_T Test", 20, 0), ("_T Release", 30, 1)]
 HOSE_STAGES = [("_T Hose Test", 10, 0, 1), ("_T Hose Release", 20, 1, 0)]
 
 
 class UnitTestQCInspection(UnitTestCase):
+	def test_repair_costing_worksheet(self):
+		# Test values only (from a sample worksheet); the real rates live on the Repair shop.
+		doc = frappe._dict(
+			repair_parts=[
+				frappe._dict(qty=1, list_price=128.39, multiplier=0.5),
+				frappe._dict(qty=None, list_price=10, multiplier=0.5),  # note line: no extended cost
+			],
+			accessory_items=[frappe._dict(qty=2, list_price=100, multiplier=0.6)],
+			labor_inspection_hr=0,
+			labor_repair_hr=0.25,
+			labor_assembly_hr=0.25,
+			labor_testing_hr=0.5,
+			new_unit_price=1000,
+			new_unit_accessories_price=2000,
+		)
+		load_shop_defaults(doc, COSTING_DEFAULTS)
+		load_shop_defaults(doc, {"default_margin_pct": 10})  # copied once only
+		calc_repair_costing(doc)
+		self.assertAlmostEqual(doc.repair_parts[0].cost_each, 64.195)
+		self.assertAlmostEqual(doc.repair_parts[0].extended_cost, 64.195)
+		self.assertEqual(doc.repair_parts[1].extended_cost, 0)
+		self.assertAlmostEqual(doc.parts_cost_total, 64.195 * 1.13)
+		self.assertAlmostEqual(doc.parts_sell_price, 64.195 * 1.13 / 0.6)
+		self.assertAlmostEqual(doc.parts_margin, doc.parts_sell_price - doc.parts_cost_total)
+		self.assertAlmostEqual(doc.accessories_total, 120)
+		self.assertEqual(doc.labor_rep_assy_hr, 0.5)
+		self.assertEqual(doc.labor_total_hr, 1)
+		self.assertEqual(doc.labor_cost, 65)
+		self.assertEqual(doc.labor_sell_price, 125)
+		self.assertAlmostEqual(doc.repair_price, doc.parts_sell_price + 125)
+		self.assertAlmostEqual(doc.repair_accessories_price, doc.repair_price + doc.accessories_sell_price)
+		self.assertAlmostEqual(doc.repair_pct_of_new, doc.repair_price / 10)
+		self.assertEqual(sell_price(100, 100), 0)
+
 	def test_proof_and_accumulator_evaluation(self):
 		row = frappe._dict(p1_spec=4500, p1_psi=4500, leak_check="No Leak")
 		self.assertEqual(evaluate_proof(row), PASS)
@@ -135,6 +179,16 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		frappe.db.set_value("QC Stage", {"name": ("not like", "_T %")}, "disabled", 1)
 		if not frappe.db.exists("Quality Procedure", PROC):
 			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
+		if not frappe.db.exists("Build Shop", REPAIR_SHOP):
+			frappe.get_doc(
+				{
+					"doctype": "Build Shop",
+					"shop_name": REPAIR_SHOP,
+					"inspection_prefix": "TQR",
+					"is_repair_shop": 1,
+					**COSTING_DEFAULTS,
+				}
+			).insert()
 		for shop, prefix, mult in ((SHOP, "TQA", 0), (HOSE_SHOP, "TQH", 2)):
 			if not frappe.db.exists("Build Shop", shop):
 				frappe.get_doc(
@@ -268,7 +322,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		frappe.delete_doc("QC Unit", unit, force=1)
 
 	def setUp(self):
-		for unit in (WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100"):
+		for unit in (WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100", "RGA-_T101"):
 			self.clear_unit(unit)
 		frappe.get_doc(
 			{
@@ -468,6 +522,36 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		)
 		self.make("_T Release", unit=unit.name)
 		self.assertEqual(frappe.db.get_value("QC Unit", unit.name, "status"), "Released")
+
+	def test_repair_shop_sets_repair_and_costing(self):
+		unit = frappe.get_doc(
+			{
+				"doctype": "QC Unit",
+				"shop": REPAIR_SHOP,
+				"product_type": "Component",
+				"job_type": "New Build",
+				"rga_number": "_t101",
+				"model": "MOTOR-1",
+				"company": self.company,
+				"received_date": frappe.utils.nowdate(),
+				"repair_parts": [
+					{"qty": 2, "item_description": "Seal kit", "list_price": 50, "multiplier": 0.5}
+				],
+				"labor_testing_hr": 1,
+			}
+		).insert()
+		self.assertEqual(unit.job_type, "Repair")
+		self.assertEqual(unit.name, "RGA-_T101")
+		self.assertEqual(unit.repair_parts[0].cost_each, 25)
+		self.assertEqual(unit.repair_parts[0].extended_cost, 50)
+		self.assertEqual(unit.parts_burden_pct, 5)
+		self.assertEqual(unit.labor_sell_price, 125)
+		unit.parts_margin_pct = 0
+		unit.save()
+		self.assertEqual(unit.parts_margin_pct, 0)  # defaults are not re-applied after the first save
+		self.assertEqual(unit.parts_sell_price, unit.parts_cost_total)
+		unit.parts_margin_pct = 100
+		self.assertRaises(frappe.ValidationError, unit.save)
 
 	def test_expired_instrument_blocks_submit(self):
 		self.make("_T Assembly")

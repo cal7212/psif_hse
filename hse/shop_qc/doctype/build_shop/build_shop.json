@@ -10,6 +10,7 @@
   "shop_name",
   "inspection_prefix",
   "disabled",
+  "is_repair_shop",
   "column_break_shop",
   "quality_procedure",
   "section_cert",
@@ -18,7 +19,15 @@
   "section_test",
   "test_pressure_multiplier",
   "column_break_test",
-  "default_hold_time_min"
+  "default_hold_time_min",
+  "section_repair_costing",
+  "default_burden_pct",
+  "default_inbound_freight_pct",
+  "default_expendables_pct",
+  "column_break_repair_costing",
+  "default_margin_pct",
+  "default_labor_cost_rate",
+  "default_labor_sell_rate"
  ],
  "fields": [
   {
@@ -42,6 +51,12 @@
    "fieldname": "disabled",
    "fieldtype": "Check",
    "label": "Disabled"
+  },
+  {
+   "fieldname": "is_repair_shop",
+   "fieldtype": "Check",
+   "label": "Repair Shop",
+   "description": "Units in this shop are repairs (Job Type Repair) and get the Repair Evaluation and Repair Costing tabs."
   },
   {
    "fieldname": "column_break_shop",
@@ -92,10 +107,51 @@
    "label": "Default Hold Time (minutes)",
    "non_negative": 1,
    "precision": "2"
+  },
+  {
+   "fieldname": "section_repair_costing",
+   "fieldtype": "Section Break",
+   "label": "Repair Costing Defaults",
+   "depends_on": "eval:doc.is_repair_shop",
+   "description": "Copied to each new repair's costing tab; change them there per repair."
+  },
+  {
+   "fieldname": "default_burden_pct",
+   "fieldtype": "Percent",
+   "label": "Burden %"
+  },
+  {
+   "fieldname": "default_inbound_freight_pct",
+   "fieldtype": "Percent",
+   "label": "Inbound Freight %"
+  },
+  {
+   "fieldname": "default_expendables_pct",
+   "fieldtype": "Percent",
+   "label": "Expendables %"
+  },
+  {
+   "fieldname": "column_break_repair_costing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_margin_pct",
+   "fieldtype": "Percent",
+   "label": "Margin %"
+  },
+  {
+   "fieldname": "default_labor_cost_rate",
+   "fieldtype": "Currency",
+   "label": "Labor Cost Rate (per hr)"
+  },
+  {
+   "fieldname": "default_labor_sell_rate",
+   "fieldtype": "Currency",
+   "label": "Labor Sell Rate (per hr)"
   }
  ],
  "links": [],
- "modified": "2026-10-06 11:00:00.000000",
+ "modified": "2026-10-13 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "Build Shop",

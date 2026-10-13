@@ -47,6 +47,75 @@ function hse_load_document_template(frm, link, table) {
 	}
 }
 
+// Repair Costing Worksheet: mirrors hse/shop_qc/repair_costing.py (the server recalculates on save).
+// Percentages are whole numbers (5 = 5 %); the line Multiplier is a fraction (0.5 = 50 %).
+const REPAIR_PRICING_INPUTS = [
+	"parts_burden_pct",
+	"parts_freight_pct",
+	"parts_expendables_pct",
+	"parts_margin_pct",
+	"accessories_burden_pct",
+	"accessories_freight_pct",
+	"accessories_expendables_pct",
+	"accessories_margin_pct",
+	"labor_inspection_hr",
+	"labor_repair_hr",
+	"labor_assembly_hr",
+	"labor_testing_hr",
+	"labor_cost_rate",
+	"labor_sell_rate",
+	"new_unit_price",
+	"new_unit_accessories_price",
+];
+
+function hse_repair_group(doc, prefix, rows) {
+	let total = 0;
+	for (const r of rows || []) {
+		r.cost_each = flt(r.list_price) * flt(r.multiplier);
+		r.extended_cost = flt(r.qty) * flt(r.cost_each);
+		total += r.extended_cost;
+	}
+	doc[`${prefix}_total`] = total;
+	let cost = total;
+	for (const part of ["burden", "freight", "expendables"]) {
+		const amount = (total * flt(doc[`${prefix}_${part}_pct`])) / 100;
+		doc[`${prefix}_${part}`] = amount;
+		cost += amount;
+	}
+	doc[`${prefix}_cost_total`] = cost;
+	const margin = flt(doc[`${prefix}_margin_pct`]) / 100;
+	const sell = cost && margin < 1 ? cost / (1 - margin) : 0;
+	doc[`${prefix}_sell_price`] = sell;
+	doc[`${prefix}_margin`] = sell ? sell - cost : 0;
+}
+
+function hse_calc_repair_costing(frm) {
+	const doc = frm.doc;
+	if (doc.job_type !== "Repair") return;
+	hse_repair_group(doc, "parts", doc.repair_parts);
+	hse_repair_group(doc, "accessories", doc.accessory_items);
+	const insp = flt(doc.labor_inspection_hr);
+	const rep = flt(doc.labor_repair_hr);
+	const assy = flt(doc.labor_assembly_hr);
+	const test = flt(doc.labor_testing_hr);
+	const hours = insp + rep + assy + test;
+	doc.labor_total_hr = hours;
+	doc.labor_inspection_cost_hr = insp;
+	doc.labor_rep_assy_hr = rep + assy;
+	doc.labor_testing_cost_hr = test;
+	doc.labor_cost = hours * flt(doc.labor_cost_rate);
+	doc.labor_sell_price = hours * flt(doc.labor_sell_rate);
+	doc.repair_price = flt(doc.parts_sell_price) + flt(doc.labor_sell_price);
+	doc.repair_accessories_price = doc.repair_price + flt(doc.accessories_sell_price);
+	doc.repair_pct_of_new = flt(doc.new_unit_price)
+		? (doc.repair_price / flt(doc.new_unit_price)) * 100
+		: 0;
+	doc.repair_accessories_pct_of_new = flt(doc.new_unit_accessories_price)
+		? (doc.repair_accessories_price / flt(doc.new_unit_accessories_price)) * 100
+		: 0;
+	frm.refresh_fields();
+}
+
 frappe.ui.form.on("QC Unit", {
 	construction_document_template(frm) {
 		hse_load_document_template(
@@ -75,7 +144,23 @@ frappe.ui.form.on("QC Unit", {
 		if (frm.doc.job_type === "Repair" && !frm.doc.received_date) {
 			frm.set_value("received_date", frappe.datetime.get_today());
 		}
+		hse_calc_repair_costing(frm);
 	},
+
+	shop(frm) {
+		if (!frm.doc.shop) return;
+		frappe.db.get_value("Build Shop", frm.doc.shop, "is_repair_shop").then((r) => {
+			if (!cint(r.message && r.message.is_repair_shop)) return;
+			frm.set_value("job_type", "Repair");
+			if (frm.is_new() && frm.doc.product_type === "Power Unit") {
+				// Repairs are normally worked at component level; change it back for a whole-unit repair.
+				frm.set_value("product_type", "Component");
+			}
+		});
+	},
+
+	repair_parts_remove: hse_calc_repair_costing,
+	accessory_items_remove: hse_calc_repair_costing,
 
 	refresh(frm) {
 		if (frm.doc.trulinx_url) {
@@ -122,6 +207,16 @@ frappe.ui.form.on("QC Unit", {
 				},
 				__("View")
 			);
+			if (frm.doc.job_type === "Repair") {
+				frm.add_custom_button(
+					__("Repair Evaluation Report"),
+					() =>
+						frappe.set_route("print", "QC Unit", frm.doc.name, {
+							format: "Repair Evaluation Report",
+						}),
+					__("View")
+				);
+			}
 			frm.trigger("render_stage_progress");
 		}
 	},
@@ -219,3 +314,15 @@ function fill_crimp_from_chart(cdt, cdn) {
 			});
 		});
 }
+
+// Live costing: line cost each / extended, and the pricing information totals.
+frappe.ui.form.on("QC Repair Part", {
+	qty: (frm) => hse_calc_repair_costing(frm),
+	list_price: (frm) => hse_calc_repair_costing(frm),
+	multiplier: (frm) => hse_calc_repair_costing(frm),
+});
+
+frappe.ui.form.on(
+	"QC Unit",
+	Object.fromEntries(REPAIR_PRICING_INPUTS.map((f) => [f, hse_calc_repair_costing]))
+);
