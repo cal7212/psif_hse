@@ -531,6 +531,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				"product_type": "Component",
 				"job_type": "New Build",
 				"rga_number": "_t101",
+				"model": "MOTOR-1",
 				"company": self.company,
 				"received_date": frappe.utils.nowdate(),
 				"repair_parts": [

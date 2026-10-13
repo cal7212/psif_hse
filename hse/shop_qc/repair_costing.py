@@ -34,16 +34,16 @@ def sell_price(cost: float, margin_pct: float) -> float:
 
 def calc_group(doc, prefix: str, rows) -> None:
 	total = sum(flt(r.extended_cost) for r in rows)
-	doc.set(f"{prefix}_total", total)
+	setattr(doc, f"{prefix}_total", total)
 	cost = total
 	for part in ("burden", "freight", "expendables"):
 		amount = total * flt(doc.get(f"{prefix}_{part}_pct")) / 100
-		doc.set(f"{prefix}_{part}", amount)
+		setattr(doc, f"{prefix}_{part}", amount)
 		cost += amount
-	doc.set(f"{prefix}_cost_total", cost)
+	setattr(doc, f"{prefix}_cost_total", cost)
 	sell = sell_price(cost, doc.get(f"{prefix}_margin_pct")) if cost else 0.0
-	doc.set(f"{prefix}_sell_price", sell)
-	doc.set(f"{prefix}_margin", sell - cost if sell else 0.0)
+	setattr(doc, f"{prefix}_sell_price", sell)
+	setattr(doc, f"{prefix}_margin", sell - cost if sell else 0.0)
 
 
 def calc_repair_costing(doc) -> None:
@@ -82,5 +82,5 @@ def load_shop_defaults(doc, shop_values: dict) -> None:
 		value = flt(shop_values.get(src))
 		for t in targets:
 			if not flt(doc.get(t)) and value:
-				doc.set(t, value)
+				setattr(doc, t, value)
 	doc.costing_defaults_loaded = 1
