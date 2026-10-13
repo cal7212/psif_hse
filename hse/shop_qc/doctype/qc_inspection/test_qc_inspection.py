@@ -26,7 +26,14 @@ from hse.shop_qc.doctype.qc_unit.qc_unit import (
 	normalise_dash,
 )
 from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
-from hse.shop_qc.utils import certificate_format_for, get_stages, stage_applies
+from hse.shop_qc.utils import (
+	certificate_format_for,
+	get_qc_photos,
+	get_stages,
+	is_image_url,
+	qc_photo_appendix,
+	stage_applies,
+)
 
 PROC = "_Test QC Procedure"
 WO = "_TEST-WO-1"
@@ -170,6 +177,14 @@ class UnitTestQCInspection(UnitTestCase):
 		self.assertEqual(evaluate_numeric(3100, 2910, 3090), FAIL)
 		self.assertEqual(evaluate_numeric(2900, 2910, 3090), FAIL)
 		self.assertEqual(evaluate_numeric(5), PASS)
+
+
+class UnitTestQCPhotos(UnitTestCase):
+	def test_is_image_url(self):
+		self.assertTrue(is_image_url("/private/files/pump.JPG"))
+		self.assertTrue(is_image_url("/files/a.png?fid=123"))
+		self.assertFalse(is_image_url("/files/report.pdf"))
+		self.assertFalse(is_image_url(None))
 
 
 class IntegrationTestQCInspection(IntegrationTestCase):
@@ -417,6 +432,23 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(self.status(), "QC Hold")
 		with self.assertRaises(frappe.ValidationError):
 			self.make("_T Release")  # hold point: _T Test not accepted
+
+	def test_photo_appendix_is_optional(self):
+		insp = self.make("_T Assembly")
+		row = insp.items[0]
+		frappe.db.set_value("QC Inspection Reading", row.name, "photo", "/files/_t_qc_photo.jpg")
+		frappe.db.set_value("QC Unit", WO, {"as_received_photo": "/files/_t_received.png", "print_photos": 0})
+		photos = get_qc_photos(WO)
+		self.assertEqual([p.url for p in photos[:2]], ["/files/_t_received.png", "/files/_t_qc_photo.jpg"])
+		self.assertEqual(photos[1].no, 2)
+		self.assertIn(row.check_item, photos[1].title)
+		unit = frappe.get_doc("QC Unit", WO)
+		self.assertEqual(qc_photo_appendix(unit), "")
+		unit.print_photos = 1
+		html = qc_photo_appendix(unit)
+		self.assertIn("Photo Appendix", html)
+		self.assertIn("/files/_t_qc_photo.jpg", html)
+		frappe.db.set_value("QC Unit", WO, {"as_received_photo": None, "print_photos": 0})
 
 	def test_full_release_path(self):
 		self.make("_T Assembly")

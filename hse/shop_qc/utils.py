@@ -290,3 +290,92 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		if unit.released_by
 		else "",
 	)
+
+
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp")
+
+
+def is_image_url(url: str | None) -> bool:
+	return bool(url) and url.split("?")[0].lower().endswith(IMAGE_EXTENSIONS)
+
+
+def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
+	"""Every photo recorded for a unit, in build order.
+
+	The As-Received photo first, then each submitted inspection's checklist photos and an image
+	test report, oldest inspection first. Draft and cancelled inspections are left out."""
+	unit = frappe.db.get_value("QC Unit", qc_unit, ["name", "as_received_photo"], as_dict=True)
+	if not unit:
+		return []
+	photos = []
+	if is_image_url(unit.as_received_photo):
+		photos.append(frappe._dict(url=unit.as_received_photo, title=_("As-Received Photo"), source=qc_unit))
+	inspections = frappe.get_all(
+		"QC Inspection",
+		filters={"qc_unit": qc_unit, "docstatus": 1},
+		fields=[
+			"name",
+			"stage",
+			"status",
+			"inspection_date",
+			"inspector_name",
+			"is_reinspection",
+			"test_report",
+		],
+		order_by="inspection_date asc, creation asc",
+	)
+	readings = {}
+	if inspections:
+		for r in frappe.get_all(
+			"QC Inspection Reading",
+			filters={
+				"parenttype": "QC Inspection",
+				"parent": ("in", [i.name for i in inspections]),
+				"photo": ("is", "set"),
+			},
+			fields=["parent", "idx", "check_item", "result", "finding", "photo"],
+			order_by="idx asc",
+		):
+			readings.setdefault(r.parent, []).append(r)
+	for insp in inspections:
+		source = " · ".join(
+			x
+			for x in (
+				insp.name + (" " + _("(re-inspection)") if insp.is_reinspection else ""),
+				frappe.utils.format_datetime(insp.inspection_date) if insp.inspection_date else "",
+				insp.inspector_name or "",
+			)
+			if x
+		)
+		for r in readings.get(insp.name, []):
+			if not is_image_url(r.photo):
+				continue
+			photos.append(
+				frappe._dict(
+					url=r.photo,
+					title=f"{insp.stage}: {r.check_item}" if insp.stage else (r.check_item or ""),
+					result=r.result,
+					detail=r.finding,
+					source=source,
+				)
+			)
+		if is_image_url(insp.test_report):
+			photos.append(
+				frappe._dict(url=insp.test_report, title=f"{insp.stage}: {_('Test Report')}", source=source)
+			)
+	for no, p in enumerate(photos, 1):
+		p.no = no
+	return photos
+
+
+def qc_photo_appendix(doc) -> str:
+	"""Jinja helper: the photo appendix HTML when the unit's Print Photos box is ticked, else ""."""
+	if not doc or not doc.get("print_photos"):
+		return ""
+	photos = get_qc_photos(doc.name)
+	if not photos:
+		return ""
+	# Fixed app template; no user input reaches the template source.
+	return frappe.get_template("hse/templates/print/qc_photo_appendix.html").render(
+		{"unit": doc, "photos": photos, "_": _}
+	)
