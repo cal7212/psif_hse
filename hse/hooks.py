@@ -271,7 +271,11 @@ required_apps = ["erpnext"]  # merge if you already list required apps
 doctype_js = {
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
-	"Non Conformance": ["public/js/non_conformance.js", "public/js/non_conformance_qc.js"],
+	"Non Conformance": [
+		"public/js/non_conformance.js",
+		"public/js/non_conformance_qc.js",
+		"public/js/non_conformance_capa.js",
+	],
 	"Quality Review": "public/js/quality_review.js",
 	"Quality Goal": "public/js/quality_goal.js",
 	"QC Inspection": "public/js/inspection_instruments.js",
@@ -286,6 +290,7 @@ doc_events = {
 	"Non Conformance": {
 		"validate": [
 			"hse.quality_metrics.ncr.validate",  # QM-104 NCR fields and closure rules; runs first
+			"hse.quality_metrics.capa.validate",  # QM-128 CAPA numbering, due dates and closure
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
 			"hse.shop_qc.events.validate",

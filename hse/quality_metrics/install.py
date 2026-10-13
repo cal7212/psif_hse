@@ -180,9 +180,11 @@ def after_install():
 
 
 def after_migrate():
+	from hse.quality_metrics.capa import setup_capa
 	from hse.quality_metrics.ncr import backfill_ncr, setup_ncr
 
 	make_custom_fields()
 	backfill_resolved_on()
 	setup_ncr(MODULE)
+	setup_capa(MODULE)
 	backfill_ncr()

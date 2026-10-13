@@ -64,12 +64,23 @@ def get_custom_fields() -> list[dict]:
 			"in_list_view": 1,
 		},
 		{
+			"fieldname": "ncr_no",
+			"label": "NCR No.",
+			"fieldtype": "Data",
+			"insert_after": "ncr_date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"search_index": 1,
+			"no_copy": 1,
+			"description": "Number from the internal NCR log.",
+		},
+		{
 			"fieldname": "initiator",
 			"label": "Initiator",
 			"fieldtype": "Link",
 			"options": "User",
 			"default": "__user",
-			"insert_after": "ncr_date",
+			"insert_after": "ncr_no",
 		},
 		{
 			"fieldname": "initiator_name",
@@ -281,6 +292,7 @@ def is_custom(fieldname: str) -> bool:
 # ---------------------------------------------------------------- document events
 def validate(doc, method=None):
 	fill_from_origin(doc)
+	validate_log_number(doc, "ncr_no", _("NCR No."))
 	if doc.get("disposition") == OTHER and not cstr(doc.get("disposition_other")).strip():
 		frappe.throw(_("Describe the Other disposition."))
 	if doc.get("reject_qty") and doc.get("lot_qty") and doc.reject_qty > doc.lot_qty:
@@ -390,3 +402,14 @@ def backfill_ncr() -> None:
 		changes = {f: doc.get(f) for f in BACKFILL_FIELDS if doc.get(f) != before[f]}
 		if changes:
 			frappe.db.set_value("Non Conformance", name, changes, update_modified=False)
+
+
+def validate_log_number(doc, fieldname: str, label: str) -> None:
+	"""Log numbers are typed in from the internal log: trim them and keep them unique."""
+	value = cstr(doc.get(fieldname)).strip() or None
+	doc.set(fieldname, value)
+	if not value:
+		return
+	other = frappe.db.get_value("Non Conformance", {fieldname: value, "name": ("!=", doc.name)}, "name")
+	if other:
+		frappe.throw(_("{0} {1} is already used on {2}.").format(label, value, other))

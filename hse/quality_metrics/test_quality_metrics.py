@@ -57,6 +57,24 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		super().setUpClass()
 		if not frappe.db.exists("Quality Procedure", PROC):
 			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
+		company = frappe.db.get_value("Company", {}, "name")
+		cls.employee = frappe.db.get_value("Employee", {"status": "Active", "company": company}, "name")
+		if not cls.employee:
+			cls.employee = (
+				frappe.get_doc(
+					{
+						"doctype": "Employee",
+						"first_name": "_Test CAPA Owner",
+						"gender": frappe.db.get_value("Gender", {}, "name"),
+						"date_of_birth": "1990-01-01",
+						"date_of_joining": "2020-01-01",
+						"company": company,
+						"status": "Active",
+					}
+				)
+				.insert()
+				.name
+			)
 
 	def make_nc(self, severity="Critical", days_old=0, status="Open"):
 		nc = frappe.get_doc(
@@ -118,6 +136,94 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		nc.save()
 		self.assertEqual(nc.status, "Resolved")
 		nc.lot_qty, nc.reject_qty = 2, 3
+		self.assertRaises(frappe.ValidationError, nc.save)
+
+	def test_capa_numbering_due_dates_and_closure(self):
+		from frappe.utils import add_days, getdate
+
+		other = self.make_nc(severity="Low")
+		nc = self.make_nc(severity="Low")
+		nc.update(
+			{
+				"details": "<p>Ground lug loose</p>",
+				"capa_required": 1,
+				"capa_no": f"_T-CAPA-{frappe.generate_hash(length=6)}",
+				"capa_initiated_date": "2026-10-01",
+				"capa_related_ncrs": [{"non_conformance": other.name}],
+			}
+		)
+		nc.save()
+		self.assertTrue(nc.capa_no.startswith("_T-CAPA-"))
+		# log numbers are unique across NCRs
+		other.reload()
+		other.update({"capa_required": 1, "capa_no": nc.capa_no})
+		self.assertRaises(frappe.ValidationError, other.save)
+		other.reload()
+		other.capa_required = 1
+		self.assertRaises(frappe.ValidationError, other.save)  # CAPA # required
+		other.reload()
+		ncr_no = f"_T-NCR-{frappe.generate_hash(length=6)}"
+		frappe.db.set_value("Non Conformance", nc.name, "ncr_no", ncr_no, update_modified=False)
+		other.ncr_no = f" {ncr_no} "
+		self.assertRaises(frappe.ValidationError, other.save)
+		other.reload()
+		self.assertEqual(nc.capa_status, "Open")
+		self.assertEqual(nc.capa_source, "NCR Trend")
+		self.assertEqual(nc.capa_scar_reference, nc.capa_no)
+		self.assertIn("Ground lug loose", nc.capa_finding)
+		self.assertEqual(nc.why_problem, nc.subject)
+		self.assertEqual(getdate(nc.capa_containment_due), getdate("2026-10-08"))
+		self.assertEqual(getdate(nc.capa_correction_due), getdate("2026-10-31"))
+		self.assertEqual(getdate(nc.capa_closure_due), getdate("2026-11-30"))
+		# an extension needs an approver and a justification, and moves correction and closure
+		nc.capa_extended_until = "2026-12-15"
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.update(
+			{
+				"capa_extended_until": "2026-12-15",
+				"capa_extension_approved_by": self.employee,
+				"capa_extension_justification": "Supplier lead time",
+			}
+		)
+		nc.save()
+		self.assertEqual(getdate(nc.capa_closure_due), getdate("2026-12-15"))
+		# closing needs the whys, root cause, corrective action and an Effective verification
+		nc.capa_status = "Closed"
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.update(
+			{
+				"capa_status": "Closed",
+				"why_1": "Lug not torqued",
+				"why_2": "Torque step missing from traveler",
+				"capa_corrective_action": "<p>Add torque step</p>",
+				"capa_quality_verification": "Not Effective",
+				"capa_verified_by": self.employee,
+				"capa_verification_date": add_days("2026-10-01", 20),
+				"capa_closed_by": self.employee,
+			}
+		)
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.update(
+			{
+				"capa_status": "Closed",
+				"why_1": "Lug not torqued",
+				"why_2": "Torque step missing from traveler",
+				"capa_corrective_action": "<p>Add torque step</p>",
+				"capa_quality_verification": "Effective",
+				"capa_verified_by": self.employee,
+				"capa_verification_date": add_days("2026-10-01", 20),
+				"capa_closed_by": self.employee,
+			}
+		)
+		nc.save()
+		self.assertEqual(nc.capa_status, "Closed")
+		self.assertEqual(nc.capa_root_cause, "Torque step missing from traveler")
+		self.assertTrue(nc.capa_closure_date)
+		# a CAPA cannot list its own NCR as related
+		nc.append("capa_related_ncrs", {"non_conformance": nc.name})
 		self.assertRaises(frappe.ValidationError, nc.save)
 
 	def test_resolved_on_stamped_and_cleared(self):
