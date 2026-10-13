@@ -14,9 +14,9 @@ def validate(doc, method=None):
 		return
 
 	required = {
-		"corrective_action": _("Corrective Action"),
-		"verified_by": _("Verified By"),
-		"verification_date": _("Verification Date"),
+		"corrective_action": _("Correction"),
+		"verified_by": _("Inspected By"),
+		"verification_date": _("Inspected Date"),
 		"qc_reinspection": _("QC Re-inspection"),
 	}
 	missing = [label for field, label in required.items() if not doc.get(field)]

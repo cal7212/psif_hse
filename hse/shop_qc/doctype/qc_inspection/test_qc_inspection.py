@@ -429,6 +429,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			{
 				"status": "Resolved",
 				"corrective_action": "Reset relief valve",
+				"disposition": "Rework to Specification",
+				"quality_verification": "Accept",
 				"verified_by": self.employee,
 				"verification_date": frappe.utils.nowdate(),
 			}

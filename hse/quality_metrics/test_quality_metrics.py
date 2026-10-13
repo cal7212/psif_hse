@@ -79,8 +79,46 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		if status != "Open":
 			nc.reload()
 			nc.status = status
+			if status == "Resolved":
+				nc.update({"disposition": "Rework to Specification", "quality_verification": "Accept"})
 			nc.save()
 		return nc
+
+	def test_ncr_header_defaults_and_closure_rules(self):
+		nc = self.make_nc(severity="Low")
+		self.assertTrue(nc.ncr_date)
+		self.assertEqual(nc.initiator, frappe.session.user)
+		nc.status = "Resolved"
+		self.assertRaises(frappe.ValidationError, nc.save)  # no disposition or QA acceptance
+		nc.reload()
+		nc.update({"status": "Resolved", "disposition": "Use As-Is", "quality_verification": "Accept"})
+		self.assertRaises(frappe.ValidationError, nc.save)  # customer approval required
+		nc.reload()
+		nc.update(
+			{
+				"status": "Resolved",
+				"disposition": "Repair",
+				"auth_customer": "J. Buyer",
+				"quality_verification": "Reject",
+			}
+		)
+		self.assertRaises(frappe.ValidationError, nc.save)  # QA rejected the correction
+		nc.reload()
+		nc.update({"status": "Resolved", "disposition": "Other", "quality_verification": "Accept"})
+		self.assertRaises(frappe.ValidationError, nc.save)  # Other needs a description
+		nc.reload()
+		nc.update(
+			{
+				"status": "Resolved",
+				"disposition": "Other",
+				"disposition_other": "Return to customer",
+				"quality_verification": "Accept",
+			}
+		)
+		nc.save()
+		self.assertEqual(nc.status, "Resolved")
+		nc.lot_qty, nc.reject_qty = 2, 3
+		self.assertRaises(frappe.ValidationError, nc.save)
 
 	def test_resolved_on_stamped_and_cleared(self):
 		nc = self.make_nc(severity="Low", status="Resolved")

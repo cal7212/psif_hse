@@ -281,6 +281,7 @@ doctype_list_js = {
 doc_events = {
 	"Non Conformance": {
 		"validate": [
+			"hse.quality_metrics.ncr.validate",  # QM-104 NCR fields and closure rules; runs first
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
 			"hse.shop_qc.events.validate",
