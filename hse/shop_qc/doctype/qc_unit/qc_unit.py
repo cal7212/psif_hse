@@ -1,14 +1,18 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
 
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
+from hse.shop_qc.multi_unit import unit_base, unit_name, validate_unit_numbers
 from hse.shop_qc.repair_costing import SHOP_DEFAULTS, calc_repair_costing, load_shop_defaults
 
 REPAIR = "Repair"
+PMG_TAG = re.compile(r"^PMG-?\d+$")
 MAX_PMG = 10
 PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
 SYSTEM_TYPES = ("Power Unit", "Manifold", "Valve Stand")
@@ -77,12 +81,11 @@ class QCUnit(Document):
 		if self.job_type == REPAIR:
 			if not self.rga_number:
 				frappe.throw(_("Enter the RGA Number for a repair."))
-			rga = self.rga_number
-			self.name = rga if rga.startswith("RGA") else f"RGA-{rga}"
-		else:
-			if not self.trulinx_work_order:
-				frappe.throw(_("Enter the TrulinX Work Order for a new build."))
-			self.name = self.trulinx_work_order
+		elif not self.trulinx_work_order:
+			frappe.throw(_("Enter the TrulinX Work Order for a new build."))
+		# Orders of more than one unit: one QC Unit per unit, named <order>-<unit no>.
+		validate_unit_numbers(self)
+		self.name = unit_name(unit_base(self), self.unit_no, self.unit_qty)
 
 	def validate(self):
 		self.normalise_ids()
@@ -90,6 +93,7 @@ class QCUnit(Document):
 		self.set_repair_shop_job_type()
 		self.validate_job_type_change()
 		self.validate_unique_serial()
+		validate_unit_numbers(self)
 		self.set_test_pressures()
 		self.validate_hoses()
 		self.validate_pump_motor_groups()
@@ -154,15 +158,17 @@ class QCUnit(Document):
 				self.append("post_shipment_reviews", {"area": area})
 
 	def validate_circuit_items(self):
+		# A circuit is a pump/motor group tag (PMG-1) or a circuit of its own, e.g. ACC on an
+		# accumulator stand. Only PMG-n tags must match a group, to catch typos.
 		tags = {r.pmg_tag for r in self.pump_motor_groups}
 		for table in ("circuit_devices", "accumulators"):
 			for r in self.get(table):
 				r.pmg_tag = cstr(r.pmg_tag).strip().upper() or None
-				if r.pmg_tag and r.pmg_tag not in tags:
+				if r.pmg_tag and PMG_TAG.match(r.pmg_tag) and r.pmg_tag not in tags:
 					frappe.throw(
-						_("{0} row {1}: circuit {2} is not one of this unit's pump / motor groups.").format(
-							_(self.meta.get_label(table)), r.idx, r.pmg_tag
-						)
+						_(
+							"{0} row {1}: {2} is not one of this unit's pump / motor groups. Use a PMG tag from the list, or a circuit name such as ACC."
+						).format(_(self.meta.get_label(table)), r.idx, r.pmg_tag)
 					)
 		for r in self.accumulators:
 			if flt(r.precharge_psi) < 0 or flt(r.volume_gal) < 0:

@@ -13,7 +13,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, flt, getdate, now_datetime, sbool
+from frappe.utils import cint, cstr, flt, getdate, now_datetime, sbool
 
 from hse.shop_qc.doctype.qc_unit.qc_unit import normalise_wo
 
@@ -49,11 +49,13 @@ FIELD_MAP = {
 	"drawing_rev": "drawing_rev",
 	"shop": "shop",
 	"product_type": "product_type",
+	"quantity": "unit_qty",
 }
 DEFAULT_SHOP = "HPU"  # work orders without a shop column are HPU builds
 DEFAULT_PRODUCT_TYPE = "Power Unit"
 DATE_FIELDS = {"wo_date", "promised_date", "trulinx_ship_date"}
 FLOAT_FIELDS = {"motor_hp", "flow_gpm", "relief_setting_psi", "max_operating_psi", "reservoir_gal"}
+INT_FIELDS = {"unit_qty"}
 
 # Map raw TrulinX WO status text -> sync action. Confirm the real values with Tribute/your admin.
 CANCELLED_STATUSES = {"CANCELLED", "CANCELED", "VOID", "DELETED"}
@@ -98,39 +100,83 @@ def upsert_qc_units(units: list | str, company: str | None = None, dry_run: bool
 
 
 def _upsert_one(wo: str, row: dict, company: str, dry_run: bool) -> str:
+	"""Create or update every QC Unit of a work order.
+
+	A quantity over 1 means one QC Unit per unit (WO-1, WO-2 ...). Order data goes to all of
+	them; a serial number is only taken when the order is a single unit."""
 	values = _clean(row)
 	values["trulinx_work_order"] = wo
 	row_hash = hashlib.sha1(json.dumps(values, sort_keys=True, default=str).encode()).hexdigest()
 
-	# Match on the work order field, not the record name: repairs are named by RGA number.
-	name = frappe.db.get_value("QC Unit", {"trulinx_work_order": wo}, "name")
-	if name and frappe.db.get_value("QC Unit", name, "sync_hash") == row_hash:
-		frappe.db.set_value("QC Unit", name, "last_synced_on", now_datetime(), update_modified=False)
+	# Match on the work order field, not the record name: repairs are named by RGA number,
+	# and multi-unit orders by WO-<unit no>.
+	units = frappe.get_all(
+		"QC Unit",
+		filters={"trulinx_work_order": wo},
+		fields=["name", "unit_no", "unit_qty", "sync_hash"],
+		order_by="unit_no asc, creation asc",
+	)
+	qty = cint(values.get("unit_qty")) or max(len(units), 1)
+	if units and len(units) >= qty and all(u.sync_hash == row_hash for u in units):
+		for u in units:
+			frappe.db.set_value("QC Unit", u.name, "last_synced_on", now_datetime(), update_modified=False)
 		return "unchanged"
 
-	doc = frappe.get_doc("QC Unit", name) if name else frappe.new_doc("QC Unit")
-	if not name:
+	shared = {k: v for k, v in values.items() if v not in (None, "")}
+	if qty > 1 or len(units) > 1:
+		shared.pop("serial_no", None)
+
+	if not units:
+		doc = frappe.new_doc("QC Unit")
 		doc.company = company
 		doc.status = "Pending Build"
 		doc.job_type = "New Build"
 		doc.shop = DEFAULT_SHOP
 		doc.product_type = DEFAULT_PRODUCT_TYPE
+		if qty > 1:
+			doc.unit_no = 1
+		_save_synced(doc, shared, values, row_hash, created=True)
+		if qty > 1:
+			_make_missing(doc.name)
+		return "created"
 
+	for u in units:
+		doc = frappe.get_doc("QC Unit", u.name)
+		update = dict(shared)
+		if cint(u.unit_no) > qty:
+			# TrulinX quantity went down: keep the unit and its records, flag it for review.
+			update.pop("unit_qty", None)
+			doc.qc_flag = _(
+				"TrulinX now shows {0} unit(s) on work order {1}; this is unit {2}. Cancel it if it is no longer being built."
+			).format(qty, wo, u.unit_no)
+		elif qty > 1 and not cint(doc.unit_no):
+			doc.unit_no = 1
+		_save_synced(doc, update, values, row_hash, created=False)
+	if qty > len([u for u in units if cint(u.unit_no) <= qty]):
+		_make_missing(units[0].name)
+	return "updated"
+
+
+def _save_synced(doc, update: dict, values: dict, row_hash: str, created: bool) -> None:
 	# Never blank out data already in Frappe because TrulinX sent an empty column.
-	doc.update({k: v for k, v in values.items() if v not in (None, "")})
-
+	doc.update(update)
 	if values.get("customer_name") and not doc.customer:
 		doc.customer = frappe.db.get_value("Customer", {"customer_name": values["customer_name"]}, "name")
-
 	_apply_trulinx_status(doc)
-
 	doc.sync_source = "TrulinX"
 	doc.sync_hash = row_hash
 	doc.last_synced_on = now_datetime()
-	doc.sync_note = "Created from TrulinX" if not name else "Updated from TrulinX"
+	doc.sync_note = "Created from TrulinX" if created else "Updated from TrulinX"
 	doc.flags.from_trulinx_sync = True
 	doc.save()
-	return "updated" if name else "created"
+
+
+def _make_missing(name: str) -> None:
+	from hse.shop_qc.multi_unit import make_missing_units
+
+	doc = frappe.get_doc("QC Unit", name)
+	doc.flags.from_trulinx_sync = True
+	make_missing_units(doc)
 
 
 def _clean(row: dict) -> dict:
@@ -147,6 +193,8 @@ def _clean(row: dict) -> dict:
 			out[field] = str(getdate(val))
 		elif field in FLOAT_FIELDS:
 			out[field] = flt(val)
+		elif field in INT_FIELDS:
+			out[field] = cint(val)
 		else:
 			out[field] = cstr(val)
 	return out

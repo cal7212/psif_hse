@@ -218,7 +218,62 @@ frappe.ui.form.on("QC Unit", {
 				);
 			}
 			frm.trigger("render_stage_progress");
+			if (cint(frm.doc.unit_qty) > 1) frm.trigger("order_units");
 		}
+	},
+
+	// Orders of more than one unit: one QC Unit per unit (12345-1, 12345-2 ...).
+	order_units(frm) {
+		frappe
+			.xcall("hse.shop_qc.multi_unit.get_order_status", { qc_unit: frm.doc.name })
+			.then((r) => {
+				const others = (r.units || []).filter((u) => u.name !== frm.doc.name);
+				if (others.length) {
+					const links = others
+						.map(
+							(u) =>
+								`<a href="/app/qc-unit/${encodeURIComponent(
+									u.name
+								)}">${frappe.utils.escape_html(
+									u.name
+								)}</a> (${frappe.utils.escape_html(__(u.status || ""))})`
+						)
+						.join(", ");
+					frm.dashboard.add_comment(
+						__("Other units of this order: {0}", [links]),
+						"blue",
+						true
+					);
+				}
+				if (!r.missing || frm.doc.status === "Cancelled") return;
+				frm.add_custom_button(
+					__("Create Remaining Units"),
+					() =>
+						frappe.confirm(
+							__(
+								"Create the {0} unit(s) not yet entered for this order of {1}? Order data, specs, pump/motor groups, hoses, circuit items and requirements are copied from this unit. Serial No, inspections, NCRs, repair findings and release are not.",
+								[r.missing, r.qty]
+							),
+							() =>
+								frappe
+									.xcall("hse.shop_qc.multi_unit.create_remaining_units", {
+										qc_unit: frm.doc.name,
+									})
+									.then((res) => {
+										frappe.msgprint(
+											__("Created: {0}", [(res.created || []).join(", ")]),
+											__("Units Created")
+										);
+										if (res.renamed_to && res.renamed_to !== frm.doc.name) {
+											frappe.set_route("Form", "QC Unit", res.renamed_to);
+										} else {
+											frm.reload_doc();
+										}
+									})
+						),
+					__("Create")
+				);
+			});
 	},
 
 	render_stage_progress(frm) {

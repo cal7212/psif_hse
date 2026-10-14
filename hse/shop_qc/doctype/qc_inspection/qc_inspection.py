@@ -459,10 +459,14 @@ class QCInspection(Document):
 		errors += self.circuit_test_errors()
 		if (
 			self.is_pmg_test_stage()
-			and not self.pmg_tests
+			and not (self.pmg_tests or self.device_tests or self.accumulator_tests)
 			and frappe.db.get_value("QC Unit", self.qc_unit, "product_type") == "Power Unit"
 		):
-			errors.append(_("This stage tests each pump/motor group, but the unit has none listed."))
+			errors.append(
+				_(
+					"This stage tests pump/motor groups, circuit devices and accumulators, but the unit has none listed."
+				)
+			)
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
 

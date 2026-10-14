@@ -283,7 +283,7 @@
    "in_standard_filter": 1,
    "label": "RGA Number",
    "mandatory_depends_on": "eval:doc.job_type=='Repair'",
-   "unique": 1
+   "search_index": 1
   },
   {
    "fieldname": "section_trulinx",
@@ -300,8 +300,7 @@
    "label": "TrulinX Work Order",
    "mandatory_depends_on": "eval:doc.job_type=='New Build'",
    "search_index": 1,
-   "set_only_once": 1,
-   "unique": 1
+   "set_only_once": 1
   },
   {
    "description": "Only if TrulinX uses line numbers or suffixes for multi-unit work orders.",
@@ -1558,7 +1557,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-13 20:00:00.000000",
+ "modified": "2026-10-14 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
