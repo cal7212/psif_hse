@@ -5,6 +5,7 @@
 import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase
 
+from hse.shop_qc.api import upsert_qc_units
 from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	FAIL,
 	PASS,
@@ -25,6 +26,7 @@ from hse.shop_qc.doctype.qc_unit.qc_unit import (
 	iso_within,
 	normalise_dash,
 )
+from hse.shop_qc.multi_unit import create_remaining_units
 from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
 from hse.shop_qc.utils import (
 	certificate_format_for,
@@ -38,6 +40,7 @@ from hse.shop_qc.utils import (
 PROC = "_Test QC Procedure"
 WO = "_TEST-WO-1"
 HOSE_WO = "_TEST-HOSE-WO-1"
+MU_WO = "_TEST-MU-1"
 SHOP = "_T Shop"
 HOSE_SHOP = "_T Hose Shop"
 REPAIR_SHOP = "_T Repair Shop"
@@ -749,6 +752,97 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		finally:
 			for flag in ("pmg_test", "proof_test"):
 				frappe.db.set_value("QC Stage", "_T Test", flag, 0)
+
+	def make_order_unit(self, **kw):
+		return frappe.get_doc(
+			{
+				"doctype": "QC Unit",
+				"shop": SHOP,
+				"product_type": "Power Unit",
+				"job_type": "New Build",
+				"trulinx_work_order": MU_WO,
+				"model": "HPU-MU",
+				"company": self.company,
+				**kw,
+			}
+		).insert()
+
+	def clear_order(self):
+		for name in frappe.get_all("QC Unit", {"trulinx_work_order": MU_WO}, pluck="name"):
+			self.clear_unit(name)
+
+	def test_multi_unit_naming_and_create_remaining(self):
+		self.clear_order()
+		with self.assertRaises(frappe.ValidationError):
+			self.make_order_unit(unit_qty=3)  # Unit No. missing
+		with self.assertRaises(frappe.ValidationError):
+			self.make_order_unit(unit_qty=3, unit_no=4)
+		one = self.make_order_unit(unit_qty=3, unit_no=1, serial_no="_T-MU-SN1")
+		self.assertEqual(one.name, f"{MU_WO}-1")
+		with self.assertRaises(frappe.ValidationError):
+			self.make_order_unit(unit_qty=3, unit_no=1)
+		res = create_remaining_units(one.name)
+		self.assertEqual(res["created"], [f"{MU_WO}-2", f"{MU_WO}-3"])
+		self.assertEqual(res["renamed_to"], one.name)
+		two = frappe.get_doc("QC Unit", f"{MU_WO}-2")
+		self.assertEqual((two.unit_no, two.unit_qty, two.model), (2, 3, "HPU-MU"))
+		self.assertIsNone(two.serial_no)
+		self.assertEqual(two.status, "Pending Build")
+		self.assertEqual(create_remaining_units(one.name)["created"], [])
+		self.clear_order()
+
+	def test_plain_named_unit_renamed_for_order(self):
+		self.clear_order()
+		unit = self.make_order_unit()
+		self.assertEqual(unit.name, MU_WO)
+		unit.update({"unit_no": 1, "unit_qty": 2})
+		unit.save()
+		res = create_remaining_units(unit.name)
+		self.assertEqual(res["renamed_to"], f"{MU_WO}-1")
+		self.assertEqual(res["created"], [f"{MU_WO}-2"])
+		self.assertFalse(frappe.db.exists("QC Unit", MU_WO))
+		self.clear_order()
+
+	def test_sync_quantity_creates_one_unit_each(self):
+		self.clear_order()
+		row = {"work_order": MU_WO, "quantity": 3, "model": "HPU-MU", "serial_no": "_T-MU-SN9"}
+		out = upsert_qc_units([row], company=self.company)
+		self.assertEqual(out["errors"], [])
+		names = frappe.get_all(
+			"QC Unit", {"trulinx_work_order": MU_WO}, ["name", "serial_no"], order_by="unit_no"
+		)
+		self.assertEqual([u.name for u in names], [f"{MU_WO}-{n}" for n in (1, 2, 3)])
+		self.assertFalse(any(u.serial_no for u in names))
+		self.assertEqual(upsert_qc_units([row], company=self.company)["unchanged"], [MU_WO])
+		upsert_qc_units([dict(row, quantity=2)], company=self.company)
+		self.assertTrue(frappe.db.get_value("QC Unit", f"{MU_WO}-3", "qc_flag"))
+		self.assertEqual(frappe.db.get_value("QC Unit", f"{MU_WO}-1", "unit_qty"), 2)
+		self.clear_order()
+
+	def test_circuit_without_pump_motor_group(self):
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.append(
+			"circuit_devices",
+			{"pmg_tag": "acc", "description": "Relief valve RV-1", "design_setting": "2500 psi"},
+		)
+		unit.append("accumulators", {"pmg_tag": "ACC", "description": "ACC-1", "precharge_psi": 1000})
+		unit.save()
+		self.assertEqual(unit.circuit_devices[0].pmg_tag, "ACC")
+		frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 1)
+		try:
+			self.make("_T Assembly")
+			doc = self.make("_T Test", reading=3000, submit=False)
+			self.assertEqual(doc.pmg_tests, [])
+			doc.device_tests[0].update({"as_set": "2500 psi", "result": PASS})
+			doc.accumulator_tests[0].precharge_actual = 1000
+			doc.save()
+			doc.submit()
+			self.assertEqual(doc.status, "Accepted")
+			html = frappe.get_print("QC Unit", WO, print_format="System Construction Test Record")
+			self.assertIn("Circuit ACC", html)
+			self.assertIn("Relief valve RV-1", html)
+		finally:
+			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)
 
 	def test_coating_record_required(self):
 		frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 1)
