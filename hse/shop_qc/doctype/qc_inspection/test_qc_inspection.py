@@ -795,6 +795,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.clear_order()
 		unit = self.make_order_unit()
 		self.assertEqual(unit.name, MU_WO)
+		with self.assertRaises(frappe.ValidationError):
+			self.make_order_unit(unit_qty=2, unit_no=2)  # plain unit must be numbered first
 		unit.update({"unit_no": 1, "unit_qty": 2})
 		unit.save()
 		res = create_remaining_units(unit.name)
@@ -826,6 +828,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			{"pmg_tag": "acc", "description": "Relief valve RV-1", "design_setting": "2500 psi"},
 		)
 		unit.append("accumulators", {"pmg_tag": "ACC", "description": "ACC-1", "precharge_psi": 1000})
+		unit.setting_tolerance_psi = 50
 		unit.save()
 		self.assertEqual(unit.circuit_devices[0].pmg_tag, "ACC")
 		frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 1)

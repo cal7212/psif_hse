@@ -75,12 +75,25 @@ def validate_unit_numbers(doc) -> None:
 		frappe.throw(_("Enter the Unit No. (1 to {0}) for an order of {0} units.").format(qty))
 	if qty and no > qty:
 		frappe.throw(_("Unit No. {0} is more than the Order Quantity of {1}.").format(no, qty))
-	if no and (doc.get("trulinx_work_order") or doc.get("rga_number")):
-		other = frappe.db.get_value(
-			"QC Unit", {**group_filters(doc), "unit_no": no, "name": ("!=", doc.name or "")}, "name"
+	key = doc.get("rga_number") if doc.get("job_type") == REPAIR else doc.get("trulinx_work_order")
+	if not key:
+		return
+	# The work order / RGA is no longer unique on its own: one QC Unit per unit of the order.
+	others = frappe.get_all(
+		"QC Unit", filters={**group_filters(doc), "name": ("!=", doc.name or "")}, fields=["name", "unit_no"]
+	)
+	if not others:
+		return
+	single = next((u.name for u in others if not cint(u.unit_no)), None)
+	if not no or single:
+		frappe.throw(
+			_(
+				"{0} is already QC Unit {1}. For an order of more than one unit, set the Order Quantity and Unit No. on {1} and use Create Remaining Units."
+			).format(key, single or others[0].name)
 		)
-		if other:
-			frappe.throw(_("Unit No. {0} of this order is already QC Unit {1}.").format(no, other))
+	other = next((u.name for u in others if cint(u.unit_no) == no), None)
+	if other:
+		frappe.throw(_("Unit No. {0} of this order is already QC Unit {1}.").format(no, other))
 
 
 def get_order_units(doc) -> list[frappe._dict]:
