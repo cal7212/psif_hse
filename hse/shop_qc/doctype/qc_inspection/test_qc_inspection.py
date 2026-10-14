@@ -30,6 +30,7 @@ from hse.shop_qc.multi_unit import create_remaining_units
 from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
 from hse.shop_qc.utils import (
 	certificate_format_for,
+	get_qc_certificate_data,
 	get_qc_photos,
 	get_stages,
 	is_image_url,
@@ -837,10 +838,13 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			doc = self.make("_T Test", reading=3000, submit=False)
 			self.assertEqual(doc.pmg_tests, [])
 			doc.device_tests[0].update({"as_set": "2500 psi", "result": PASS})
-			doc.accumulator_tests[0].precharge_actual = 1000
+			doc.accumulator_tests[0].precharge_actual = 1000.4
 			doc.save()
+			self.assertEqual(doc.accumulator_tests[0].precharge_actual, 1000)  # psi: whole number
 			doc.submit()
 			self.assertEqual(doc.status, "Accepted")
+			printed = get_qc_certificate_data(WO).circuit.accumulators[0]
+			self.assertEqual(repr(printed.precharge_actual), "1000")
 			html = frappe.get_print("QC Unit", WO, print_format="System Construction Test Record")
 			self.assertIn("Circuit ACC", html)
 			self.assertIn("Relief valve RV-1", html)
