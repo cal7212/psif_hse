@@ -847,6 +847,19 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		finally:
 			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)
 
+	def test_print_hides_documents_not_required(self):
+		unit = frappe.get_doc("QC Unit", WO)
+		for r in unit.construction_documents + unit.quality_documents:
+			r.required = "No"
+			r.reference = None
+		unit.construction_documents[0].required = "Yes"
+		unit.quality_documents[0].reference = "_T-REF-7"
+		unit.save()
+		html = frappe.get_print("QC Unit", WO, print_format="System Construction Test Record")
+		self.assertIn(unit.construction_documents[0].document, html)
+		self.assertIn("_T-REF-7", html)
+		self.assertNotIn(unit.construction_documents[1].document, html)
+
 	def test_coating_record_required(self):
 		frappe.db.set_value("QC Stage", "_T Assembly", "coating_record", 1)
 		try:
