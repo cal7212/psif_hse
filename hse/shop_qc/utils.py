@@ -8,7 +8,7 @@ and the stage's job type is the unit's job type (or "Both").
 
 import frappe
 from frappe import _
-from frappe.utils import cstr
+from frappe.utils import cstr, flt
 
 LOCKED_STATUSES = ("Shipped", "Cancelled")  # set by the TrulinX sync; QC does not override
 STAGE_FIELDS = [
@@ -222,6 +222,17 @@ def certificate_format_for(job_type: str | None, product_type: str | None, shop:
 	return "System Construction Test Record"
 
 
+def _whole(row) -> dict:
+	"""Row values for printing; precision-0 fields as whole numbers (3010, not 3010.0)."""
+	from hse.shop_qc.doctype.qc_inspection.qc_inspection import whole_number_fields
+
+	d = row.as_dict()
+	for field in whole_number_fields(row.doctype):
+		if d.get(field) is not None:
+			d[field] = int(flt(d[field], 0))
+	return d
+
+
 def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 	"""Jinja helper: everything a QC certificate prints for a unit."""
 	from hse.shop_qc.doctype.qc_unit.qc_unit import hose_spec
@@ -241,16 +252,16 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		doc = frappe.get_doc("QC Inspection", acc.name)
 		inspections.append(doc)
 		for h in doc.hose_tests:
-			hose_results[h.hose_tag] = frappe._dict(h.as_dict(), inspection=doc.name, stage=s.name)
+			hose_results[h.hose_tag] = frappe._dict(_whole(h), inspection=doc.name, stage=s.name)
 		for g in doc.get("pmg_tests") or []:
-			pmg_results[g.pmg_tag] = frappe._dict(g.as_dict(), inspection=doc.name, stage=s.name)
+			pmg_results[g.pmg_tag] = frappe._dict(_whole(g), inspection=doc.name, stage=s.name)
 		for table, key in (
 			("device_tests", "devices"),
 			("accumulator_tests", "accumulators"),
 			("proof_tests", "proof_tests"),
 			("coating_layers", "coating_layers"),
 		):
-			circuit[key] += [frappe._dict(r.as_dict(), stage=s.name) for r in doc.get(table) or []]
+			circuit[key] += [frappe._dict(_whole(r), stage=s.name) for r in doc.get(table) or []]
 	instruments = {}
 	for doc in inspections:
 		for row in doc.get("instruments") or []:

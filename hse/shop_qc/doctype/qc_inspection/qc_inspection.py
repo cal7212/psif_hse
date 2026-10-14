@@ -165,6 +165,7 @@ class QCInspection(Document):
 			self.set_items_from_template()
 		self.load_stage_tests()
 		self.refresh_hose_specs()
+		self.round_whole_numbers()
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
 		self.evaluate_pmg_tests()
@@ -277,6 +278,14 @@ class QCInspection(Document):
 		self.set("hose_tests", [])
 		for row in build_hose_tests(self.qc_unit, tags):
 			self.append("hose_tests", row)
+
+	def round_whole_numbers(self):
+		"""psi, °F, dB and tolerance fields are set to precision 0: store them as whole numbers."""
+		for table in ("hose_tests", "pmg_tests", "accumulator_tests", "proof_tests"):
+			for row in self.get(table) or []:
+				for field in whole_number_fields(row.doctype):
+					if row.get(field) is not None:
+						row.set(field, flt(row.get(field), 0))
 
 	def is_pmg_test_stage(self) -> bool:
 		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, "pmg_test"))
@@ -1037,6 +1046,15 @@ def get_template_instructions(template: str) -> str:
 
 
 @frappe.whitelist()
+def whole_number_fields(doctype: str) -> list[str]:
+	"""Float fields of a test table that are set to precision 0."""
+	return [
+		df.fieldname
+		for df in frappe.get_meta(doctype).fields
+		if df.fieldtype == "Float" and cstr(df.precision) == "0"
+	]
+
+
 def build_circuit_tests(qc_unit: str) -> tuple[list[dict], list[dict]]:
 	"""Device and accumulator test rows from the unit's circuit lists."""
 	unit = frappe.get_doc("QC Unit", qc_unit)
