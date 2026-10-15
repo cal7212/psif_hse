@@ -43,6 +43,8 @@
   "coating_layers",
   "section_hose_tests",
   "hose_tests",
+  "section_photos",
+  "photos",
   "section_sign",
   "test_report",
   "remarks",
@@ -314,6 +316,20 @@
    "options": "QC Hose Test"
   },
   {
+   "fieldname": "section_photos",
+   "fieldtype": "Section Break",
+   "label": "Photos",
+   "collapsible": 0
+  },
+  {
+   "fieldname": "photos",
+   "fieldtype": "Table",
+   "label": "Photos",
+   "options": "QC Inspection Photo",
+   "description": "Add as many photos as needed. Pick the check item a photo belongs to; untick Print to leave a photo out of the printed photo appendix.",
+   "allow_on_submit": 1
+  },
+  {
    "fieldname": "section_sign",
    "fieldtype": "Section Break",
    "label": "Sign-off"
@@ -349,7 +365,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-05 12:00:00.000000",
+ "modified": "2026-10-15 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

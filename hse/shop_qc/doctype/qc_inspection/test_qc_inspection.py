@@ -454,6 +454,36 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("/files/_t_qc_photo.jpg", html)
 		frappe.db.set_value("QC Unit", WO, {"as_received_photo": None, "print_photos": 0})
 
+	def test_photos_table_meets_requirement_and_prints(self):
+		doc = self.make("_T Assembly", submit=False)
+		row = doc.items[0]
+		row.requires_photo = 1
+		doc.save()
+		with self.assertRaises(frappe.ValidationError):
+			doc.submit()  # no photo yet
+		doc.reload()
+		doc.append("photos", {"photo": "/files/_t_extra.jpg", "check_item": "Not on this checklist"})
+		with self.assertRaises(frappe.ValidationError):
+			doc.save()
+		doc.reload()
+		for url, item, cap, prn in (
+			("/files/_t_a.jpg", row.check_item, "Left side", 1),
+			("/files/_t_b.jpg", row.check_item, "Right side", 1),
+			("/files/_t_c.jpg", None, "Shop floor overview", 0),
+		):
+			doc.append("photos", {"photo": url, "check_item": item, "caption": cap, "print_photo": prn})
+		doc.save()
+		doc.submit()
+		urls = [p.url for p in get_qc_photos(WO)]
+		self.assertEqual(urls, ["/files/_t_a.jpg", "/files/_t_b.jpg"])
+		titles = [p.title for p in get_qc_photos(WO)]
+		self.assertIn(row.check_item, titles[0])
+		# Print can be changed after the inspection is submitted.
+		doc.photos[1].print_photo = 0
+		doc.photos[2].print_photo = 1
+		doc.save()
+		self.assertEqual([p.url for p in get_qc_photos(WO)], ["/files/_t_a.jpg", "/files/_t_c.jpg"])
+
 	def test_full_release_path(self):
 		self.make("_T Assembly")
 		bad = self.make("_T Test", reading=3200)

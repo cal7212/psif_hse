@@ -313,8 +313,9 @@ def is_image_url(url: str | None) -> bool:
 def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
 	"""Every photo recorded for a unit, in build order.
 
-	The As-Received photo first, then each submitted inspection's checklist photos and an image
-	test report, oldest inspection first. Draft and cancelled inspections are left out."""
+	The As-Received photo first, then for each submitted inspection (oldest first) its checklist
+	photos, its Photos table rows marked Print, and an image test report. Draft and cancelled
+	inspections are left out."""
 	unit = frappe.db.get_value("QC Unit", qc_unit, ["name", "as_received_photo"], as_dict=True)
 	if not unit:
 		return []
@@ -336,7 +337,28 @@ def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
 		order_by="inspection_date asc, creation asc",
 	)
 	readings = {}
+	extra = {}
 	if inspections:
+		for r in frappe.get_all(
+			"QC Inspection Photo",
+			filters={
+				"parenttype": "QC Inspection",
+				"parent": ("in", [i.name for i in inspections]),
+				"photo": ("is", "set"),
+				"print_photo": 1,
+			},
+			fields=["parent", "check_item", "caption", "photo"],
+			order_by="idx asc",
+		):
+			extra.setdefault(r.parent, []).append(r)
+	item_results = {}
+	if extra:
+		for r in frappe.get_all(
+			"QC Inspection Reading",
+			filters={"parenttype": "QC Inspection", "parent": ("in", list(extra))},
+			fields=["parent", "check_item", "result"],
+		):
+			item_results[(r.parent, r.check_item)] = r.result
 		for r in frappe.get_all(
 			"QC Inspection Reading",
 			filters={
@@ -367,6 +389,19 @@ def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
 					title=f"{insp.stage}: {r.check_item}" if insp.stage else (r.check_item or ""),
 					result=r.result,
 					detail=r.finding,
+					source=source,
+				)
+			)
+		for r in extra.get(insp.name, []):
+			if not is_image_url(r.photo):
+				continue
+			label = r.check_item or r.caption or _("Photo")
+			photos.append(
+				frappe._dict(
+					url=r.photo,
+					title=f"{insp.stage}: {label}" if insp.stage else label,
+					result=item_results.get((insp.name, r.check_item)) if r.check_item else None,
+					detail=r.caption if r.check_item else None,
 					source=source,
 				)
 			)

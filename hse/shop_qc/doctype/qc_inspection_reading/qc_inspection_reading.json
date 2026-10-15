@@ -146,12 +146,12 @@
    "fieldname": "photo",
    "fieldtype": "Attach Image",
    "label": "Photo",
-   "mandatory_depends_on": "eval:doc.requires_photo && doc.result!='N/A'"
+   "description": "Or add one or more photos for this item in the Photos table."
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-02 23:45:00.000000",
+ "modified": "2026-10-15 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection Reading",

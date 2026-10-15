@@ -166,6 +166,7 @@ class QCInspection(Document):
 		self.load_stage_tests()
 		self.refresh_hose_specs()
 		self.round_whole_numbers()
+		self.validate_photos()
 		self.evaluate_numeric_readings()
 		self.evaluate_hose_tests()
 		self.evaluate_pmg_tests()
@@ -278,6 +279,17 @@ class QCInspection(Document):
 		self.set("hose_tests", [])
 		for row in build_hose_tests(self.qc_unit, tags):
 			self.append("hose_tests", row)
+
+	def validate_photos(self):
+		items = {cstr(r.check_item).strip() for r in self.items}
+		for p in self.photos or []:
+			p.check_item = cstr(p.check_item).strip() or None
+			if p.check_item and p.check_item not in items:
+				frappe.throw(
+					_("Photos row {0}: '{1}' is not a check item on this inspection.").format(
+						p.idx, p.check_item
+					)
+				)
 
 	def round_whole_numbers(self):
 		"""psi, °F, dB and tolerance fields are set to precision 0: store them as whole numbers."""
@@ -397,6 +409,7 @@ class QCInspection(Document):
 
 	def check_readings_complete(self):
 		errors = []
+		photo_items = {cstr(p.check_item).strip() for p in self.photos or [] if p.photo}
 		for row in self.items:
 			label = row.check_item
 			if not row.result:
@@ -422,8 +435,12 @@ class QCInspection(Document):
 				)
 			if row.record_text and not cstr(row.text_value).strip():
 				errors.append(_("Row {0}: Record the value for '{1}'.").format(row.idx, label))
-			if row.requires_photo and not row.photo:
-				errors.append(_("Row {0}: A photo is required for '{1}'.").format(row.idx, label))
+			if row.requires_photo and not row.photo and row.check_item not in photo_items:
+				errors.append(
+					_(
+						"Row {0}: A photo is required for '{1}'. Attach it on the row or in the Photos table."
+					).format(row.idx, label)
+				)
 		for row in self.hose_tests:
 			if not flt(row.test_pressure_spec):
 				errors.append(
