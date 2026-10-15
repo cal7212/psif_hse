@@ -8,7 +8,13 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
-from hse.shop_qc.multi_unit import unit_base, unit_name, validate_unit_numbers
+from hse.shop_qc.multi_unit import (
+	hose_build_name,
+	unit_base,
+	unit_name,
+	validate_hose_build,
+	validate_unit_numbers,
+)
 from hse.shop_qc.repair_costing import SHOP_DEFAULTS, calc_repair_costing, load_shop_defaults
 
 REPAIR = "Repair"
@@ -83,6 +89,10 @@ class QCUnit(Document):
 				frappe.throw(_("Enter the RGA Number for a repair."))
 		elif not self.trulinx_work_order:
 			frappe.throw(_("Enter the TrulinX Work Order for a new build."))
+		if self.parent_qc_unit:
+			# Hose build for another unit: <parent>-H, on the parent's work order.
+			self.name = hose_build_name(self.parent_qc_unit)
+			return
 		# Orders of more than one unit: one QC Unit per unit, named <order>-<unit no>.
 		validate_unit_numbers(self)
 		self.name = unit_name(unit_base(self), self.unit_no, self.unit_qty)
@@ -94,6 +104,7 @@ class QCUnit(Document):
 		self.validate_job_type_change()
 		self.validate_unique_serial()
 		validate_unit_numbers(self)
+		validate_hose_build(self)
 		self.set_test_pressures()
 		self.validate_hoses()
 		self.validate_pump_motor_groups()

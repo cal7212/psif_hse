@@ -26,7 +26,7 @@ from hse.shop_qc.doctype.qc_unit.qc_unit import (
 	iso_within,
 	normalise_dash,
 )
-from hse.shop_qc.multi_unit import create_remaining_units
+from hse.shop_qc.multi_unit import create_hose_build, create_remaining_units, get_order_units
 from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
 from hse.shop_qc.utils import (
 	certificate_format_for,
@@ -341,7 +341,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		frappe.delete_doc("QC Unit", unit, force=1)
 
 	def setUp(self):
-		for unit in (WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100", "RGA-_T101"):
+		for unit in (f"{WO}-H", WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100", "RGA-_T101"):
 			self.clear_unit(unit)
 		frappe.get_doc(
 			{
@@ -851,6 +851,27 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(frappe.db.get_value("QC Unit", f"{MU_WO}-3", "qc_flag"))
 		self.assertEqual(frappe.db.get_value("QC Unit", f"{MU_WO}-1", "unit_qty"), 2)
 		self.clear_order()
+
+	def test_hose_build_on_parent_work_order(self):
+		if not frappe.db.exists("Build Shop", "Hose"):
+			frappe.get_doc(
+				{"doctype": "Build Shop", "shop_name": "Hose", "inspection_prefix": "_THB"}
+			).insert()
+		frappe.db.set_value("QC Unit", WO, {"customer_po": "_T-PO-9", "promised_date": "2099-01-31"})
+		name = create_hose_build(WO)
+		self.assertEqual(name, f"{WO}-H")
+		hb = frappe.get_doc("QC Unit", name)
+		self.assertEqual(
+			(hb.trulinx_work_order, hb.parent_qc_unit, hb.parent_work_order, hb.shop, hb.product_type),
+			(WO, WO, WO, "Hose", "Hose Assembly"),
+		)
+		self.assertEqual((hb.customer_po, str(hb.promised_date)), ("_T-PO-9", "2099-01-31"))
+		self.assertEqual(hb.status, "Pending Build")
+		self.assertEqual(create_hose_build(WO), name)  # one per parent: opens the existing one
+		self.assertEqual([u.name for u in get_order_units(frappe.get_doc("QC Unit", WO))], [WO])
+		with self.assertRaises(frappe.ValidationError):
+			create_hose_build(name)  # a hose build cannot have its own
+		self.clear_unit(name)
 
 	def test_circuit_without_pump_motor_group(self):
 		unit = frappe.get_doc("QC Unit", WO)
