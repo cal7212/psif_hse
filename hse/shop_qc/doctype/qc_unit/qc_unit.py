@@ -118,10 +118,13 @@ class QCUnit(Document):
 		self.validate_status_change()
 
 	def on_update(self):
-		# Ticking or unticking Required QC can change Ready for Release; the form keeps its
-		# modified time so it can be saved again straight away.
-		if self.get("qc_stages") and not self.flags.in_insert and self.status not in LOCKED_STATUSES:
-			self.status = update_unit_status(self.name, update_modified=False) or self.status
+		# Ticking or unticking Required QC can change Ready for Release. The status is written
+		# without touching modified, so the open form can be saved again straight away.
+		if not self.get("qc_stages") or self.flags.in_insert or self.status in LOCKED_STATUSES:
+			return
+		status = update_unit_status(self.name, update_modified=False)
+		if status:
+			self.update({"status": status})  # what the form shows after this save
 
 	def after_insert(self):
 		if self.get("qc_stages"):
