@@ -112,7 +112,7 @@ def _upsert_one(wo: str, row: dict, company: str, dry_run: bool) -> str:
 	# and multi-unit orders by WO-<unit no>.
 	units = frappe.get_all(
 		"QC Unit",
-		filters={"trulinx_work_order": wo},
+		filters={"trulinx_work_order": wo, "parent_qc_unit": ("is", "not set")},
 		fields=["name", "unit_no", "unit_qty", "sync_hash"],
 		order_by="unit_no asc, creation asc",
 	)

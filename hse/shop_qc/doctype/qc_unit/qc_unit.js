@@ -193,6 +193,7 @@ frappe.ui.form.on("QC Unit", {
 				__("Create")
 			);
 		}
+		if (!frm.is_new()) frm.trigger("hose_build");
 		if (!frm.is_new()) {
 			frm.add_custom_button(
 				frm.doc.job_type === "Repair" ? __("Repair Report") : __("QC Certificate"),
@@ -220,6 +221,54 @@ frappe.ui.form.on("QC Unit", {
 			frm.trigger("render_stage_progress");
 			if (cint(frm.doc.unit_qty) > 1) frm.trigger("order_units");
 		}
+	},
+
+	// Hose build: a Hose Assembly QC Unit on this unit's work order (<unit>-H).
+	hose_build(frm) {
+		const link = (name) =>
+			`<a href="/app/qc-unit/${encodeURIComponent(name)}">${frappe.utils.escape_html(
+				name
+			)}</a>`;
+		if (frm.doc.parent_qc_unit) {
+			frm.dashboard.add_comment(
+				__("Hose build for QC Unit {0}", [link(frm.doc.parent_qc_unit)]),
+				"blue",
+				true
+			);
+			return;
+		}
+		if (frm.doc.job_type === "Repair" || frm.doc.product_type === "Hose Assembly") return;
+		frappe
+			.xcall("hse.shop_qc.multi_unit.get_related_hose_build", { qc_unit: frm.doc.name })
+			.then((r) => {
+				if (r.hose_build) {
+					frm.dashboard.add_comment(
+						__("Hose build: {0}", [link(r.hose_build)]),
+						"blue",
+						true
+					);
+				}
+				if (!r.hose_build && frm.doc.status === "Cancelled") return;
+				frm.add_custom_button(
+					__("Hose Build"),
+					() => {
+						if (r.hose_build) return frappe.set_route("Form", "QC Unit", r.hose_build);
+						frappe.confirm(
+							__(
+								"Create a hose build on work order {0}? It is a Hose Assembly QC Unit in the Hose shop named {1}-H, with this unit's customer, order and dates.",
+								[frm.doc.trulinx_work_order || "", frm.doc.name]
+							),
+							() =>
+								frappe
+									.xcall("hse.shop_qc.multi_unit.create_hose_build", {
+										qc_unit: frm.doc.name,
+									})
+									.then((name) => frappe.set_route("Form", "QC Unit", name))
+						);
+					},
+					__("Create")
+				);
+			});
 	},
 
 	// Orders of more than one unit: one QC Unit per unit (12345-1, 12345-2 ...).

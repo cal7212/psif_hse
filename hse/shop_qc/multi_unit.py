@@ -64,10 +64,17 @@ def group_filters(doc) -> dict:
 	"""Every QC Unit of the same order."""
 	if doc.get("job_type") == REPAIR:
 		return {"job_type": REPAIR, "rga_number": doc.get("rga_number")}
-	return {"job_type": ("!=", REPAIR), "trulinx_work_order": doc.get("trulinx_work_order")}
+	# Hose builds share their parent's work order but are not units of the order.
+	return {
+		"job_type": ("!=", REPAIR),
+		"trulinx_work_order": doc.get("trulinx_work_order"),
+		"parent_qc_unit": ("is", "not set"),
+	}
 
 
 def validate_unit_numbers(doc) -> None:
+	if doc.get("parent_qc_unit"):
+		return
 	qty, no = cint(doc.get("unit_qty")), cint(doc.get("unit_no"))
 	if qty < 0 or no < 0:
 		frappe.throw(_("Unit No. and Order Quantity cannot be negative."))
@@ -176,3 +183,95 @@ def get_order_status(qc_unit: str) -> dict:
 	doc.check_permission("read")
 	units = get_order_units(doc)
 	return {"qty": cint(doc.unit_qty), "units": units, "missing": max(cint(doc.unit_qty) - len(units), 0)}
+
+
+# ---------------------------------------------------------------- hose builds
+HOSE_SHOP = "Hose"
+HOSE_PRODUCT_TYPE = "Hose Assembly"
+# Order data a hose build takes from its parent unit.
+HOSE_BUILD_FIELDS = (
+	"company",
+	"customer",
+	"customer_name",
+	"trulinx_work_order",
+	"trulinx_line",
+	"trulinx_sales_order",
+	"customer_po",
+	"trulinx_url",
+	"wo_date",
+	"promised_date",
+	"target_date",
+	"project_name",
+	"fluid",
+	"target_cleanliness",
+	"print_photos",
+)
+
+
+def hose_build_name(parent: str) -> str:
+	return f"{parent}-H"
+
+
+def validate_hose_build(doc) -> None:
+	if not doc.get("parent_qc_unit"):
+		return
+	parent = frappe.db.get_value(
+		"QC Unit", doc.parent_qc_unit, ["name", "parent_qc_unit", "job_type"], as_dict=True
+	)
+	if not parent:
+		frappe.throw(_("Parent QC Unit {0} does not exist.").format(doc.parent_qc_unit))
+	if parent.parent_qc_unit:
+		frappe.throw(_("{0} is itself a hose build and cannot have one.").format(parent.name))
+	if doc.product_type != HOSE_PRODUCT_TYPE:
+		frappe.throw(_("A hose build must have Product Type {0}.").format(_(HOSE_PRODUCT_TYPE)))
+	other = frappe.db.get_value(
+		"QC Unit", {"parent_qc_unit": doc.parent_qc_unit, "name": ("!=", doc.name or "")}, "name"
+	)
+	if other:
+		frappe.throw(_("{0} already has hose build {1}.").format(doc.parent_qc_unit, other))
+
+
+def get_hose_build(qc_unit: str) -> str | None:
+	return frappe.db.get_value("QC Unit", {"parent_qc_unit": qc_unit}, "name")
+
+
+@frappe.whitelist(methods=["POST"])
+def create_hose_build(qc_unit: str) -> str:
+	"""The hose build QC Unit for a unit, created on the parent's work order if not there yet."""
+	frappe.has_permission("QC Unit", "create", throw=True)
+	parent = frappe.get_doc("QC Unit", qc_unit)
+	parent.check_permission("read")
+	existing = get_hose_build(parent.name)
+	if existing:
+		return existing
+	if parent.job_type == REPAIR or parent.product_type == HOSE_PRODUCT_TYPE or parent.parent_qc_unit:
+		frappe.throw(_("Hose builds are made from a new-build unit that is not itself a hose assembly."))
+	if parent.status == "Cancelled":
+		frappe.throw(_("Cannot create a hose build for a cancelled unit."))
+	if not parent.trulinx_work_order:
+		frappe.throw(_("Enter the TrulinX Work Order on {0} first.").format(parent.name))
+	if not frappe.db.exists("Build Shop", HOSE_SHOP):
+		frappe.throw(_("Create the Build Shop {0} first.").format(HOSE_SHOP))
+	doc = frappe.new_doc("QC Unit")
+	for field in HOSE_BUILD_FIELDS:
+		doc.set(field, parent.get(field))
+	doc.update(
+		{
+			"parent_qc_unit": parent.name,
+			"shop": HOSE_SHOP,
+			"product_type": HOSE_PRODUCT_TYPE,
+			"job_type": "New Build",
+			"status": "Pending Build",
+			"model": _("Hoses for {0}").format(parent.model or parent.name),
+			"description": _("Hose assemblies for QC Unit {0}").format(parent.name),
+		}
+	)
+	doc.insert()
+	return doc.name
+
+
+@frappe.whitelist()
+def get_related_hose_build(qc_unit: str) -> dict:
+	doc = frappe.get_doc("QC Unit", qc_unit)
+	doc.check_permission("read")
+	return {"hose_build": get_hose_build(doc.name), "parent": doc.parent_qc_unit}
