@@ -4,6 +4,14 @@
 const QCI_METHOD = "hse.shop_qc.doctype.qc_inspection.qc_inspection";
 const QC_UTILS = "hse.shop_qc.utils";
 
+// Photos table: offer this inspection's check items in the Check Item column.
+function hse_set_photo_items(frm) {
+	const grid = frm.fields_dict.photos && frm.fields_dict.photos.grid;
+	if (!grid) return;
+	const items = [...new Set((frm.doc.items || []).map((r) => r.check_item).filter(Boolean))];
+	grid.update_docfield_property("check_item", "options", items.join("\n"));
+}
+
 frappe.ui.form.on("QC Inspection", {
 	setup(frm) {
 		frm.ignore_doctypes_on_cancel_all = ["Non Conformance", "QC Inspection", "QC Unit"];
@@ -42,6 +50,7 @@ frappe.ui.form.on("QC Inspection", {
 	},
 
 	refresh(frm) {
+		hse_set_photo_items(frm);
 		frm.trigger("load_applicable_stages");
 		frm.trigger("set_indicator");
 		frm.trigger("render_instructions");
@@ -187,6 +196,7 @@ frappe.ui.form.on("QC Inspection", {
 	load_items(frm) {
 		frm.clear_table("items");
 		frm.refresh_field("items");
+		hse_set_photo_items(frm);
 		if (!frm.doc.template) return;
 		frappe.call({
 			method: `${QCI_METHOD}.get_template_items`,
@@ -194,6 +204,7 @@ frappe.ui.form.on("QC Inspection", {
 			callback: (r) => {
 				(r.message || []).forEach((item) => Object.assign(frm.add_child("items"), item));
 				frm.refresh_field("items");
+				hse_set_photo_items(frm);
 			},
 		});
 	},
@@ -434,3 +445,8 @@ function mark_items_na(frm) {
 		__("Mark N/A")
 	);
 }
+
+frappe.ui.form.on("QC Inspection", {
+	photos_add: (frm) => hse_set_photo_items(frm),
+	items_remove: (frm) => hse_set_photo_items(frm),
+});
