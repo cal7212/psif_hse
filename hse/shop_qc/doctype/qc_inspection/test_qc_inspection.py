@@ -28,8 +28,10 @@ from hse.shop_qc.doctype.qc_unit.qc_unit import (
 )
 from hse.shop_qc.multi_unit import create_hose_build, create_remaining_units, get_order_units
 from hse.shop_qc.repair_costing import calc_repair_costing, load_shop_defaults, sell_price
+from hse.shop_qc.unit_stages import get_qc_stage_rows, make_draft_inspections
 from hse.shop_qc.utils import (
 	certificate_format_for,
+	get_applicable_stages,
 	get_qc_certificate_data,
 	get_qc_photos,
 	get_stages,
@@ -195,6 +197,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
+		# Most tests use units made before Required QC existed (every applicable stage, no drafts).
+		frappe.flags.skip_required_qc = True
 		frappe.db.set_value("QC Stage", {"name": ("not like", "_T %")}, "disabled", 1)
 		if not frappe.db.exists("Quality Procedure", PROC):
 			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
@@ -506,6 +510,67 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.make("_T Release")
 		self.assertEqual(self.status(), "Released")
 		self.assertTrue(frappe.db.get_value("QC Unit", WO, "released_on"))
+
+	def test_required_qc_and_draft_inspections(self):
+		self.clear_unit(WO)
+		self.assertEqual([r["stage"] for r in get_qc_stage_rows(SHOP, "New Build")], [s[0] for s in STAGES])
+		frappe.flags.skip_required_qc = False
+		try:
+			frappe.get_doc(
+				{
+					"doctype": "QC Unit",
+					"shop": SHOP,
+					"product_type": "Power Unit",
+					"job_type": "New Build",
+					"trulinx_work_order": WO,
+					"model": "HPU-30-460-3",
+					"company": self.company,
+					"relief_setting_psi": 0,
+				}
+			).insert()
+		finally:
+			frappe.flags.skip_required_qc = True
+		unit = frappe.get_doc("QC Unit", WO)
+		self.assertEqual([r.stage for r in unit.qc_stages], [s[0] for s in STAGES])
+		self.assertTrue(all(r.required and r.inspection for r in unit.qc_stages))
+		drafts = frappe.get_all(
+			"QC Inspection", {"qc_unit": WO}, ["name", "stage", "docstatus", "inspected_by"]
+		)
+		self.assertEqual(sorted(d.stage for d in drafts), sorted(s[0] for s in STAGES))
+		self.assertTrue(all(d.docstatus == 0 and not d.inspected_by for d in drafts))
+		by_stage = {d.stage: d.name for d in drafts}
+		# Limits from the unit's design data follow the unit while the inspection is a draft.
+		frappe.db.set_value("QC Unit", WO, "relief_setting_psi", 3000)
+		test_draft = frappe.get_doc("QC Inspection", by_stage["_T Test"])
+		test_draft.save()
+		self.assertAlmostEqual(next(r for r in test_draft.items if r.numeric).min_value, 2910)
+		# The button only adds missing drafts.
+		self.assertEqual(make_draft_inspections(WO), [])
+		# A draft is completed only with an inspector.
+		asm = frappe.get_doc("QC Inspection", by_stage["_T Assembly"])
+		for row in asm.items:
+			row.result = PASS
+		asm.append("instruments", {"instrument": "_T-G1"})
+		with self.assertRaisesRegex(frappe.ValidationError, "Inspected By"):
+			asm.submit()
+		asm.reload()
+		for row in asm.items:
+			row.result = PASS
+		asm.inspected_by = self.employee
+		asm.append("instruments", {"instrument": "_T-G1"})
+		asm.submit()
+		# Untick _T Test: not offered, rejected, and not needed for release. Final release stays ticked.
+		unit = frappe.get_doc("QC Unit", WO)
+		for row in unit.qc_stages:
+			row.required = 0 if row.stage in ("_T Test", "_T Release") else row.required
+		unit.save()
+		self.assertEqual([r.stage for r in unit.qc_stages if r.required], ["_T Assembly", "_T Release"])
+		self.assertNotIn("_T Test", get_applicable_stages(WO))
+		with self.assertRaisesRegex(frappe.ValidationError, "Required QC"):
+			self.make("_T Test", reading=3000, submit=False)
+		self.assertEqual(self.status(), "Ready for Release")
+		self.make("_T Release")
+		self.assertEqual(self.status(), "Released")
 
 	def test_shop_prefix_naming(self):
 		doc = self.make("_T Assembly", submit=False)

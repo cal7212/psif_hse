@@ -40,16 +40,23 @@ def stage_applies(stage, shop: str | None, job_type: str | None) -> bool:
 
 def get_stages(qc_unit: str | None = None, required_only: bool = False) -> list[dict]:
 	"""Enabled stages in sequence order; limited to the unit's shop and job type when given."""
-	filters = {"disabled": 0}
-	if required_only:
-		filters["is_required"] = 1
 	stages = frappe.get_all(
-		"QC Stage", filters=filters, fields=STAGE_FIELDS, order_by="sequence asc, name asc"
+		"QC Stage", filters={"disabled": 0}, fields=STAGE_FIELDS, order_by="sequence asc, name asc"
 	)
-	if not qc_unit:
-		return stages
-	ctx = get_unit_context(qc_unit)
-	return [s for s in stages if stage_applies(s, ctx.shop, ctx.job_type)]
+	if qc_unit:
+		from hse.shop_qc.unit_stages import get_unit_stage_selection
+
+		ctx = get_unit_context(qc_unit)
+		stages = [s for s in stages if stage_applies(s, ctx.shop, ctx.job_type)]
+		selected = get_unit_stage_selection(qc_unit)
+		if selected is not None:
+			# Required QC on the unit: only the ticked stages, and each of them is required.
+			stages = [s for s in stages if s.name in selected]
+			for s in stages:
+				s.is_required = 1
+	if required_only:
+		stages = [s for s in stages if s.is_required]
+	return stages
 
 
 def get_final_stage(stages: list[dict]):
@@ -71,7 +78,7 @@ def count_open_ncs(qc_unit: str) -> int:
 	return frappe.db.count("Non Conformance", {"qc_unit": qc_unit, "status": "Open"})
 
 
-def update_unit_status(qc_unit: str) -> str | None:
+def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None:
 	if not qc_unit or not frappe.db.exists("QC Unit", qc_unit):
 		return None
 
@@ -111,7 +118,7 @@ def update_unit_status(qc_unit: str) -> str | None:
 
 	values["status"] = new_status
 	# db.set_value: no version noise and does not disturb the TrulinX sync hash
-	frappe.db.set_value("QC Unit", qc_unit, values)
+	frappe.db.set_value("QC Unit", qc_unit, values, update_modified=update_modified)
 	if new_status != unit.status:
 		frappe.get_doc("QC Unit", qc_unit).add_comment(
 			"Info", _("QC Status changed from {0} to {1}").format(unit.status, new_status)

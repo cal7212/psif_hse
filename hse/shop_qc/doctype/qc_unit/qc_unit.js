@@ -194,6 +194,7 @@ frappe.ui.form.on("QC Unit", {
 			);
 		}
 		if (!frm.is_new()) frm.trigger("hose_build");
+		frm.trigger("required_qc");
 		if (!frm.is_new()) {
 			frm.add_custom_button(
 				frm.doc.job_type === "Repair" ? __("Repair Report") : __("QC Certificate"),
@@ -221,6 +222,61 @@ frappe.ui.form.on("QC Unit", {
 			frm.trigger("render_stage_progress");
 			if (cint(frm.doc.unit_qty) > 1) frm.trigger("order_units");
 		}
+	},
+
+	// Required QC: the stages this unit needs, with a draft inspection for each.
+	required_qc(frm) {
+		const grid = frm.fields_dict.qc_stages && frm.fields_dict.qc_stages.grid;
+		if (!grid) return;
+		if (!grid.qc_load_button) {
+			grid.qc_load_button = grid.add_custom_button(__("Load QC Stages"), () =>
+				frm.trigger("load_qc_stages")
+			);
+		}
+		grid.qc_load_button.toggle(
+			!frm.is_new() && !(frm.doc.qc_stages || []).length && !!frm.doc.shop
+		);
+		if (
+			!frm.is_new() &&
+			(frm.doc.qc_stages || []).length &&
+			!["Shipped", "Cancelled"].includes(frm.doc.status)
+		) {
+			frm.add_custom_button(
+				__("Draft Inspections"),
+				() => {
+					if (frm.is_dirty()) {
+						frappe.msgprint(__("Save the unit first."));
+						return;
+					}
+					frappe
+						.xcall("hse.shop_qc.unit_stages.make_draft_inspections", {
+							qc_unit: frm.doc.name,
+						})
+						.then(() => frm.reload_doc());
+				},
+				__("Create")
+			);
+		}
+	},
+
+	load_qc_stages(frm) {
+		frappe
+			.xcall("hse.shop_qc.unit_stages.get_qc_stage_rows", {
+				shop: frm.doc.shop,
+				job_type: frm.doc.job_type,
+			})
+			.then((rows) => {
+				frm.clear_table("qc_stages");
+				rows.forEach((r) => frm.add_child("qc_stages", r));
+				frm.refresh_field("qc_stages");
+				frm.trigger("required_qc");
+				frappe.show_alert({
+					message: __(
+						"Untick any stage this unit does not need, save, then use Create > Draft Inspections."
+					),
+					indicator: "blue",
+				});
+			});
 	},
 
 	// Hose build: a Hose Assembly QC Unit on this unit's work order (<unit>-H).

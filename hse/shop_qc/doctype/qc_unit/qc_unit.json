@@ -152,6 +152,8 @@
   "repair_accessories_pct_of_new",
   "costing_defaults_loaded",
   "tab_requirements",
+  "section_required_qc",
+  "qc_stages",
   "section_cdocs",
   "construction_document_template",
   "construction_documents",
@@ -1115,6 +1117,18 @@
    "label": "Construction Requirements"
   },
   {
+   "fieldname": "section_required_qc",
+   "fieldtype": "Section Break",
+   "label": "Required QC",
+   "description": "QC stages this unit needs. A draft inspection is created for each ticked stage when the unit is first saved; Create > Draft Inspections adds any that are missing."
+  },
+  {
+   "fieldname": "qc_stages",
+   "fieldtype": "Table",
+   "label": "QC Stages",
+   "options": "QC Unit Stage"
+  },
+  {
    "fieldname": "section_cdocs",
    "fieldtype": "Section Break",
    "label": "Construction Documentation"
@@ -1577,7 +1591,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-15 16:00:00.000000",
+ "modified": "2026-10-15 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
