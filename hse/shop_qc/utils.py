@@ -351,14 +351,6 @@ def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
 			order_by="idx asc",
 		):
 			extra.setdefault(r.parent, []).append(r)
-	item_results = {}
-	if extra:
-		for r in frappe.get_all(
-			"QC Inspection Reading",
-			filters={"parenttype": "QC Inspection", "parent": ("in", list(extra))},
-			fields=["parent", "check_item", "result"],
-		):
-			item_results[(r.parent, r.check_item)] = r.result
 		for r in frappe.get_all(
 			"QC Inspection Reading",
 			filters={
@@ -370,6 +362,14 @@ def get_qc_photos(qc_unit: str) -> list[frappe._dict]:
 			order_by="idx asc",
 		):
 			readings.setdefault(r.parent, []).append(r)
+	item_results = {}
+	if extra:
+		for r in frappe.get_all(
+			"QC Inspection Reading",
+			filters={"parenttype": "QC Inspection", "parent": ("in", list(extra))},
+			fields=["parent", "check_item", "result"],
+		):
+			item_results[(r.parent, r.check_item)] = r.result
 	for insp in inspections:
 		source = " · ".join(
 			x
