@@ -16,6 +16,8 @@ from hse.shop_qc.multi_unit import (
 	validate_unit_numbers,
 )
 from hse.shop_qc.repair_costing import SHOP_DEFAULTS, calc_repair_costing, load_shop_defaults
+from hse.shop_qc.unit_stages import create_draft_inspections, set_qc_stages
+from hse.shop_qc.utils import LOCKED_STATUSES, update_unit_status
 
 REPAIR = "Repair"
 PMG_TAG = re.compile(r"^PMG-?\d+$")
@@ -110,9 +112,23 @@ class QCUnit(Document):
 		self.validate_pump_motor_groups()
 		self.validate_circuit_items()
 		self.set_order_documents()
+		set_qc_stages(self)
 		self.set_post_shipment_review()
 		self.set_repair_costing()
 		self.validate_status_change()
+
+	def on_update(self):
+		# Ticking or unticking Required QC can change Ready for Release. The status is written
+		# without touching modified, so the open form can be saved again straight away.
+		if not self.get("qc_stages") or self.flags.in_insert or self.status in LOCKED_STATUSES:
+			return
+		status = update_unit_status(self.name, update_modified=False)
+		if status:
+			self.update({"status": status})  # what the form shows after this save
+
+	def after_insert(self):
+		if self.get("qc_stages"):
+			create_draft_inspections(self)
 
 	def is_repair_shop(self) -> bool:
 		return bool(self.shop and cint(frappe.db.get_value("Build Shop", self.shop, "is_repair_shop")))

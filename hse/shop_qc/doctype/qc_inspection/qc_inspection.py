@@ -21,6 +21,7 @@ from hse.hse.instruments import (
 	pick,
 )
 from hse.shop_qc.doctype.qc_unit.qc_unit import format_iso_code, hose_spec, iso_within
+from hse.shop_qc.unit_stages import get_unit_stage_selection
 from hse.shop_qc.utils import (
 	LOCKED_STATUSES,
 	count_open_ncs,
@@ -164,6 +165,7 @@ class QCInspection(Document):
 		if not self.items:
 			self.set_items_from_template()
 		self.load_stage_tests()
+		self.refresh_spec_limits()
 		self.refresh_hose_specs()
 		self.round_whole_numbers()
 		self.validate_photos()
@@ -206,6 +208,13 @@ class QCInspection(Document):
 				_("QC Stage {0} does not apply to {1} {2} units.").format(
 					frappe.bold(self.stage), ctx.shop or "", (ctx.job_type or "").lower()
 				)
+			)
+		selected = get_unit_stage_selection(self.qc_unit)
+		if selected is not None and self.stage not in selected:
+			frappe.throw(
+				_(
+					"QC Stage {0} is not required for {1}. Tick it under Required QC on the unit first."
+				).format(frappe.bold(self.stage), frappe.bold(self.qc_unit))
 			)
 		self.stage_sequence = stage.sequence
 
@@ -301,6 +310,23 @@ class QCInspection(Document):
 
 	def is_pmg_test_stage(self) -> bool:
 		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, "pmg_test"))
+
+	def refresh_spec_limits(self):
+		"""While in draft, keep checklist limits that come from the unit's design data in step
+		with the unit (drafts are often created before those values are entered)."""
+		if self.docstatus != 0 or not self.items or not self.template or not self.qc_unit:
+			return
+		if not any(r.unit_spec_field for r in self.items):
+			return
+		specs = {
+			r["check_item"]: r for r in build_items(self.template, self.qc_unit) if r.get("unit_spec_field")
+		}
+		for row in self.items:
+			spec = specs.get(row.check_item)
+			if not row.unit_spec_field or not spec:
+				continue
+			for field in ("min_value", "max_value", "criteria"):
+				row.set(field, spec.get(field))
 
 	def refresh_hose_specs(self):
 		"""While in draft, keep each hose row's limits in step with the unit, so a spec
@@ -399,6 +425,8 @@ class QCInspection(Document):
 
 	# ------------------------------------------------------------------ submit
 	def before_submit(self):
+		if not self.inspected_by:
+			frappe.throw(_("Enter Inspected By before completing the inspection."))
 		self.check_readings_complete()
 		self.check_test_equipment()
 		self.check_hold_points()
@@ -630,7 +658,9 @@ class QCInspection(Document):
 
 	def check_hold_points(self):
 		stage = frappe.get_cached_doc("QC Stage", self.stage)
-		if not stage.hold_point:
+		# With Required QC on the unit, every ticked stage must be accepted before final release.
+		final_gate = stage.is_final_release and get_unit_stage_selection(self.qc_unit) is not None
+		if not (stage.hold_point or final_gate):
 			return
 		accepted = get_accepted_by_stage(self.qc_unit)
 		missing = [

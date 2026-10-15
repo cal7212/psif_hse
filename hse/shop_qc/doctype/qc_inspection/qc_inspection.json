@@ -174,7 +174,7 @@
    "fieldtype": "Link",
    "label": "Inspected By",
    "options": "Employee",
-   "reqd": 1
+   "description": "Required when the inspection is completed."
   },
   {
    "fetch_from": "inspected_by.employee_name",
@@ -365,7 +365,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-15 09:00:00.000000",
+ "modified": "2026-10-15 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",
