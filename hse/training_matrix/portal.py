@@ -64,6 +64,9 @@ def my_training_context(employee: str) -> dict:
 		}
 	return {
 		"matrix": matrix,
+		"skills": [
+			s for s in (matrix.skills if matrix else []) if s.needed_for != "Held" or s.status == "Authorized"
+		],
 		"rows": rows,
 		"courses": courses,
 		"pending": pending_acknowledgments(employee),

@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, today
 
-from hse.training_matrix import lms
+from hse.training_matrix import lms, skills
 from hse.training_matrix import status as st
 from hse.training_matrix.matrix import apply_status
 
@@ -20,11 +20,17 @@ class EmployeeTrainingMatrix(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from hse.training_matrix.doctype.employee_target_skill.employee_target_skill import (
+			EmployeeTargetSkill,
+		)
 		from hse.training_matrix.doctype.employee_training_matrix_item.employee_training_matrix_item import (
 			EmployeeTrainingMatrixItem,
 		)
 		from hse.training_matrix.doctype.employee_training_matrix_role.employee_training_matrix_role import (
 			EmployeeTrainingMatrixRole,
+		)
+		from hse.training_matrix.doctype.employee_training_matrix_skill.employee_training_matrix_skill import (
+			EmployeeTrainingMatrixSkill,
 		)
 
 		active: DF.Check
@@ -45,6 +51,8 @@ class EmployeeTrainingMatrix(Document):
 		required_count: DF.Int
 		roles: DF.TableMultiSelect[EmployeeTrainingMatrixRole]
 		roles_from_hr: DF.Check
+		skills: DF.Table[EmployeeTrainingMatrixSkill]
+		target_skills: DF.Table[EmployeeTargetSkill]
 		user_id: DF.Link | None
 	# end: auto-generated types
 
@@ -90,5 +98,6 @@ class EmployeeTrainingMatrix(Document):
 				)
 
 	def on_update(self):
+		skills.after_matrix_update(self)
 		if not self.flags.skip_lms:
 			lms.enroll_required(self)

@@ -9,11 +9,13 @@
   "avenue",
   "requirement_code",
   "applicability",
+  "needed_for",
   "column_break_status",
   "status",
   "qualification",
   "assigned_on",
   "due_date",
+  "development_due",
   "section_completion",
   "in_progress",
   "completed_on",
@@ -63,10 +65,11 @@
    "fieldname": "requirement_code",
    "fieldtype": "Select",
    "label": "Requirement",
-   "options": "R\nC\n—",
+   "options": "R\nC\nDev\n—",
    "read_only": 1,
    "in_list_view": 1,
-   "columns": 1
+   "columns": 1,
+   "description": "Dev = development training for a target skill (outside compliance)."
   },
   {
    "fieldname": "applicability",
@@ -75,6 +78,13 @@
    "options": "\nApplies\nNot Applicable",
    "depends_on": "eval:doc.requirement_code=='C'",
    "description": "Conditional courses: the Manager confirms whether the task or hazard applies."
+  },
+  {
+   "fieldname": "needed_for",
+   "fieldtype": "Data",
+   "label": "Needed For",
+   "read_only": 1,
+   "description": "Role, or the skills that need this course."
   },
   {
    "fieldname": "column_break_status",
@@ -109,6 +119,13 @@
    "read_only": 1,
    "in_list_view": 1,
    "columns": 1
+  },
+  {
+   "fieldname": "development_due",
+   "fieldtype": "Date",
+   "label": "Target Date",
+   "read_only": 1,
+   "depends_on": "eval:doc.requirement_code=='Dev'"
   },
   {
    "fieldname": "section_completion",
@@ -227,7 +244,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-20 12:00:00.000000",
+ "modified": "2026-10-21 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Employee Training Matrix Item",

@@ -16,6 +16,8 @@ from frappe.utils import add_days, add_months, formatdate, getdate
 
 # Part 1 requirement codes
 REQUIRED, CONDITIONAL, NOT_REQUIRED = "R", "C", "—"
+# Development: needed for a target skill the manager set; tracked but outside compliance.
+DEVELOPMENT = "Dev"
 APPLIES, DOES_NOT_APPLY = "Applies", "Not Applicable"
 
 # Row statuses (Part 2 codes in brackets)
@@ -76,15 +78,23 @@ def next_due_date(frequency: str | None, completed_on, expires_on) -> date | Non
 	return _d(expires_on)
 
 
-def evaluate(row: dict, requirement: dict, hire_date, today) -> dict:
+def evaluate(row: dict, requirement: dict, hire_date, today, assigned_override=None) -> dict:
 	"""Status of one matrix row.
 
-	row: requirement_code, applicability, assigned_on, in_progress, completed_on, expires_on
+	row: requirement_code, applicability, assigned_on, in_progress, completed_on, expires_on,
+	     development_due (Dev rows: the manager's target date)
 	requirement: initial_due_basis, initial_due_days, refresher_frequency
 	Returns status, qualification, due_date, is_required.
 	"""
 	today = getdate(today)
 	code, applicability = row.get("requirement_code"), row.get("applicability")
+
+	if code == DEVELOPMENT:
+		override = None if row.get("completed_on") else row.get("development_due")
+		if override:  # due on the manager's target date
+			requirement = {**requirement, "initial_due_basis": ASSIGNED, "initial_due_days": 0}
+		result = evaluate({**row, "requirement_code": REQUIRED}, requirement, hire_date, today, override)
+		return {**result, "is_required": 0}
 
 	if code == CONDITIONAL and not applicability:
 		return _result(CONFIRM, NOT_QUALIFIED, None, False)
@@ -106,7 +116,7 @@ def evaluate(row: dict, requirement: dict, hire_date, today) -> dict:
 		requirement.get("initial_due_basis"),
 		requirement.get("initial_due_days"),
 		hire_date,
-		row.get("assigned_on"),
+		assigned_override or row.get("assigned_on"),
 	)
 	if due and today > due:
 		return _result(OVERDUE, NOT_QUALIFIED, due, True)

@@ -15,22 +15,31 @@ def _own_employees(user: str) -> list[str]:
 	return frappe.get_all("Employee", filters={"user_id": user}, pluck="name")
 
 
+def _visible_employees_sql(user: str) -> str:
+	"""The user's own employee record and their direct reports (managers review their team)."""
+	own = "(select `name` from `tabEmployee` where `user_id` = {0})".format(frappe.db.escape(user))
+	return f"(select `name` from `tabEmployee` where `name` in {own} or `reports_to` in {own})"
+
+
+def _visible_employees(user: str) -> set[str]:
+	own = _own_employees(user)
+	if not own:
+		return set()
+	return set(own) | set(frappe.get_all("Employee", filters={"reports_to": ["in", own]}, pluck="name"))
+
+
 def matrix_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user
 	if _full_access(user):
 		return ""
-	return "`tabEmployee Training Matrix`.`employee` in (select `name` from `tabEmployee` where `user_id` = {0})".format(
-		frappe.db.escape(user)
-	)
+	return f"`tabEmployee Training Matrix`.`employee` in {_visible_employees_sql(user)}"
 
 
-def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
-	"""Frappe only uses this hook to deny: True means "no objection, role permissions decide";
-	anything falsy (including None) is a denial."""
+def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
 	user = user or frappe.session.user
 	if _full_access(user):
-		return True
-	return doc.employee in _own_employees(user)
+		return None  # role permissions decide
+	return doc.employee in _visible_employees(user) and ptype in ("read", "print", "report", "export")
 
 
 # ---------------------------------------------------------------- Training Record / Competency Evaluation
@@ -81,3 +90,23 @@ def evaluation_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | No
 	if doc.owner == user or doc.evaluator in own:
 		return None
 	return ptype in ("read", "print") and doc.employee in own
+
+
+# ---------------------------------------------------------------- Skill Authorization
+def authorization_query_conditions(user: str | None = None, **kwargs) -> str:
+	user = user or frappe.session.user
+	if _full_access(user):
+		return ""
+	return (
+		f"(`tabSkill Authorization`.`employee` in {_visible_employees_sql(user)}"
+		f" or `tabSkill Authorization`.`authorized_by` = {frappe.db.escape(user)})"
+	)
+
+
+def authorization_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+	user = user or frappe.session.user
+	if _full_access(user) or doc.is_new() or doc.authorized_by == user:
+		return None  # creating is checked by the controller (manager of the employee)
+	if doc.employee in _own_employees(user):
+		return ptype in ("read", "print")
+	return doc.employee in _visible_employees(user) or None

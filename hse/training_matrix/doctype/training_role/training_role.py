@@ -23,16 +23,24 @@ class TrainingRole(Document):
 		from hse.training_matrix.doctype.training_role_designation.training_role_designation import (
 			TrainingRoleDesignation,
 		)
+		from hse.training_matrix.doctype.training_role_employee_group.training_role_employee_group import (
+			TrainingRoleEmployeeGroup,
+		)
 
 		departments: DF.TableMultiSelect[TrainingRoleDepartment]
 		description: DF.SmallText | None
 		designations: DF.TableMultiSelect[TrainingRoleDesignation]
 		disabled: DF.Check
+		employee_groups: DF.TableMultiSelect[TrainingRoleEmployeeGroup]
 		role_name: DF.Data
 	# end: auto-generated types
 
 	def validate(self):
-		for table, field in (("designations", "designation"), ("departments", "department")):
+		for table, field in (
+			("designations", "designation"),
+			("departments", "department"),
+			("employee_groups", "employee_group"),
+		):
 			seen = set()
 			for row in self.get(table):
 				if row.get(field) in seen:

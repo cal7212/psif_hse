@@ -19,6 +19,11 @@
 	.tm-Not-Started { background: #f2f4f7; color: #475467; }
 	.tm-Completed { background: #e7f6ec; color: #067647; }
 	.tm-Confirm-Applicability { background: #f4ebff; color: #6941c6; }
+	.tm-skill-Authorized { background: #e7f6ec; color: #067647; }
+	.tm-skill-Ready-for-Authorization { background: #f4ebff; color: #6941c6; }
+	.tm-skill-In-Training { background: #e8f1fd; color: #175cd3; }
+	.tm-skill-Not-Started { background: #f2f4f7; color: #475467; }
+	.tm-skill-Lapsed { background: #fde8e8; color: #b42318; }
 </style>
 <div class="tm-wrap">
 	<h1>{{ _("My Training") }}</h1>
@@ -50,6 +55,24 @@
 				<td>{{ frappe.format(r.training_date, {"fieldtype": "Date"}) }}</td>
 				<td>{{ r.trainer_name or r.external_provider or "" }}</td>
 				<td><button class="btn btn-primary btn-sm tm-ack" data-record="{{ r.name }}">{{ _("Acknowledge") }}</button></td>
+			</tr>
+			{% endfor %}
+		</table></div>
+	</div>
+	{% endif %}
+
+	{% if skills %}
+	<div class="tm-card">
+		<h3>{{ _("My skills") }}</h3>
+		<p class="tm-label">{{ _("Complete every course for a skill, then your manager authorizes it.") }}</p>
+		<div class="tm-table-wrap"><table class="tm-table">
+			<tr><th>{{ _("Skill") }}</th><th>{{ _("Status") }}</th><th>{{ _("Courses") }}</th><th>{{ _("Still needed") }}</th></tr>
+			{% for s in skills %}
+			<tr>
+				<td><b>{{ s.skill }}</b>{% if s.needed_for == "Target" %} <span class="tm-label">({{ _("development target") }}{% if s.target_due %}, {{ frappe.format(s.target_due, {"fieldtype": "Date"}) }}{% endif %})</span>{% endif %}</td>
+				<td><span class="tm-badge tm-skill-{{ s.status | replace(' ', '-') }}">{{ _(s.status) }}</span></td>
+				<td>{{ s.progress or "" }}</td>
+				<td>{{ s.missing or "" }}</td>
 			</tr>
 			{% endfor %}
 		</table></div>

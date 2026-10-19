@@ -3,6 +3,8 @@
 Phase 1: the TRN-701 Employee Training Matrix, built from TRN-700 Rev 1 Appendix A.
 Phase 2: training records, competency evaluations, the Qualified Trainer register and the
 Frappe Learning integration.
+Phase 2b: skills built from courses, granted by manager authorization and mirrored to the
+Frappe HR Employee Skill Map.
 
 ## What it does
 
@@ -10,7 +12,9 @@ Frappe Learning integration.
   controlled document number (e.g. SAF-0012). Holds avenue, delivery, verification, first-due
   rule, refresher, controlled document / revision / section, and R / C codes per Training Role.
 - **Training Role**: Technician, Logistics, Customer Service, Manager. Each maps to one or more
-  Designations or Departments.
+  Designations, Departments or Employee Groups. Use Employee Groups for work that doesn't follow
+  job titles (e.g. a *Respirator Users* role mapped to a *Respirator Users* group): adding someone
+  to the group assigns the training, removing them drops it (training history is kept).
 - **Employee Training Matrix**: one per employee (TRN-701 Part 2). Created and updated
   automatically when an Employee is created or their designation, department, hire date or
   status changes. A daily job recalculates Due / Overdue / expiry.
@@ -95,3 +99,27 @@ period.
    TRN-704 checklist (e.g. SAF-0024 LOTO, NFPA 70E, SAF-0002 Forklift).
 3. Register **Qualified Trainers** and the courses they are authorized for.
 4. Make sure each employee's **User ID** on the Employee record is their Learning login.
+
+## Phase 2b: skills and the Frappe HR skill map
+
+- **Skill Definition** (one per Frappe HR Skill): required courses, prerequisite skills (e.g.
+  Mechanical before Technician), proficiency when authorized, optional authorization validity,
+  and the Training Roles that need the skill (R / C). A role's skills bring their courses, and
+  their prerequisites' courses, onto the matrix.
+- **Eligibility vs authorization**: Qualified in every course and prerequisite makes the skill
+  *Ready for Authorization* and assigns a ToDo to the employee's manager (Reports To, else HR
+  Managers). Only a submitted **Skill Authorization** by that manager (or an HR Manager) grants it.
+  It cannot be submitted early or by the employee.
+- **Lapse**: if a course lapses or a prerequisite is lost, the skill is Lapsed (skills built on it
+  too). Once requalified it needs a new authorization.
+- **Target skills**: managers set development targets with a date (*Manager → Set Target Skill*).
+  Their courses are added as **Dev** rows: tracked with due dates but outside compliance %,
+  overdue counts and snapshots.
+- **Frappe HR**: the Employee Skill Map shows authorized skills at their proficiency and
+  needed skills at zero. Each Designation lists the skills its Training Role requires. Only
+  skills with a Skill Definition are managed; other HR skills are untouched.
+- **Managers** can open their direct reports' matrices to authorize skills, set targets and
+  confirm conditional (C) courses.
+- **Skill Matrix** report: employees × skills (A authorized, R ready, T in training, L lapsed).
+
+`hrms` is now a required app.

@@ -127,3 +127,43 @@ class IntegrationTestEmployeeTrainingMatrix(IntegrationTestCase):
 		matrix = self.matrix()
 		matrix.items[0].completed_on = add_days(today(), 5)
 		self.assertRaises(frappe.ValidationError, matrix.save)
+
+
+class IntegrationTestEmployeeGroupMapping(IntegrationTestCase):
+	def test_group_membership_assigns_role(self):
+		from erpnext.setup.doctype.employee.test_employee import make_employee
+
+		employee = make_employee(
+			"_t_group_member@example.com",
+			company=ensure_company(),
+			gender=ensure_gender(),
+			designation=OFFICE,
+		)
+		if not frappe.db.exists("Employee Group", "_T Respirator Users"):
+			frappe.get_doc(
+				{"doctype": "Employee Group", "employee_group_name": "_T Respirator Users"}
+			).insert()
+		if not frappe.db.exists("Training Role", "_T Respirator"):
+			role = frappe.get_doc(
+				{
+					"doctype": "Training Role",
+					"role_name": "_T Respirator",
+					"employee_groups": [{"employee_group": "_T Respirator Users"}],
+				}
+			)
+			role.flags.skip_resync = True
+			role.insert()
+		make_requirement("_T-RESP", roles=[("_T Respirator", "R")])
+
+		group = frappe.get_doc("Employee Group", "_T Respirator Users")
+		group.append("employee_list", {"employee": employee})
+		group.save()
+		matrix = frappe.get_doc("Employee Training Matrix", employee)
+		self.assertIn("_T Respirator", [r.training_role for r in matrix.roles])
+		self.assertIn("_T-RESP", {r.training_requirement for r in matrix.items})
+
+		group.set("employee_list", [r for r in group.employee_list if r.employee != employee])
+		group.save()
+		matrix = frappe.get_doc("Employee Training Matrix", employee)
+		self.assertNotIn("_T Respirator", [r.training_role for r in matrix.roles])
+		self.assertNotIn("_T-RESP", {r.training_requirement for r in matrix.items})

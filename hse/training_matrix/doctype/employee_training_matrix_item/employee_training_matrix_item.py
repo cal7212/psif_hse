@@ -22,6 +22,7 @@ class EmployeeTrainingMatrixItem(Document):
 		completed_on: DF.Date | None
 		course_title: DF.Data | None
 		department: DF.Link | None
+		development_due: DF.Date | None
 		due_date: DF.Date | None
 		employee: DF.Link | None
 		employee_name: DF.Data | None
@@ -32,11 +33,12 @@ class EmployeeTrainingMatrixItem(Document):
 		in_progress: DF.Check
 		is_required: DF.Check
 		lms_reset_on: DF.Date | None
+		needed_for: DF.Data | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
 		qualification: DF.Literal["Not Qualified", "Qualified"]
-		requirement_code: DF.Literal["R", "C", "—"]
+		requirement_code: DF.Literal["R", "C", "Dev", "—"]
 		status: DF.Literal[
 			"Not Started",
 			"In Progress",
