@@ -5,6 +5,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, today
 
+from hse.testing_fixtures import ensure_company, ensure_gender
 from hse.training_matrix import status as st
 from hse.training_matrix.matrix import sync_matrix
 
@@ -63,7 +64,8 @@ class IntegrationTestEmployeeTrainingMatrix(IntegrationTestCase):
 		make_requirement("_T-RECORDS", roles=[("_T Office", "R")])
 		cls.employee = make_employee(
 			"_t_training_matrix@example.com",
-			company=frappe.db.get_value("Company", {}, "name"),
+			company=ensure_company(),
+			gender=ensure_gender(),
 			designation=TECH,
 			date_of_joining=add_days(today(), -10),
 		)

@@ -19,6 +19,7 @@ from hse.quality_metrics.metrics import (
 	get_review_period,
 	target_text,
 )
+from hse.testing_fixtures import ensure_company, ensure_gender
 
 PROC = "_Test Quality Metrics Procedure"
 GOAL = "_Test NC Metrics Goal"
@@ -57,7 +58,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		super().setUpClass()
 		if not frappe.db.exists("Quality Procedure", PROC):
 			frappe.get_doc({"doctype": "Quality Procedure", "quality_procedure_name": PROC}).insert()
-		company = frappe.db.get_value("Company", {}, "name")
+		company = ensure_company()
 		cls.employee = frappe.db.get_value("Employee", {"status": "Active", "company": company}, "name")
 		if not cls.employee:
 			cls.employee = (
@@ -65,7 +66,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 					{
 						"doctype": "Employee",
 						"first_name": "_Test CAPA Owner",
-						"gender": frappe.db.get_value("Gender", {}, "name"),
+						"gender": ensure_gender(),
 						"date_of_birth": "1990-01-01",
 						"date_of_joining": "2020-01-01",
 						"company": company,

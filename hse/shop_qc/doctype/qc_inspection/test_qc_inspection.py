@@ -39,6 +39,7 @@ from hse.shop_qc.utils import (
 	qc_photo_appendix,
 	stage_applies,
 )
+from hse.testing_fixtures import ensure_company, ensure_gender
 
 PROC = "_Test QC Procedure"
 WO = "_TEST-WO-1"
@@ -304,7 +305,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 						"items": items,
 					}
 				).insert()
-		cls.company = frappe.db.get_value("Company", {}, "name")
+		cls.company = ensure_company()
 		cls.employee = frappe.db.get_value("Employee", {"status": "Active", "company": cls.company}, "name")
 		if not cls.employee:
 			cls.employee = (
@@ -312,7 +313,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 					{
 						"doctype": "Employee",
 						"first_name": "_Test HPU Inspector",
-						"gender": frappe.db.get_value("Gender", {}, "name"),
+						"gender": ensure_gender(),
 						"date_of_birth": "1990-01-01",
 						"date_of_joining": "2020-01-01",
 						"company": cls.company,
