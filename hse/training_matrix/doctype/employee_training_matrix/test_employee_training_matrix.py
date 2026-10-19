@@ -62,7 +62,10 @@ class IntegrationTestEmployeeTrainingMatrix(IntegrationTestCase):
 		make_requirement("_T-CPR", roles=[("_T Technician", "R")], refresher=st.PER_CERTIFICATION)
 		make_requirement("_T-RECORDS", roles=[("_T Office", "R")])
 		cls.employee = make_employee(
-			"_t_training_matrix@example.com", designation=TECH, date_of_joining=add_days(today(), -10)
+			"_t_training_matrix@example.com",
+			company=frappe.db.get_value("Company", {}, "name"),
+			designation=TECH,
+			date_of_joining=add_days(today(), -10),
 		)
 
 	def matrix(self):
