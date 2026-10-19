@@ -22,7 +22,12 @@
   "text_value",
   "result",
   "finding",
-  "photo"
+  "photo",
+  "sb_checked",
+  "checked_on",
+  "cb_checked",
+  "checked_by",
+  "checked_by_name"
  ],
  "fields": [
   {
@@ -147,11 +152,40 @@
    "fieldtype": "Attach Image",
    "label": "Photo",
    "description": "Or add one or more photos for this item in the Photos table."
+  },
+  {
+   "fieldname": "sb_checked",
+   "fieldtype": "Section Break",
+   "label": "Check Record"
+  },
+  {
+   "fieldname": "checked_on",
+   "fieldtype": "Datetime",
+   "label": "Checked On",
+   "description": "Set automatically when the result or reading is entered. Correct it if the check was done earlier."
+  },
+  {
+   "fieldname": "cb_checked",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "checked_by",
+   "fieldtype": "Link",
+   "label": "Checked By",
+   "options": "Employee",
+   "description": "Defaults to your employee record, or Inspected By."
+  },
+  {
+   "fetch_from": "checked_by.employee_name",
+   "fieldname": "checked_by_name",
+   "fieldtype": "Data",
+   "label": "Checked By Name",
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-15 09:00:00.000000",
+ "modified": "2026-10-19 17:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection Reading",

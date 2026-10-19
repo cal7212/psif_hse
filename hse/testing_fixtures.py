@@ -4,28 +4,21 @@
 
 import frappe
 
-TEST_COMPANY = "_T HSE Company"
 TEST_GENDER = "_T Gender"
 
 
 def ensure_company() -> str:
-	"""Return an existing Company, creating a test one if the site has none."""
+	"""Return an existing Company, loading ERPNext's Company test records if the site has none.
+
+	A bare Company insert fails on a fresh CI site (no Warehouse Types, fiscal year, etc.),
+	and finishing the setup wizard collides with ERPNext's own test records."""
 	company = frappe.db.get_value("Company", {}, "name")
 	if company:
 		return company
-	return (
-		frappe.get_doc(
-			{
-				"doctype": "Company",
-				"company_name": TEST_COMPANY,
-				"abbr": "_THC",
-				"default_currency": "USD",
-				"country": "United States",
-			}
-		)
-		.insert(ignore_permissions=True)
-		.name
-	)
+	from frappe.tests.utils import make_test_records
+
+	make_test_records("Company")
+	return frappe.db.get_value("Company", {}, "name")
 
 
 def ensure_gender() -> str:

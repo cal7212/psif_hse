@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.naming import make_autoname
-from frappe.utils import cint, cstr, escape_html, flt, getdate
+from frappe.utils import cint, cstr, escape_html, flt, get_datetime, getdate, now_datetime
 
 from hse.hse.instruments import (
 	AMPS_TYPES,
@@ -55,6 +55,16 @@ SPEC_LABELS = {
 	"motor_hp": "Motor HP",
 	"reservoir_gal": "Reservoir (gal)",
 }
+
+
+def _changed(field: str, new, old) -> bool:
+	"""True when a checklist line value really changed (form values arrive as strings)."""
+	if field == "reading_value":
+		return flt(new) != flt(old)
+	if field == "checked_on":
+		new, old = (get_datetime(v).replace(microsecond=0) if v else None for v in (new, old))
+		return new != old
+	return cstr(new).strip() != cstr(old).strip()
 
 
 def evaluate_numeric(reading_value, min_value=None, max_value=None):
@@ -148,6 +158,10 @@ def evaluate_accumulator(row) -> str | None:
 	return PASS if abs(flt(row.precharge_actual) - flt(row.precharge_spec)) <= tol else FAIL
 
 
+# Checklist line fields whose change counts as a new check (stamps Checked On / By).
+CHECK_FIELDS = ("result", "reading_value", "text_value", "finding")
+STAMP_FIELDS = ("checked_on", "checked_by")
+
 COATING_LAYERS = ("Surface Conditioning", "Base Coat / Primer", "Intermediate Coat", "Top Coat", "Sealer")
 
 
@@ -174,8 +188,63 @@ class QCInspection(Document):
 		self.evaluate_pmg_tests()
 		self.evaluate_circuit_tests()
 		self.sync_instruments()
+		self.stamp_checked_lines()
 		if self.docstatus == 0:
 			self.status = "Pending"
+
+	def stamp_checked_lines(self):
+		"""Record when and by whom each checklist line was checked.
+
+		A line is stamped when its result, reading, text or finding changes, unless Checked On
+		or Checked By was edited by hand in the same save. Clearing the result clears the stamp,
+		so checks spread over several days keep their own dates on the report."""
+		before = self.get_doc_before_save()
+		old_rows = {r.name: r for r in before.items} if before else {}
+		checker = None
+		names = {}
+		for row in self.items:
+			if not row.result:
+				row.checked_on = row.checked_by = row.checked_by_name = None
+				continue
+			old = old_rows.get(row.name)
+			if old and any(_changed(f, row.get(f), old.get(f)) for f in STAMP_FIELDS):
+				continue  # corrected by hand
+			if old:
+				changed = any(_changed(f, row.get(f), old.get(f)) for f in CHECK_FIELDS)
+			else:
+				changed = not row.checked_on  # new row; keep stamps copied by an amendment
+			if changed or not row.checked_on:
+				if checker is None:
+					checker = self.current_checker()
+				row.checked_on = now_datetime()
+				row.checked_by = checker or row.checked_by
+			if row.checked_by:
+				if row.checked_by not in names:
+					names[row.checked_by] = frappe.db.get_value("Employee", row.checked_by, "employee_name")
+				row.checked_by_name = names[row.checked_by]
+			else:
+				row.checked_by_name = None
+
+	def current_checker(self) -> str:
+		"""The session user's active Employee record, else Inspected By."""
+		return (
+			frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+			or self.inspected_by
+			or ""
+		)
+
+	def fill_missing_check_stamps(self):
+		"""On completion, lines without a stamp take the inspection date and inspector."""
+		name = None
+		for row in self.items:
+			if not row.result:
+				continue
+			if not row.checked_on:
+				row.checked_on = self.inspection_date
+			if not row.checked_by:
+				row.checked_by = self.inspected_by
+				name = name or frappe.db.get_value("Employee", self.inspected_by, "employee_name")
+				row.checked_by_name = name
 
 	def load_stage_tests(self):
 		"""Fill the stage's test tables from the unit when they are empty."""
@@ -428,6 +497,7 @@ class QCInspection(Document):
 		if not self.inspected_by:
 			frappe.throw(_("Enter Inspected By before completing the inspection."))
 		self.check_readings_complete()
+		self.fill_missing_check_stamps()
 		self.check_test_equipment()
 		self.check_hold_points()
 		self.check_not_already_accepted()
