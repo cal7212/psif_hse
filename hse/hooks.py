@@ -358,6 +358,9 @@ after_install = [
 	"hse.quality_metrics.install.after_install",
 	"hse.training_matrix.install.after_install",
 ]
+# Test runs only: complete ERPNext setup on a fresh CI site
+before_tests = "hse.testing_fixtures.before_tests"
+
 after_migrate = [
 	"hse.module_setup.ensure_module_defs",  # must run first
 	"hse.asset_inspection.install.after_migrate",
