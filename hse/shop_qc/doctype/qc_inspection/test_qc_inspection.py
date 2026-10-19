@@ -459,6 +459,37 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("/files/_t_qc_photo.jpg", html)
 		frappe.db.set_value("QC Unit", WO, {"as_received_photo": None, "print_photos": 0})
 
+	def test_line_check_stamps(self):
+		from frappe.utils import getdate
+
+		doc = self.make("_T Assembly", submit=False)
+		first = doc.items[0]
+		self.assertTrue(first.checked_on)
+		self.assertEqual(first.checked_by, self.employee)
+		self.assertTrue(first.checked_by_name)
+		# A hand correction is kept, and re-saving an unchanged line keeps its stamp.
+		first.checked_on = "2026-01-05 08:00:00"
+		doc.save()
+		doc.save()
+		self.assertEqual(str(getdate(doc.items[0].checked_on)), "2026-01-05")
+		# A line checked on a later save gets its own stamp.
+		doc.append("items", {"check_item": "Second check", "criteria": "OK"})
+		doc.save()
+		self.assertFalse(doc.items[1].checked_on)
+		doc.items[1].result = PASS
+		doc.save()
+		doc.reload()
+		self.assertEqual(getdate(doc.items[1].checked_on), getdate())
+		self.assertEqual(str(getdate(doc.items[0].checked_on)), "2026-01-05")
+		# Clearing the result clears the stamp.
+		doc.items[1].result = None
+		doc.save()
+		self.assertFalse(doc.items[1].checked_on)
+		doc.items[1].result = PASS
+		doc.save()
+		doc.submit()
+		self.assertTrue(all(r.checked_on and r.checked_by for r in doc.items))
+
 	def test_photos_table_meets_requirement_and_prints(self):
 		doc = self.make("_T Assembly", submit=False)
 		row = doc.items[0]
