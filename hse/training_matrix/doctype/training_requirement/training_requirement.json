@@ -1,0 +1,309 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "course_id",
+  "course_title",
+  "avenue",
+  "column_break_a",
+  "disabled",
+  "all_employees",
+  "high_hazard",
+  "requires_qualified_trainer",
+  "section_delivery",
+  "delivery_method",
+  "duration_minutes",
+  "column_break_d",
+  "verification_method",
+  "section_frequency",
+  "initial_due_basis",
+  "initial_due_days",
+  "column_break_f",
+  "refresher_frequency",
+  "retrain_on_revision",
+  "frequency_notes",
+  "frequency_summary",
+  "section_document",
+  "document_number",
+  "document_revision",
+  "document_section",
+  "column_break_doc",
+  "materials_reviewed_on",
+  "materials_review_due",
+  "section_roles",
+  "roles"
+ ],
+ "fields": [
+  {
+   "fieldname": "course_id",
+   "fieldtype": "Data",
+   "label": "Course ID",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "Controlled document number where one exists (e.g. SAF-0012)."
+  },
+  {
+   "fieldname": "course_title",
+   "fieldtype": "Data",
+   "label": "Training Topic",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "avenue",
+   "fieldtype": "Select",
+   "label": "Training Avenue",
+   "options": "HR Onboarding\nSafety / EHS\nQMS\nTechnical",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "all_employees",
+   "fieldtype": "Check",
+   "label": "All Employees",
+   "default": "0",
+   "in_standard_filter": 1,
+   "description": "Required for every active employee, whatever their Training Role."
+  },
+  {
+   "fieldname": "high_hazard",
+   "fieldtype": "Check",
+   "label": "High-Hazard Work",
+   "default": "0",
+   "in_standard_filter": 1,
+   "description": "TRN-700 §4.4: authorizes high-hazard work and needs a practical evaluation."
+  },
+  {
+   "fieldname": "requires_qualified_trainer",
+   "fieldtype": "Check",
+   "label": "Requires Qualified Trainer",
+   "default": "0",
+   "description": "Training and evaluation must be by a Qualified Trainer for this course."
+  },
+  {
+   "fieldname": "section_delivery",
+   "fieldtype": "Section Break",
+   "label": "Delivery and Verification"
+  },
+  {
+   "fieldname": "delivery_method",
+   "fieldtype": "Data",
+   "label": "Delivery Method",
+   "description": "Classroom, e-Learning, Read & Acknowledge, OJT, Demonstration or External."
+  },
+  {
+   "fieldname": "duration_minutes",
+   "fieldtype": "Int",
+   "label": "Duration (minutes)"
+  },
+  {
+   "fieldname": "column_break_d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verification_method",
+   "fieldtype": "Select",
+   "label": "Competency Verification",
+   "options": "\nQuiz (80%)\nLMS Acknowledgment\nLMS Attendance Record\nLMS Completion Record\nPractical Demonstration\nPractical Evaluation\nTest and Practical\nSupervisor Observation\nValid Certificate\nQuiz and MVR Review\nCertificate and Observed Audit\nTRN-704 Checklist"
+  },
+  {
+   "fieldname": "section_frequency",
+   "fieldtype": "Section Break",
+   "label": "Due Date and Frequency"
+  },
+  {
+   "fieldname": "initial_due_basis",
+   "fieldtype": "Select",
+   "label": "First Due From",
+   "options": "Date of Hire\nDate Assigned",
+   "default": "Date Assigned",
+   "reqd": 1,
+   "description": "Date Assigned = when the course is added to the employee's matrix (new role, transfer, promotion)."
+  },
+  {
+   "fieldname": "initial_due_days",
+   "fieldtype": "Int",
+   "label": "Days Allowed",
+   "default": "0",
+   "description": "0 = before work / upon assignment. e.g. 30 for 'within 30 days of hire'."
+  },
+  {
+   "fieldname": "column_break_f",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "refresher_frequency",
+   "fieldtype": "Select",
+   "label": "Refresher",
+   "options": "One-time\nAnnually\nEvery 2 Years\nEvery 3 Years\nPer Certification",
+   "default": "Annually",
+   "reqd": 1,
+   "description": "TRN-700 §4.4: safety training is annual unless OSHA sets a different interval."
+  },
+  {
+   "fieldname": "retrain_on_revision",
+   "fieldtype": "Check",
+   "label": "Retrain on Document Revision",
+   "default": "0",
+   "description": "The document owner decides at release under QM-005 whether retraining is needed."
+  },
+  {
+   "fieldname": "frequency_notes",
+   "fieldtype": "Data",
+   "label": "Other Triggers",
+   "description": "e.g. new chemical hazard."
+  },
+  {
+   "fieldname": "frequency_summary",
+   "fieldtype": "Data",
+   "label": "Frequency",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_document",
+   "fieldtype": "Section Break",
+   "label": "Controlled Document (QM-005)"
+  },
+  {
+   "fieldname": "document_number",
+   "fieldtype": "Data",
+   "label": "Document Number",
+   "description": "Defaults to the Course ID."
+  },
+  {
+   "fieldname": "document_revision",
+   "fieldtype": "Data",
+   "label": "Revision"
+  },
+  {
+   "fieldname": "document_section",
+   "fieldtype": "Data",
+   "label": "Section",
+   "description": "Where the content lives in a larger document, e.g. a Safety Manual section."
+  },
+  {
+   "fieldname": "column_break_doc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "materials_reviewed_on",
+   "fieldtype": "Date",
+   "label": "Materials Last Reviewed"
+  },
+  {
+   "fieldname": "materials_review_due",
+   "fieldtype": "Date",
+   "label": "Materials Review Due",
+   "read_only": 1,
+   "description": "TRN-700 §4.14: at least every 2 years."
+  },
+  {
+   "fieldname": "section_roles",
+   "fieldtype": "Section Break",
+   "label": "Required By Role (TRN-701 Part 1)"
+  },
+  {
+   "fieldname": "roles",
+   "fieldtype": "Table",
+   "label": "Roles",
+   "options": "Training Requirement Role"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Training Requirement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "sort_field": "course_id",
+ "sort_order": "ASC",
+ "states": [],
+ "autoname": "field:course_id",
+ "naming_rule": "By fieldname",
+ "allow_rename": 1,
+ "title_field": "course_title",
+ "show_title_field_in_link": 1,
+ "search_fields": "course_title,avenue",
+ "track_changes": 1
+}

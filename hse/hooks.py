@@ -309,13 +309,32 @@ doc_events = {
 		"validate": "hse.quality_metrics.events.quality_review_validate",
 		"on_update": "hse.quality_metrics.events.quality_review_on_update",
 	},
+	# Training Matrix: keep each employee's TRN-701 matrix in step with HR
+	"Employee": {
+		"on_update": "hse.training_matrix.events.employee_on_update",
+	},
 }
 
 # Housekeeping Inspection: daily Due/Overdue refresh and inspector ToDos
+# Training Matrix: daily status refresh; monthly metric snapshot on the 1st
 scheduler_events = {
 	"daily": [
 		"hse.housekeeping_inspection.tasks.update_schedules",
+		"hse.training_matrix.tasks.refresh_all_matrices",
 	],
+	"cron": {
+		"0 2 1 * *": [
+			"hse.training_matrix.tasks.write_monthly_snapshot",
+		],
+	},
+}
+
+# Training Matrix: employees see only their own matrix
+permission_query_conditions = {
+	"Employee Training Matrix": "hse.training_matrix.permissions.matrix_query_conditions",
+}
+has_permission = {
+	"Employee Training Matrix": "hse.training_matrix.permissions.matrix_has_permission",
 }
 
 # Adds "Inspections" to the Connections tab on Asset Maintenance, Asset and Asset Maintenance Log
@@ -324,6 +343,7 @@ override_doctype_dashboards = {
 	"Asset": "hse.asset_inspection.dashboards.asset",
 	"Asset Maintenance Log": "hse.asset_inspection.dashboards.asset_maintenance_log",
 	"Location": "hse.housekeeping_inspection.dashboards.location",
+	"Employee": "hse.training_matrix.dashboards.employee",
 }
 
 # Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log /
@@ -336,6 +356,7 @@ after_install = [
 	"hse.hse.sds_setup.after_install",
 	"hse.shop_qc.install.after_install",
 	"hse.quality_metrics.install.after_install",
+	"hse.training_matrix.install.after_install",
 ]
 after_migrate = [
 	"hse.module_setup.ensure_module_defs",  # must run first
@@ -344,6 +365,7 @@ after_migrate = [
 	"hse.hse.sds_setup.after_migrate",
 	"hse.shop_qc.install.after_migrate",
 	"hse.quality_metrics.install.after_migrate",
+	"hse.training_matrix.install.after_migrate",
 ]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):

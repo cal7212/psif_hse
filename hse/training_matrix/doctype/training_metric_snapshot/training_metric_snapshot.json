@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "snapshot_date",
+  "department",
+  "avenue",
+  "column_break_a",
+  "compliance_pct",
+  "employees",
+  "section_counts",
+  "required_items",
+  "compliant_items",
+  "overdue_items",
+  "column_break_b",
+  "due_items",
+  "high_hazard_overdue",
+  "confirm_pending"
+ ],
+ "fields": [
+  {
+   "fieldname": "snapshot_date",
+   "fieldtype": "Date",
+   "label": "Snapshot Date",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Data",
+   "label": "Department",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "'All' = company-wide."
+  },
+  {
+   "fieldname": "avenue",
+   "fieldtype": "Data",
+   "label": "Avenue",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "'All' = every avenue."
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "compliance_pct",
+   "fieldtype": "Percent",
+   "label": "Compliance",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "employees",
+   "fieldtype": "Int",
+   "label": "Employees"
+  },
+  {
+   "fieldname": "section_counts",
+   "fieldtype": "Section Break",
+   "label": "Counts"
+  },
+  {
+   "fieldname": "required_items",
+   "fieldtype": "Int",
+   "label": "Required Items"
+  },
+  {
+   "fieldname": "compliant_items",
+   "fieldtype": "Int",
+   "label": "Qualified Items"
+  },
+  {
+   "fieldname": "overdue_items",
+   "fieldtype": "Int",
+   "label": "Overdue Items",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "due_items",
+   "fieldtype": "Int",
+   "label": "Due in 30 Days"
+  },
+  {
+   "fieldname": "high_hazard_overdue",
+   "fieldtype": "Int",
+   "label": "High-Hazard Overdue"
+  },
+  {
+   "fieldname": "confirm_pending",
+   "fieldtype": "Int",
+   "label": "Conditional to Confirm"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Training Metric Snapshot",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1
+  }
+ ],
+ "sort_field": "snapshot_date",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "hash",
+ "in_create": 1
+}
