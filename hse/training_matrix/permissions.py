@@ -24,8 +24,10 @@ def matrix_query_conditions(user: str | None = None, **kwargs) -> str:
 	)
 
 
-def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
+	"""Frappe only uses this hook to deny: True means "no objection, role permissions decide";
+	anything falsy (including None) is a denial."""
 	user = user or frappe.session.user
 	if _full_access(user):
-		return None  # role permissions decide
+		return True
 	return doc.employee in _own_employees(user)
