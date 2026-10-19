@@ -1,0 +1,308 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "training_requirement",
+  "course_title",
+  "avenue",
+  "verification_method",
+  "column_break_a",
+  "training_date",
+  "source",
+  "duration_minutes",
+  "status",
+  "section_trainer",
+  "trainer",
+  "trainer_name",
+  "column_break_t",
+  "external_provider",
+  "lms_course",
+  "section_document",
+  "document_number",
+  "document_revision",
+  "column_break_d",
+  "document_section",
+  "section_content",
+  "topics",
+  "section_attendees",
+  "attendees",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "training_requirement",
+   "fieldtype": "Link",
+   "label": "Course ID",
+   "options": "Training Requirement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "course_title",
+   "fieldtype": "Data",
+   "label": "Training Topic",
+   "fetch_from": "training_requirement.course_title",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "avenue",
+   "fieldtype": "Data",
+   "label": "Avenue",
+   "fetch_from": "training_requirement.avenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "verification_method",
+   "fieldtype": "Data",
+   "label": "Competency Verification",
+   "fetch_from": "training_requirement.verification_method",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "training_date",
+   "fieldtype": "Date",
+   "label": "Training Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Classroom\nOJT\nRead & Acknowledge\nLMS Course\nExternal Certificate",
+   "reqd": 1,
+   "default": "Classroom",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "duration_minutes",
+   "fieldtype": "Int",
+   "label": "Duration (minutes)",
+   "fetch_from": "training_requirement.duration_minutes",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nAwaiting Acknowledgment\nComplete\nCancelled",
+   "default": "Draft",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "section_trainer",
+   "fieldtype": "Section Break",
+   "label": "Trainer"
+  },
+  {
+   "fieldname": "trainer",
+   "fieldtype": "Link",
+   "label": "Trainer",
+   "options": "Employee",
+   "description": "TRN-700 §4.8: must be a Qualified Trainer for high-hazard courses."
+  },
+  {
+   "fieldname": "trainer_name",
+   "fieldtype": "Data",
+   "label": "Trainer Name",
+   "fetch_from": "trainer.employee_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_t",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "external_provider",
+   "fieldtype": "Data",
+   "label": "External Provider",
+   "description": "Training company or certifying body, for external training."
+  },
+  {
+   "fieldname": "lms_course",
+   "fieldtype": "Data",
+   "label": "LMS Course",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_document",
+   "fieldtype": "Section Break",
+   "label": "Controlled Document Trained On (TRN-700 §4.13)"
+  },
+  {
+   "fieldname": "document_number",
+   "fieldtype": "Data",
+   "label": "Document Number",
+   "fetch_from": "training_requirement.document_number",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "document_revision",
+   "fieldtype": "Data",
+   "label": "Revision",
+   "fetch_from": "training_requirement.document_revision",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "column_break_d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "document_section",
+   "fieldtype": "Data",
+   "label": "Section",
+   "fetch_from": "training_requirement.document_section",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "section_content",
+   "fieldtype": "Section Break",
+   "label": "Content"
+  },
+  {
+   "fieldname": "topics",
+   "fieldtype": "Small Text",
+   "label": "Topics Covered",
+   "description": "Printed on the training roster for RAVS."
+  },
+  {
+   "fieldname": "section_attendees",
+   "fieldtype": "Section Break",
+   "label": "Attendees"
+  },
+  {
+   "fieldname": "attendees",
+   "fieldtype": "Table",
+   "label": "Attendees",
+   "options": "Training Record Attendee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Training Record",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Training Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Qualified Trainer",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "sort_field": "training_date",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "format:TRN-702-{YYYY}-{#####}",
+ "naming_rule": "Expression",
+ "title_field": "course_title",
+ "search_fields": "training_requirement,course_title,training_date",
+ "is_submittable": 1,
+ "track_changes": 1
+}

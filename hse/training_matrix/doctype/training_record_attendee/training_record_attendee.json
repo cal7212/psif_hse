@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "user_id",
+  "score",
+  "result",
+  "column_break_a",
+  "acknowledged",
+  "acknowledged_on",
+  "certificate",
+  "expires_on",
+  "lms_enrollment"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "user_id",
+   "fieldtype": "Link",
+   "label": "Login",
+   "options": "User",
+   "fetch_from": "employee.user_id",
+   "read_only": 1
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Percent",
+   "label": "Score",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "\nPass\nFail",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "acknowledged",
+   "fieldtype": "Check",
+   "label": "Acknowledged",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "acknowledged_on",
+   "fieldtype": "Datetime",
+   "label": "Acknowledged On",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "certificate",
+   "fieldtype": "Attach",
+   "label": "Certificate"
+  },
+  {
+   "fieldname": "expires_on",
+   "fieldtype": "Date",
+   "label": "Certificate Expires On",
+   "allow_on_submit": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "lms_enrollment",
+   "fieldtype": "Data",
+   "label": "LMS Enrollment",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Training Record Attendee",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

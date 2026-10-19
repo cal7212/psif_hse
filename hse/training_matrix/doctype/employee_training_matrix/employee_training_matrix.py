@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, today
 
+from hse.training_matrix import lms
 from hse.training_matrix import status as st
 from hse.training_matrix.matrix import apply_status
 
@@ -61,7 +62,11 @@ class EmployeeTrainingMatrix(Document):
 
 	def check_certificates(self):
 		"""Per Certification courses need an expiry date once completed (TRN-700 §4.4)."""
-		names = {r.training_requirement for r in self.items if r.completed_on and not r.expires_on}
+		names = {
+			r.training_requirement
+			for r in self.items
+			if r.completed_on and not r.expires_on and not (r.training_record or r.competency_evaluation)
+		}
 		if not names:
 			return
 		per_cert = set(
@@ -72,9 +77,18 @@ class EmployeeTrainingMatrix(Document):
 			)
 		)
 		for row in self.items:
-			if row.training_requirement in per_cert and row.completed_on and not row.expires_on:
+			if (
+				row.training_requirement in per_cert
+				and row.completed_on
+				and not row.expires_on
+				and not row.training_record
+			):
 				frappe.throw(
 					_("Row {0}: enter the certificate expiry date for {1}.").format(
 						row.idx, frappe.bold(row.training_requirement)
 					)
 				)
+
+	def on_update(self):
+		if not self.flags.skip_lms:
+			lms.enroll_required(self)

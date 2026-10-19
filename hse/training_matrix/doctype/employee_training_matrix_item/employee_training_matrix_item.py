@@ -18,6 +18,7 @@ class EmployeeTrainingMatrixItem(Document):
 		assigned_on: DF.Date | None
 		avenue: DF.Data | None
 		company: DF.Link | None
+		competency_evaluation: DF.Link | None
 		completed_on: DF.Date | None
 		course_title: DF.Data | None
 		department: DF.Link | None
@@ -30,6 +31,7 @@ class EmployeeTrainingMatrixItem(Document):
 		high_hazard: DF.Check
 		in_progress: DF.Check
 		is_required: DF.Check
+		lms_reset_on: DF.Date | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
@@ -44,6 +46,7 @@ class EmployeeTrainingMatrixItem(Document):
 			"Confirm Applicability",
 			"Not Applicable",
 		]
+		training_record: DF.Link | None
 		training_requirement: DF.Link
 	# end: auto-generated types
 

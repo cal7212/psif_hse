@@ -1,0 +1,107 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "training_requirement",
+  "course_title",
+  "status",
+  "suspension_reason",
+  "designated_by",
+  "designated_on",
+  "column_break_c",
+  "basis",
+  "certification",
+  "certification_expires"
+ ],
+ "fields": [
+  {
+   "fieldname": "training_requirement",
+   "fieldtype": "Link",
+   "label": "Course ID",
+   "options": "Training Requirement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "course_title",
+   "fieldtype": "Data",
+   "label": "Training Topic",
+   "fetch_from": "training_requirement.course_title",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nSuspended",
+   "default": "Active",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "suspension_reason",
+   "fieldtype": "Data",
+   "label": "Suspension Reason",
+   "read_only": 1
+  },
+  {
+   "fieldname": "designated_by",
+   "fieldtype": "Link",
+   "label": "Designated By",
+   "options": "User",
+   "reqd": 1,
+   "default": "__user",
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "designated_on",
+   "fieldtype": "Date",
+   "label": "Designated On",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "column_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "basis",
+   "fieldtype": "Small Text",
+   "label": "Basis for Designation"
+  },
+  {
+   "fieldname": "certification",
+   "fieldtype": "Data",
+   "label": "Trainer Certification",
+   "description": "e.g. OSHA 500, OEM train-the-trainer."
+  },
+  {
+   "fieldname": "certification_expires",
+   "fieldtype": "Date",
+   "label": "Certification Expires",
+   "in_list_view": 1,
+   "columns": 2
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Qualified Trainer Course",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

@@ -20,6 +20,9 @@
   "first_completed_on",
   "column_break_completion",
   "expires_on",
+  "training_record",
+  "competency_evaluation",
+  "lms_reset_on",
   "evidence",
   "section_context",
   "is_required",
@@ -142,6 +145,27 @@
    "label": "Certificate Expires On"
   },
   {
+   "fieldname": "training_record",
+   "fieldtype": "Link",
+   "label": "Training Record",
+   "options": "Training Record",
+   "read_only": 1
+  },
+  {
+   "fieldname": "competency_evaluation",
+   "fieldtype": "Link",
+   "label": "Competency Evaluation",
+   "options": "Competency Evaluation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lms_reset_on",
+   "fieldtype": "Date",
+   "label": "LMS Course Reopened On",
+   "read_only": 1,
+   "description": "When the LMS course was reopened for a refresher."
+  },
+  {
    "fieldname": "evidence",
    "fieldtype": "Small Text",
    "label": "Evidence / Notes"
@@ -203,7 +227,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-20 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Employee Training Matrix Item",

@@ -1,7 +1,8 @@
 # Training Matrix (TRN-700 Rev 1)
 
-Phase 1 of the Training Matrix module: the TRN-701 Employee Training Matrix, built from
-TRN-700 Rev 1 Appendix A.
+Phase 1: the TRN-701 Employee Training Matrix, built from TRN-700 Rev 1 Appendix A.
+Phase 2: training records, competency evaluations, the Qualified Trainer register and the
+Frappe Learning integration.
 
 ## What it does
 
@@ -52,3 +53,45 @@ TRN-700 Rev 1 Appendix A.
 Courses due "upon assignment" have 0 days allowed, as in the SOP, so they show as Due on the
 day they are assigned and Overdue the day after. Raise *Days Allowed* on a course for a grace
 period.
+
+## Phase 2: records, evaluations and Frappe Learning
+
+- **Training Record (TRN-702)**: submitted records are locked; corrections are cancel and amend.
+  One row per attendee with score, result, acknowledgment and certificate. Sources: Classroom,
+  OJT, Read & Acknowledge, LMS Course (created automatically) and External Certificate.
+- **Acknowledgment**: classroom, OJT and read-and-acknowledge records count only after each
+  attendee acknowledges under their own login. Attendees are emailed a link to *My Training*.
+- **Competency Evaluation (TRN-704)**: checklist from a *Competency Checklist Template*, overall
+  Pass / Fail, basis Training or Prior Experience (evidence required). A failed evaluation is
+  assigned to the employee's manager (Reports To) for retraining.
+- **Qualified Trainer**: courses each trainer may train and evaluate, who designated them and
+  their certification. A trainer must be Qualified in the course first; a course is suspended
+  automatically while the certification is expired or the trainer's own qualification lapses.
+  Active trainers get the **Qualified Trainer** role, which lets them create records and
+  evaluations. High-hazard courses (*Requires Qualified Trainer*) only accept authorized
+  trainers and evaluators.
+- **Which evidence qualifies**: courses verified by quiz, acknowledgment, completion record or
+  certificate are qualified by an acknowledged, passing training record. Courses verified by
+  practical demonstration, observation, a TRN-704 checklist, or quiz and MVR review need a
+  passing Competency Evaluation; until then the row is In Progress. Hand-entered history is
+  kept unless newer evidence replaces it.
+
+### Frappe Learning
+
+- Each Training Requirement has an **LMS Course** field (added on migrate when Frappe Learning
+  is installed). Employees who need the course are enrolled automatically.
+- Finishing the course (100% progress, and every quiz passed at its pass mark, or 80% for
+  quiz-verified courses) creates and submits a TRN-702 record. An LMS Certificate's expiry date
+  is copied to the record.
+- When a refresher falls due, the course's lesson progress is cleared so the employee retakes
+  it. Set quizzes in refresher courses to allow enough attempts (*Max Attempts* 0 = unlimited).
+- A **My Training** link is added to the Learning portal sidebar. It shows the employee's
+  matrix, pending acknowledgments and training records.
+
+### Setup for Phase 2
+
+1. Set the **LMS Course** on each Training Requirement taught in Frappe Learning.
+2. Add **Competency Checklist Templates** for courses verified by practical demonstration or a
+   TRN-704 checklist (e.g. SAF-0024 LOTO, NFPA 70E, SAF-0002 Forklift).
+3. Register **Qualified Trainers** and the courses they are authorized for.
+4. Make sure each employee's **User ID** on the Employee record is their Learning login.
