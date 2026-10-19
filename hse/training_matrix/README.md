@@ -123,3 +123,12 @@ period.
 - **Skill Matrix** report: employees × skills (A authorized, R ready, T in training, L lapsed).
 
 `hrms` is now a required app.
+
+## Who sees what
+
+Set in **Role Permission Manager**. Any role with *Read* on a Training Matrix DocType (Employee
+Training Matrix, Training Record, Competency Evaluation, Skill Authorization) sees every record;
+add *Report* to run the Training Matrix, Skill Matrix and Training Requirements Matrix reports.
+The Employee role (and the automatic Qualified Trainer role) is scoped instead: employees see
+their own records and their direct reports'; trainers also see the records they trained or
+evaluated.

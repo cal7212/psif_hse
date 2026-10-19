@@ -1,14 +1,41 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
-"""Employees see only their own training matrix; HR, the Training Coordinator and Quality see all."""
+"""Record-level access for the Training Matrix module.
+
+Frappe only uses has_permission hooks to deny access: True means "no objection, role permissions
+decide", and anything falsy, None included, is a denial. Every hook here returns a bool.
+
+Who sees every record is set in Role Permission Manager: any role with read permission on the
+DocType sees all of them. The roles below are scoped instead: they only see the user's own
+records and their direct reports' (and, for trainers, the records they trained or evaluated).
+"""
 
 import frappe
+import frappe.permissions
 
-FULL_ACCESS = ("System Manager", "HR Manager", "HR User", "Training Coordinator", "Quality Manager")
+# Roles that never give company-wide access by themselves: every employee has the self-service
+# roles, and Qualified Trainer is granted automatically to anyone on the trainer register.
+SCOPED_ROLES = {
+	"Employee",
+	"Employee Self Service",
+	"All",
+	"Guest",
+	"Desk User",
+	"LMS Student",
+	"Qualified Trainer",
+}
 
 
-def _full_access(user: str) -> bool:
-	return user == "Administrator" or bool(set(frappe.get_roles(user)) & set(FULL_ACCESS))
+def _full_access(user: str, doctype: str) -> bool:
+	"""Company-wide access comes from Role Permission Manager: any role with read permission on the
+	DocType, other than the scoped roles above, sees every record."""
+	if user == "Administrator":
+		return True
+	roles = [r for r in frappe.get_roles(user) if r not in SCOPED_ROLES]
+	if not roles:
+		return False
+	# DocPerm and Custom DocPerm (Role Permission Manager), level 0, for these roles only
+	return any(p.get("read") for p in frappe.permissions.get_valid_perms(doctype, roles=roles))
 
 
 def _own_employees(user: str) -> list[str]:
@@ -30,28 +57,28 @@ def _visible_employees(user: str) -> set[str]:
 
 def matrix_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user
-	if _full_access(user):
+	if _full_access(user, "Employee Training Matrix"):
 		return ""
 	return f"`tabEmployee Training Matrix`.`employee` in {_visible_employees_sql(user)}"
 
 
-def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+def matrix_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	user = user or frappe.session.user
-	if _full_access(user):
-		return None  # role permissions decide
+	if _full_access(user, "Employee Training Matrix"):
+		return True  # no objection: role permissions decide
 	return doc.employee in _visible_employees(user) and ptype in ("read", "print", "report", "export")
 
 
 # ---------------------------------------------------------------- Training Record / Competency Evaluation
 # Trainers (Qualified Trainer role) and employees see the records they trained, attended or were
-# evaluated on; the roles in FULL_ACCESS see everything.
+# evaluated on; roles with read permission on the DocType see everything.
 def _employees_sql(user: str) -> str:
 	return "(select `name` from `tabEmployee` where `user_id` = {0})".format(frappe.db.escape(user))
 
 
 def record_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user
-	if _full_access(user):
+	if _full_access(user, "Training Record"):
 		return ""
 	emp = _employees_sql(user)
 	return (
@@ -61,19 +88,19 @@ def record_query_conditions(user: str | None = None, **kwargs) -> str:
 	)
 
 
-def record_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+def record_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	user = user or frappe.session.user
-	if _full_access(user) or doc.is_new():
-		return None
+	if _full_access(user, "Training Record") or doc.is_new():
+		return True
 	own = set(_own_employees(user))
 	if doc.owner == user or doc.trainer in own:
-		return None
+		return True
 	return ptype in ("read", "print") and any(a.employee in own for a in doc.attendees)
 
 
 def evaluation_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user
-	if _full_access(user):
+	if _full_access(user, "Competency Evaluation"):
 		return ""
 	emp = _employees_sql(user)
 	return (
@@ -82,20 +109,20 @@ def evaluation_query_conditions(user: str | None = None, **kwargs) -> str:
 	)
 
 
-def evaluation_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+def evaluation_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	user = user or frappe.session.user
-	if _full_access(user) or doc.is_new():
-		return None
+	if _full_access(user, "Competency Evaluation") or doc.is_new():
+		return True
 	own = set(_own_employees(user))
 	if doc.owner == user or doc.evaluator in own:
-		return None
+		return True
 	return ptype in ("read", "print") and doc.employee in own
 
 
 # ---------------------------------------------------------------- Skill Authorization
 def authorization_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user
-	if _full_access(user):
+	if _full_access(user, "Skill Authorization"):
 		return ""
 	return (
 		f"(`tabSkill Authorization`.`employee` in {_visible_employees_sql(user)}"
@@ -103,10 +130,10 @@ def authorization_query_conditions(user: str | None = None, **kwargs) -> str:
 	)
 
 
-def authorization_has_permission(doc, ptype=None, user=None, **kwargs) -> bool | None:
+def authorization_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	user = user or frappe.session.user
-	if _full_access(user) or doc.is_new() or doc.authorized_by == user:
-		return None  # creating is checked by the controller (manager of the employee)
+	if _full_access(user, "Skill Authorization") or doc.is_new() or doc.authorized_by == user:
+		return True  # creating is checked by the controller (manager of the employee)
 	if doc.employee in _own_employees(user):
 		return ptype in ("read", "print")
-	return doc.employee in _visible_employees(user) or None
+	return doc.employee in _visible_employees(user)
