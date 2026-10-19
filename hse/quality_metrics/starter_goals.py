@@ -42,4 +42,13 @@ STARTER_GOALS = [
 			("hk_areas_overdue", "At most", 0),
 		],
 	},
+	{
+		"goal": "Training and Competency",
+		"objectives": [
+			("training_compliance_pct", "At least", 95),
+			("training_high_hazard_overdue", "At most", 0),
+			("training_onboarding_on_time_pct", "At least", 95),
+			("training_overdue", "Record only", 0),
+		],
+	},
 ]

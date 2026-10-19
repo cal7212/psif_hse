@@ -1,0 +1,217 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "training_requirement",
+  "course_title",
+  "avenue",
+  "requirement_code",
+  "applicability",
+  "column_break_status",
+  "status",
+  "qualification",
+  "assigned_on",
+  "due_date",
+  "section_completion",
+  "in_progress",
+  "completed_on",
+  "first_completed_on",
+  "column_break_completion",
+  "expires_on",
+  "evidence",
+  "section_context",
+  "is_required",
+  "high_hazard",
+  "active",
+  "column_break_context",
+  "employee",
+  "employee_name",
+  "department",
+  "company"
+ ],
+ "fields": [
+  {
+   "fieldname": "training_requirement",
+   "fieldtype": "Link",
+   "label": "Course ID",
+   "options": "Training Requirement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "read_only": 1
+  },
+  {
+   "fieldname": "course_title",
+   "fieldtype": "Data",
+   "label": "Training Topic",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "avenue",
+   "fieldtype": "Data",
+   "label": "Avenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requirement_code",
+   "fieldtype": "Select",
+   "label": "Requirement",
+   "options": "R\nC\n—",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "applicability",
+   "fieldtype": "Select",
+   "label": "Applicability",
+   "options": "\nApplies\nNot Applicable",
+   "depends_on": "eval:doc.requirement_code=='C'",
+   "description": "Conditional courses: the Manager confirms whether the task or hazard applies."
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Not Started\nIn Progress\nDue\nOverdue\nCompleted\nConfirm Applicability\nNot Applicable",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "qualification",
+   "fieldtype": "Select",
+   "label": "Qualification",
+   "options": "Not Qualified\nQualified",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assigned_on",
+   "fieldtype": "Date",
+   "label": "Assigned On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "section_completion",
+   "fieldtype": "Section Break",
+   "label": "Completion"
+  },
+  {
+   "fieldname": "in_progress",
+   "fieldtype": "Check",
+   "label": "In Progress",
+   "description": "Training started, or completed and awaiting competency verification."
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Date",
+   "label": "Completed On",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Date competency was verified (Qualified). Recorded by training records from Phase 2."
+  },
+  {
+   "fieldname": "first_completed_on",
+   "fieldtype": "Date",
+   "label": "First Completed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_completion",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expires_on",
+   "fieldtype": "Date",
+   "label": "Certificate Expires On"
+  },
+  {
+   "fieldname": "evidence",
+   "fieldtype": "Small Text",
+   "label": "Evidence / Notes"
+  },
+  {
+   "fieldname": "section_context",
+   "fieldtype": "Section Break",
+   "label": "Context",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "is_required",
+   "fieldtype": "Check",
+   "label": "Required",
+   "read_only": 1
+  },
+  {
+   "fieldname": "high_hazard",
+   "fieldtype": "Check",
+   "label": "High Hazard",
+   "read_only": 1
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Employee Active",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_context",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Employee Training Matrix Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

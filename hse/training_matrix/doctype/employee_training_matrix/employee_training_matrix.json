@@ -1,0 +1,272 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "user_id",
+  "active",
+  "column_break_a",
+  "department",
+  "designation",
+  "company",
+  "date_of_joining",
+  "section_roles",
+  "roles_from_hr",
+  "roles",
+  "section_summary",
+  "percent_complete",
+  "required_count",
+  "compliant_count",
+  "column_break_s",
+  "overdue_count",
+  "due_count",
+  "confirm_count",
+  "column_break_t",
+  "no_lms_login",
+  "last_refreshed",
+  "section_items",
+  "items"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "unique": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "user_id",
+   "fieldtype": "Link",
+   "label": "LMS Login",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "read_only": 1,
+   "default": "1",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "date_of_joining",
+   "fieldtype": "Date",
+   "label": "Date of Hire",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_roles",
+   "fieldtype": "Section Break",
+   "label": "Training Roles"
+  },
+  {
+   "fieldname": "roles_from_hr",
+   "fieldtype": "Check",
+   "label": "Roles from Designation / Department",
+   "default": "1",
+   "description": "Untick to set the Training Roles by hand (e.g. a Manager who also does Technician work)."
+  },
+  {
+   "fieldname": "roles",
+   "fieldtype": "Table MultiSelect",
+   "label": "Training Roles",
+   "options": "Employee Training Matrix Role",
+   "read_only_depends_on": "eval:doc.roles_from_hr"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "fieldname": "percent_complete",
+   "fieldtype": "Percent",
+   "label": "% Complete",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "required_count",
+   "fieldtype": "Int",
+   "label": "Required Courses",
+   "read_only": 1
+  },
+  {
+   "fieldname": "compliant_count",
+   "fieldtype": "Int",
+   "label": "Qualified",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "overdue_count",
+   "fieldtype": "Int",
+   "label": "Overdue",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "due_count",
+   "fieldtype": "Int",
+   "label": "Due in 30 Days",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confirm_count",
+   "fieldtype": "Int",
+   "label": "Conditional to Confirm",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_t",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "no_lms_login",
+   "fieldtype": "Check",
+   "label": "No LMS Login",
+   "read_only": 1,
+   "description": "TRN-700 §4.1: completion is recorded by the employee's own login."
+  },
+  {
+   "fieldname": "last_refreshed",
+   "fieldtype": "Datetime",
+   "label": "Last Refreshed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Training (TRN-701 Part 2)"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Training",
+   "options": "Employee Training Matrix Item"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Employee Training Matrix",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:employee",
+ "naming_rule": "By fieldname",
+ "title_field": "employee_name",
+ "show_title_field_in_link": 1,
+ "search_fields": "employee_name,department",
+ "track_changes": 1
+}

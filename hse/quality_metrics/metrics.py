@@ -250,6 +250,93 @@ def hk_areas_overdue(start, end):
 	return len(rows), (_names(rows) if rows else _("None overdue."))
 
 
+# ---------------------------------------------------------------- Training Matrix (TRN-700 Rev 1)
+def _required_training_rows(extra=None):
+	filters = {"parenttype": "Employee Training Matrix", "active": 1, "is_required": 1}
+	filters.update(extra or {})
+	return frappe.get_all(
+		"Employee Training Matrix Item",
+		filters=filters,
+		fields=["employee_name", "training_requirement", "status", "qualification"],
+	)
+
+
+def training_compliance_pct(start, end):
+	rows = _required_training_rows()
+	if not rows:
+		return None, _("No required training on any active employee's matrix.")
+	qualified = sum(1 for r in rows if r.qualification == "Qualified")
+	return round(qualified / len(rows) * 100, 1), _(
+		"{0} of {1} required training items Qualified across active employees."
+	).format(qualified, len(rows))
+
+
+def _overdue_detail(rows):
+	if not rows:
+		return _("None overdue.")
+	by_course = Counter(r.training_requirement for r in rows)
+	top = ", ".join(f"{c} ({n})" for c, n in by_course.most_common(5))
+	return _("{0} employees affected. Most overdue: {1}").format(len({r.employee_name for r in rows}), top)
+
+
+def training_overdue(start, end):
+	rows = _required_training_rows({"status": "Overdue"})
+	return len(rows), _overdue_detail(rows)
+
+
+def training_high_hazard_overdue(start, end):
+	rows = _required_training_rows({"status": "Overdue", "high_hazard": 1})
+	return len(rows), _overdue_detail(rows)
+
+
+def training_onboarding_on_time_pct(start, end):
+	"""Hire-based courses (orientation, QMS Awareness, HR onboarding) whose first deadline fell in
+	the period: share completed by that deadline (TRN-700 §4.3, §4.5)."""
+	courses = {
+		r.name: r.initial_due_days
+		for r in frappe.get_all(
+			"Training Requirement",
+			filters={"initial_due_basis": "Date of Hire"},
+			fields=["name", "initial_due_days"],
+		)
+	}
+	if not courses:
+		return None, _("No hire-based training requirements.")
+	matrices = {
+		m.name: m.date_of_joining
+		for m in frappe.get_all(
+			"Employee Training Matrix",
+			filters={"date_of_joining": ["is", "set"]},
+			fields=["name", "date_of_joining"],
+		)
+	}
+	rows = frappe.get_all(
+		"Employee Training Matrix Item",
+		filters={
+			"parenttype": "Employee Training Matrix",
+			"is_required": 1,
+			"training_requirement": ["in", list(courses)],
+		},
+		fields=["parent", "training_requirement", "first_completed_on"],
+	)
+	start, end = getdate(start), getdate(end)
+	due_in_period, on_time = 0, 0
+	for r in rows:
+		hired = matrices.get(r.parent)
+		if not hired:
+			continue
+		deadline = getdate(add_days(hired, courses[r.training_requirement] or 0))
+		if not (start <= deadline <= end):
+			continue
+		due_in_period += 1
+		on_time += bool(r.first_completed_on and getdate(r.first_completed_on) <= deadline)
+	if not due_in_period:
+		return None, _("No new-hire training deadlines fell in the period.")
+	return round(on_time / due_in_period * 100, 1), _(
+		"{0} of {1} new-hire training deadlines met in the period."
+	).format(on_time, due_in_period)
+
+
 # ---------------------------------------------------------------- registry
 # key: (label, function, default uom, snapshot?, required doctype)
 METRICS = {
@@ -320,6 +407,34 @@ METRICS = {
 		"Nos",
 		True,
 		"Housekeeping Area",
+	),
+	"training_compliance_pct": (
+		"Training compliance, required items Qualified (%) (now)",
+		training_compliance_pct,
+		"Percent",
+		True,
+		"Employee Training Matrix",
+	),
+	"training_overdue": (
+		"Required training items overdue (now)",
+		training_overdue,
+		"Nos",
+		True,
+		"Employee Training Matrix",
+	),
+	"training_high_hazard_overdue": (
+		"High-hazard training items overdue (now)",
+		training_high_hazard_overdue,
+		"Nos",
+		True,
+		"Employee Training Matrix",
+	),
+	"training_onboarding_on_time_pct": (
+		"New-hire training completed by its deadline (%)",
+		training_onboarding_on_time_pct,
+		"Percent",
+		False,
+		"Employee Training Matrix",
 	),
 }
 

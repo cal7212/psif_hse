@@ -1,0 +1,132 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "role_name",
+  "disabled",
+  "column_break_a",
+  "description",
+  "section_mapping",
+  "designations",
+  "column_break_m",
+  "departments"
+ ],
+ "fields": [
+  {
+   "fieldname": "role_name",
+   "fieldtype": "Data",
+   "label": "Role Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_mapping",
+   "fieldtype": "Section Break",
+   "label": "HR Mapping",
+   "description": "Employees with any of these Designations or Departments get this role's training requirements."
+  },
+  {
+   "fieldname": "designations",
+   "fieldtype": "Table MultiSelect",
+   "label": "Designations",
+   "options": "Training Role Designation"
+  },
+  {
+   "fieldname": "column_break_m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "departments",
+   "fieldtype": "Table MultiSelect",
+   "label": "Departments",
+   "options": "Training Role Department"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Training Role",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:role_name",
+ "naming_rule": "By fieldname",
+ "allow_rename": 1,
+ "title_field": "role_name",
+ "track_changes": 1
+}
