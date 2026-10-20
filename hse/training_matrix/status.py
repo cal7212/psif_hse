@@ -82,7 +82,8 @@ def evaluate(row: dict, requirement: dict, hire_date, today, assigned_override=N
 	"""Status of one matrix row.
 
 	row: requirement_code, applicability, assigned_on, in_progress, completed_on, expires_on,
-	     development_due (Dev rows: the manager's target date)
+	     development_due (Dev rows: the manager's target date),
+	     retrain_from / retrain_due (a Retraining Assignment is open)
 	requirement: initial_due_basis, initial_due_days, refresher_frequency
 	Returns status, qualification, due_date, is_required.
 	"""
@@ -102,6 +103,9 @@ def evaluate(row: dict, requirement: dict, hire_date, today, assigned_override=N
 		return _result(NOT_APPLICABLE, _held(row, requirement, today), None, False)
 
 	completed_on = _d(row.get("completed_on"))
+	retrain_from = _d(row.get("retrain_from"))
+	if retrain_from and (not completed_on or completed_on < retrain_from):
+		return _retraining(row, requirement, completed_on, today)
 	if completed_on:
 		due = next_due_date(requirement.get("refresher_frequency"), completed_on, row.get("expires_on"))
 		if due is None:
@@ -125,6 +129,19 @@ def evaluate(row: dict, requirement: dict, hire_date, today, assigned_override=N
 	if due and (due - today).days <= DUE_WINDOW_DAYS:
 		return _result(DUE, NOT_QUALIFIED, due, True)
 	return _result(NOT_STARTED, NOT_QUALIFIED, due, True)
+
+
+def _retraining(row: dict, requirement: dict, completed_on, today) -> dict:
+	"""A Retraining Assignment (TRN-700 §4.10): training before retrain_from no longer counts.
+	Earlier training still holds until the retraining due date, like a refresher."""
+	due = _d(row.get("retrain_due")) or _d(row.get("retrain_from"))
+	held = NOT_QUALIFIED
+	if completed_on:
+		lapses = next_due_date(requirement.get("refresher_frequency"), completed_on, row.get("expires_on"))
+		held = QUALIFIED if not lapses or today <= lapses else NOT_QUALIFIED
+	if today > due:
+		return _result(OVERDUE, NOT_QUALIFIED, due, True)
+	return _result(IN_PROGRESS if row.get("in_progress") else DUE, held, due, True)
 
 
 def _held(row: dict, requirement: dict, today) -> str:

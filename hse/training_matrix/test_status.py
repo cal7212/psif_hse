@@ -101,3 +101,35 @@ class UnitTestTrainingStatus(UnitTestCase):
 		self.assertEqual(
 			st.frequency_summary(st.ASSIGNED, 0, "Every 3 Years"), "Upon assignment; every 3 years"
 		)
+
+
+class UnitTestRetrainingStatus(UnitTestCase):
+	def row(self, **kw):
+		return {"requirement_code": st.REQUIRED, "assigned_on": "2026-01-01", **kw}
+
+	def test_earlier_training_holds_until_retraining_due(self):
+		r = st.evaluate(
+			self.row(completed_on="2026-03-01", retrain_from="2026-10-10", retrain_due="2026-11-01"),
+			ON_ASSIGNMENT,
+			None,
+			"2026-10-15",
+		)
+		self.assertEqual((r["status"], r["qualification"]), (st.DUE, st.QUALIFIED))
+
+	def test_missed_retraining_is_overdue(self):
+		r = st.evaluate(
+			self.row(completed_on="2026-03-01", retrain_from="2026-10-10", retrain_due="2026-11-01"),
+			ON_ASSIGNMENT,
+			None,
+			"2026-11-02",
+		)
+		self.assertEqual((r["status"], r["qualification"]), (st.OVERDUE, st.NOT_QUALIFIED))
+
+	def test_retraining_done(self):
+		r = st.evaluate(
+			self.row(completed_on="2026-10-20", retrain_from="2026-10-10", retrain_due="2026-11-01"),
+			ON_ASSIGNMENT,
+			None,
+			"2026-11-02",
+		)
+		self.assertEqual(r["status"], st.COMPLETED)

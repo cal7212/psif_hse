@@ -19,6 +19,9 @@
 	.tm-Not-Started { background: #f2f4f7; color: #475467; }
 	.tm-Completed { background: #e7f6ec; color: #067647; }
 	.tm-Confirm-Applicability { background: #f4ebff; color: #6941c6; }
+	.tm-form { display: grid; gap: 10px; max-width: 560px; }
+	.tm-form label { display: grid; gap: 4px; font-size: 0.9rem; }
+	.tm-form input, .tm-form select, .tm-form textarea { border: 1px solid var(--border-color, #d0d5dd); border-radius: 6px; padding: 6px 8px; font: inherit; }
 	.tm-skill-Authorized { background: #e7f6ec; color: #067647; }
 	.tm-skill-Ready-for-Authorization { background: #f4ebff; color: #6941c6; }
 	.tm-skill-In-Training { background: #e8f1fd; color: #175cd3; }
@@ -99,6 +102,44 @@
 		{% endif %}
 	</div>
 
+	<div class="tm-card">
+		<h3>{{ _("Request training") }}</h3>
+		<p class="tm-label">{{ _("Ask for training that isn't on your matrix. Your manager approves or rejects it based on the benefit to your role and to PSIF.") }}</p>
+		<form id="tm-request" class="tm-form">
+			<label>{{ _("Type") }}
+				<select name="request_type" required>
+					<option value="Internal Course">{{ _("A PSIF course") }}</option>
+					<option value="External Training">{{ _("External training") }}</option>
+				</select>
+			</label>
+			<label>{{ _("Course (optional)") }}
+				<select name="training_requirement">
+					<option value="">{{ _("Not a listed course") }}</option>
+					{% for c in request_courses %}<option value="{{ c.name }}">{{ c.name }} {{ c.course_title or "" }}</option>{% endfor %}
+				</select>
+			</label>
+			<label>{{ _("Training") }}<input name="training_title" required maxlength="140"></label>
+			<label>{{ _("Provider (external training)") }}<input name="provider" maxlength="140"></label>
+			<label>{{ _("Preferred date") }}<input type="date" name="preferred_date"></label>
+			<label>{{ _("Benefit to your role and to PSIF") }}<textarea name="reason" required rows="3"></textarea></label>
+			<button class="btn btn-primary btn-sm" type="submit">{{ _("Send request") }}</button>
+		</form>
+		{% if requests %}
+		<div class="tm-table-wrap" style="margin-top:16px"><table class="tm-table">
+			<tr><th>{{ _("Request") }}</th><th>{{ _("Type") }}</th><th>{{ _("Status") }}</th><th>{{ _("Notes") }}</th><th></th></tr>
+			{% for r in requests %}
+			<tr>
+				<td><b>{{ r.training_title }}</b></td>
+				<td>{{ _(r.request_type) }}</td>
+				<td>{{ _(r.status) }}{% if r.certificate_due %}<br><span class="tm-label">{{ _("Certificate due") }} {{ frappe.format(r.certificate_due, {"fieldtype": "Date"}) }}</span>{% endif %}</td>
+				<td>{{ r.decision_notes or "" }}</td>
+				<td>{% if r.status == "Approved" %}<input type="date" class="tm-done-date" data-request="{{ r.name }}"> <button class="btn btn-default btn-sm tm-done" data-request="{{ r.name }}">{{ _("Mark completed") }}</button>{% endif %}</td>
+			</tr>
+			{% endfor %}
+		</table></div>
+		{% endif %}
+	</div>
+
 	{% if records %}
 	<div class="tm-card">
 		<h3>{{ _("My training records") }}</h3>
@@ -121,6 +162,33 @@
 
 {% block script %}
 <script>
+	const tmRequest = document.getElementById("tm-request");
+	if (tmRequest) {
+		tmRequest.addEventListener("submit", (event) => {
+			event.preventDefault();
+			const args = Object.fromEntries(new FormData(tmRequest).entries());
+			const button = tmRequest.querySelector("button");
+			button.disabled = true;
+			frappe
+				.call({ method: "hse.training_matrix.training_requests.create_training_request", args })
+				.then(() => window.location.reload())
+				.catch(() => (button.disabled = false));
+		});
+	}
+	document.querySelectorAll(".tm-done").forEach((button) => {
+		button.addEventListener("click", () => {
+			const input = document.querySelector(`.tm-done-date[data-request="${button.dataset.request}"]`);
+			if (!input || !input.value) return input && input.focus();
+			button.disabled = true;
+			frappe
+				.call({
+					method: "hse.training_matrix.training_requests.complete_training_request",
+					args: { name: button.dataset.request, completed_on: input.value },
+				})
+				.then(() => window.location.reload())
+				.catch(() => (button.disabled = false));
+		});
+	});
 	document.querySelectorAll(".tm-ack").forEach((button) => {
 		button.addEventListener("click", () => {
 			button.disabled = true;

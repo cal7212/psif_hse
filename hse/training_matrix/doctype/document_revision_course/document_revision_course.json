@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "training_requirement",
+  "course_title",
+  "document_section",
+  "retraining",
+  "due_date",
+  "retraining_assignment",
+  "training_record"
+ ],
+ "fields": [
+  {
+   "fieldname": "training_requirement",
+   "fieldtype": "Link",
+   "label": "Course ID",
+   "options": "Training Requirement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "course_title",
+   "fieldtype": "Data",
+   "label": "Training Topic",
+   "fetch_from": "training_requirement.course_title",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "document_section",
+   "fieldtype": "Data",
+   "label": "Section",
+   "fetch_from": "training_requirement.document_section",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "retraining",
+   "fieldtype": "Select",
+   "label": "Retraining",
+   "options": "No Retraining\nRead & Acknowledge\nInstructor-led",
+   "default": "No Retraining",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due",
+   "in_list_view": 1,
+   "columns": 2,
+   "depends_on": "eval:doc.retraining!='No Retraining'"
+  },
+  {
+   "fieldname": "retraining_assignment",
+   "fieldtype": "Link",
+   "label": "Retraining Assignment",
+   "options": "Retraining Assignment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "training_record",
+   "fieldtype": "Link",
+   "label": "Training Record",
+   "options": "Training Record",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Document Revision Course",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

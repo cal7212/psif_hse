@@ -146,8 +146,18 @@ def apply_status(matrix, requirements: dict | None = None, on_date=None):
 				"active": matrix.active,
 			}
 		)
+		track_overdue(row, on_date)
 	matrix.flags.ready_skills = sk.apply_skills(matrix, on_date)
 	update_summary(matrix)
+
+
+def track_overdue(row, on_date) -> None:
+	"""Remember when a required course went overdue, for the manager notice and the escalation
+	(TRN-700 §4.9). Cleared as soon as it is no longer overdue."""
+	if row.is_required and row.status == st.OVERDUE:
+		row.overdue_since = row.overdue_since or on_date
+	else:
+		row.update({"overdue_since": None, "manager_notified_on": None, "escalated_on": None})
 
 
 def update_summary(matrix):
@@ -233,6 +243,8 @@ def reconcile_rows(matrix, codes: dict[str, str], on_date, needed_for=None, deve
 				if not row.assigned_on or row.requirement_code == st.NOT_REQUIRED:
 					row.assigned_on = on_date
 				row.requirement_code = code
+		elif retraining_open(row):
+			row.requirement_code = st.REQUIRED  # assigned retraining outside the role's courses
 		elif row.completed_on or row.in_progress:
 			row.requirement_code = st.NOT_REQUIRED
 		else:
@@ -247,6 +259,8 @@ def reconcile_rows(matrix, codes: dict[str, str], on_date, needed_for=None, deve
 	needed_for, development_due = needed_for or {}, development_due or {}
 	for row in matrix.items:
 		labels = sorted(needed_for.get(row.training_requirement) or ())
+		if retraining_open(row):
+			labels.append("Retraining")
 		row.needed_for = ", ".join(labels) if labels else None
 		row.development_due = development_due.get(row.training_requirement)
 
@@ -257,9 +271,18 @@ def reconcile_rows(matrix, codes: dict[str, str], on_date, needed_for=None, deve
 
 def _fingerprint(matrix):
 	return (
-		[(r.name, r.status, r.qualification, str(r.due_date or "")) for r in matrix.items],
+		[
+			(r.name, r.status, r.qualification, str(r.due_date or ""), str(r.overdue_since or ""))
+			for r in matrix.items
+		],
 		[(r.skill, r.status, str(r.eligible_since or ""), r.skill_authorization) for r in matrix.skills],
 	)
+
+
+def retraining_open(row) -> bool:
+	if not row.get("retrain_from"):
+		return False
+	return not row.get("completed_on") or getdate(row.completed_on) < getdate(row.retrain_from)
 
 
 def refresh_matrix_status(name: str, on_date=None) -> bool:

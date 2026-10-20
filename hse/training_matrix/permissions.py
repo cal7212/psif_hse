@@ -140,3 +140,44 @@ def authorization_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	if doc.employee in _own_employees(user):
 		return ptype in ("read", "print")
 	return doc.employee in _visible_employees(user)
+
+
+# ---------------------------------------------------------------- Retraining Assignment / Training Request
+# Managers see the assignments and requests of their team; employees see their own.
+def assignment_query_conditions(user: str | None = None, **kwargs) -> str:
+	user = user or frappe.session.user
+	if _full_access(user, "Retraining Assignment"):
+		return ""
+	return (
+		f"(`tabRetraining Assignment`.`owner` = {frappe.db.escape(user)}"
+		" or `tabRetraining Assignment`.`name` in (select `parent` from `tabRetraining Assignment Employee`"
+		f" where `parenttype` = 'Retraining Assignment' and `employee` in {_visible_employees_sql(user)}))"
+	)
+
+
+def assignment_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
+	user = user or frappe.session.user
+	if _full_access(user, "Retraining Assignment") or doc.is_new() or doc.owner == user:
+		return True  # creating and submitting are checked by the controller (the employees' manager)
+	visible = _visible_employees(user)
+	if not any(r.employee in visible for r in doc.employees):
+		return False
+	own = set(_own_employees(user))
+	only_self = all(r.employee in own for r in doc.employees)
+	return ptype in ("read", "print") if only_self else True
+
+
+def request_query_conditions(user: str | None = None, **kwargs) -> str:
+	user = user or frappe.session.user
+	if _full_access(user, "Training Request"):
+		return ""
+	return f"`tabTraining Request`.`employee` in {_visible_employees_sql(user)}"
+
+
+def request_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
+	user = user or frappe.session.user
+	if _full_access(user, "Training Request") or doc.is_new():
+		return True
+	if doc.employee in _own_employees(user):
+		return ptype in ("read", "print", "create")
+	return doc.employee in _visible_employees(user) and ptype in ("read", "print")

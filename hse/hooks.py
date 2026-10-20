@@ -275,7 +275,9 @@ doctype_js = {
 		"public/js/non_conformance.js",
 		"public/js/non_conformance_qc.js",
 		"public/js/non_conformance_capa.js",
+		"public/js/training_retraining.js",  # Training Matrix: "Retraining Required" (TRN-700 §4.10)
 	],
+	"Injury_Illness Report": "public/js/training_retraining.js",
 	"Quality Review": "public/js/quality_review.js",
 	"Quality Goal": "public/js/quality_goal.js",
 	"QC Inspection": "public/js/inspection_instruments.js",
@@ -338,10 +340,15 @@ scheduler_events = {
 		"hse.training_matrix.tasks.refresh_all_matrices",
 		"hse.training_matrix.trainers.refresh_register",
 		"hse.training_matrix.lms.reopen_due_refreshers",
+		"hse.training_matrix.training_requests.remind_overdue_certificates",
 	],
 	"cron": {
 		"0 2 1 * *": [
 			"hse.training_matrix.tasks.write_monthly_snapshot",
+		],
+		# Training Matrix: every Monday; sends only on the first Monday of the month (TRN-700 §4.9)
+		"0 7 * * 1": [
+			"hse.training_matrix.notifications.monthly_status_email",
 		],
 	},
 }
@@ -352,12 +359,16 @@ permission_query_conditions = {
 	"Training Record": "hse.training_matrix.permissions.record_query_conditions",
 	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_query_conditions",
 	"Skill Authorization": "hse.training_matrix.permissions.authorization_query_conditions",
+	"Retraining Assignment": "hse.training_matrix.permissions.assignment_query_conditions",
+	"Training Request": "hse.training_matrix.permissions.request_query_conditions",
 }
 has_permission = {
 	"Employee Training Matrix": "hse.training_matrix.permissions.matrix_has_permission",
 	"Training Record": "hse.training_matrix.permissions.record_has_permission",
 	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_has_permission",
 	"Skill Authorization": "hse.training_matrix.permissions.authorization_has_permission",
+	"Retraining Assignment": "hse.training_matrix.permissions.assignment_has_permission",
+	"Training Request": "hse.training_matrix.permissions.request_has_permission",
 }
 
 # Adds "Inspections" to the Connections tab on Asset Maintenance, Asset and Asset Maintenance Log
