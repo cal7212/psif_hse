@@ -130,6 +130,32 @@ class QCUnit(Document):
 		if self.get("qc_stages"):
 			create_draft_inspections(self)
 
+	def on_trash(self):
+		"""Deleting a unit created by mistake: its draft and cancelled inspections go with it.
+		Submitted inspections are QC records and must be cancelled first."""
+		submitted = frappe.get_all(
+			"QC Inspection", filters={"qc_unit": self.name, "docstatus": 1}, pluck="name"
+		)
+		if submitted:
+			frappe.throw(
+				_("Cancel the submitted QC Inspections of {0} first: {1}").format(
+					frappe.bold(self.name), ", ".join(submitted)
+				),
+				title=_("Submitted Inspections"),
+			)
+		inspections = frappe.get_all(
+			"QC Inspection",
+			filters={"qc_unit": self.name, "docstatus": ("in", (0, 2))},
+			pluck="name",
+			order_by="creation desc",  # amendments and re-inspections before their originals
+		)
+		for row in self.get("qc_stages"):
+			row.inspection = None
+		for name in inspections:
+			frappe.delete_doc("QC Inspection", name)
+		if inspections:
+			frappe.msgprint(_("Deleted QC Inspections: {0}").format(", ".join(inspections)), alert=True)
+
 	def is_repair_shop(self) -> bool:
 		return bool(self.shop and cint(frappe.db.get_value("Build Shop", self.shop, "is_repair_shop")))
 

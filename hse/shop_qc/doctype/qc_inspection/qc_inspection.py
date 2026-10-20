@@ -803,6 +803,14 @@ class QCInspection(Document):
 			self.link_reinspection_to_original_nc()
 		update_unit_status(self.qc_unit)
 
+	def on_trash(self):
+		"""Unlink the unit's Required QC row (its Draft Inspection), which would otherwise block
+		deleting an unneeded draft. Runs before Frappe's linked-document check."""
+		clear_unit_stage_links([self.name])
+
+	def after_delete(self):
+		update_unit_status(self.qc_unit, update_modified=False)
+
 	def before_cancel(self):
 		if frappe.db.get_value("QC Unit", self.qc_unit, "status") == "Shipped":
 			frappe.throw(
@@ -1278,3 +1286,11 @@ def make_reinspection_from_nc(non_conformance: str):
 	if not source:
 		frappe.throw(_("This Non Conformance is not linked to a QC Inspection."))
 	return make_reinspection(source)
+
+
+def clear_unit_stage_links(inspections: list[str]) -> None:
+	"""Empty the Draft Inspection link on QC Unit Required QC rows pointing at these inspections."""
+	if not inspections:
+		return
+	for row in frappe.get_all("QC Unit Stage", filters={"inspection": ("in", inspections)}, pluck="name"):
+		frappe.db.set_value("QC Unit Stage", row, "inspection", None, update_modified=False)
