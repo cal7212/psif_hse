@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate, today
 
+from hse.training_matrix import lms, skills
 from hse.training_matrix import status as st
 from hse.training_matrix.matrix import apply_status
 
@@ -19,11 +20,17 @@ class EmployeeTrainingMatrix(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from hse.training_matrix.doctype.employee_target_skill.employee_target_skill import (
+			EmployeeTargetSkill,
+		)
 		from hse.training_matrix.doctype.employee_training_matrix_item.employee_training_matrix_item import (
 			EmployeeTrainingMatrixItem,
 		)
 		from hse.training_matrix.doctype.employee_training_matrix_role.employee_training_matrix_role import (
 			EmployeeTrainingMatrixRole,
+		)
+		from hse.training_matrix.doctype.employee_training_matrix_skill.employee_training_matrix_skill import (
+			EmployeeTrainingMatrixSkill,
 		)
 
 		active: DF.Check
@@ -44,6 +51,8 @@ class EmployeeTrainingMatrix(Document):
 		required_count: DF.Int
 		roles: DF.TableMultiSelect[EmployeeTrainingMatrixRole]
 		roles_from_hr: DF.Check
+		skills: DF.Table[EmployeeTrainingMatrixSkill]
+		target_skills: DF.Table[EmployeeTargetSkill]
 		user_id: DF.Link | None
 	# end: auto-generated types
 
@@ -61,7 +70,11 @@ class EmployeeTrainingMatrix(Document):
 
 	def check_certificates(self):
 		"""Per Certification courses need an expiry date once completed (TRN-700 §4.4)."""
-		names = {r.training_requirement for r in self.items if r.completed_on and not r.expires_on}
+		names = {
+			r.training_requirement
+			for r in self.items
+			if r.completed_on and not r.expires_on and not (r.training_record or r.competency_evaluation)
+		}
 		if not names:
 			return
 		per_cert = set(
@@ -72,9 +85,19 @@ class EmployeeTrainingMatrix(Document):
 			)
 		)
 		for row in self.items:
-			if row.training_requirement in per_cert and row.completed_on and not row.expires_on:
+			if (
+				row.training_requirement in per_cert
+				and row.completed_on
+				and not row.expires_on
+				and not row.training_record
+			):
 				frappe.throw(
 					_("Row {0}: enter the certificate expiry date for {1}.").format(
 						row.idx, frappe.bold(row.training_requirement)
 					)
 				)
+
+	def on_update(self):
+		skills.after_matrix_update(self)
+		if not self.flags.skip_lms:
+			lms.enroll_required(self)

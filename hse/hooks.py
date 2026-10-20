@@ -265,7 +265,7 @@ require_type_annotated_api_methods = True
 # ---------------------------------------------------------------------------
 
 # Requires ERPNext (Asset, Asset Maintenance, Non Conformance)
-required_apps = ["erpnext"]  # merge if you already list required apps
+required_apps = ["erpnext", "hrms"]  # merge if you already list required apps
 
 # Form scripts for standard ERPNext DocTypes
 doctype_js = {
@@ -313,6 +313,21 @@ doc_events = {
 	"Employee": {
 		"on_update": "hse.training_matrix.events.employee_on_update",
 	},
+	# Training Matrix: Employee Groups mapped to a Training Role assign its training
+	"Employee Group": {
+		"on_update": "hse.training_matrix.events.employee_group_on_update",
+		"on_trash": "hse.training_matrix.events.employee_group_on_trash",
+	},
+	# Training Matrix: Frappe Learning completions, quiz scores and certificates (only fire when lms is installed)
+	"LMS Enrollment": {
+		"on_update": "hse.training_matrix.lms.enrollment_on_update",
+	},
+	"LMS Quiz Submission": {
+		"on_update": "hse.training_matrix.lms.quiz_submission_on_update",
+	},
+	"LMS Certificate": {
+		"on_update": "hse.training_matrix.lms.certificate_on_update",
+	},
 }
 
 # Housekeeping Inspection: daily Due/Overdue refresh and inspector ToDos
@@ -321,6 +336,8 @@ scheduler_events = {
 	"daily": [
 		"hse.housekeeping_inspection.tasks.update_schedules",
 		"hse.training_matrix.tasks.refresh_all_matrices",
+		"hse.training_matrix.trainers.refresh_register",
+		"hse.training_matrix.lms.reopen_due_refreshers",
 	],
 	"cron": {
 		"0 2 1 * *": [
@@ -332,9 +349,15 @@ scheduler_events = {
 # Training Matrix: employees see only their own matrix
 permission_query_conditions = {
 	"Employee Training Matrix": "hse.training_matrix.permissions.matrix_query_conditions",
+	"Training Record": "hse.training_matrix.permissions.record_query_conditions",
+	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_query_conditions",
+	"Skill Authorization": "hse.training_matrix.permissions.authorization_query_conditions",
 }
 has_permission = {
 	"Employee Training Matrix": "hse.training_matrix.permissions.matrix_has_permission",
+	"Training Record": "hse.training_matrix.permissions.record_has_permission",
+	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_has_permission",
+	"Skill Authorization": "hse.training_matrix.permissions.authorization_has_permission",
 }
 
 # Adds "Inspections" to the Connections tab on Asset Maintenance, Asset and Asset Maintenance Log

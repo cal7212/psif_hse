@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "creation": "2026-10-19 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "skill",
+  "disabled",
+  "column_break_a",
+  "proficiency",
+  "authorization_valid_months",
+  "section_requirements",
+  "description",
+  "prerequisites",
+  "courses",
+  "section_roles",
+  "roles"
+ ],
+ "fields": [
+  {
+   "fieldname": "skill",
+   "fieldtype": "Link",
+   "label": "HR Skill",
+   "options": "Skill",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "The Frappe HR Skill this defines. Shown on each employee's Employee Skill Map once authorized."
+  },
+  {
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "proficiency",
+   "fieldtype": "Rating",
+   "label": "Proficiency When Authorized",
+   "default": "1"
+  },
+  {
+   "fieldname": "authorization_valid_months",
+   "fieldtype": "Int",
+   "label": "Authorization Valid (months)",
+   "default": "0",
+   "description": "0 = no expiry. Otherwise the manager re-authorizes after this many months."
+  },
+  {
+   "fieldname": "section_requirements",
+   "fieldtype": "Section Break",
+   "label": "What It Takes"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "prerequisites",
+   "fieldtype": "Table MultiSelect",
+   "label": "Prerequisite Skills",
+   "options": "Skill Definition Prerequisite",
+   "description": "Skills that must be Authorized first, e.g. Mechanical before Technician."
+  },
+  {
+   "fieldname": "courses",
+   "fieldtype": "Table",
+   "label": "Required Courses",
+   "options": "Skill Definition Course",
+   "description": "The employee must be Qualified in every course. A manager's Skill Authorization then grants the skill."
+  },
+  {
+   "fieldname": "section_roles",
+   "fieldtype": "Section Break",
+   "label": "Required By Role"
+  },
+  {
+   "fieldname": "roles",
+   "fieldtype": "Table",
+   "label": "Roles",
+   "options": "Skill Definition Role",
+   "description": "Employees in these Training Roles need the skill; its courses are added to their matrix."
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Skill Definition",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Training Coordinator",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:skill",
+ "naming_rule": "By fieldname",
+ "title_field": "skill",
+ "track_changes": 1
+}

@@ -9,10 +9,13 @@ for one of those roles. Rows with recorded training are kept when a requirement 
 so the history survives a job change.
 """
 
+import copy
+
 import frappe
 from frappe import _
 from frappe.utils import getdate, now_datetime, today
 
+from hse.training_matrix import skills as sk
 from hse.training_matrix import status as st
 
 MATRIX = "Employee Training Matrix"
@@ -43,9 +46,25 @@ EMP_FIELDS = (
 
 
 # ---------------------------------------------------------------- lookups
-def roles_for_employee(designation: str | None, department: str | None) -> list[str]:
-	"""Enabled Training Roles mapped to the employee's Designation or Department."""
+def roles_for_employee(
+	designation: str | None, department: str | None, employee: str | None = None
+) -> list[str]:
+	"""Enabled Training Roles mapped to the employee's Designation, Department or Employee Groups."""
 	roles = set()
+	if employee:
+		groups = frappe.get_all(
+			"Employee Group Table",
+			filters={"employee": employee, "parenttype": "Employee Group"},
+			pluck="parent",
+		)
+		if groups:
+			roles.update(
+				frappe.get_all(
+					"Training Role Employee Group",
+					filters={"employee_group": ["in", groups], "parenttype": "Training Role"},
+					pluck="parent",
+				)
+			)
 	if designation:
 		roles.update(
 			frappe.get_all(
@@ -127,6 +146,7 @@ def apply_status(matrix, requirements: dict | None = None, on_date=None):
 				"active": matrix.active,
 			}
 		)
+	matrix.flags.ready_skills = sk.apply_skills(matrix, on_date)
 	update_summary(matrix)
 
 
@@ -171,18 +191,27 @@ def sync_matrix(employee: str, on_date=None):
 	)
 	if matrix.roles_from_hr:
 		matrix.set(
-			"roles", [{"training_role": r} for r in roles_for_employee(emp.designation, emp.department)]
+			"roles",
+			[{"training_role": r} for r in roles_for_employee(emp.designation, emp.department, employee)],
 		)
 
 	if matrix.active:
-		reconcile_rows(matrix, requirement_codes([r.training_role for r in matrix.roles]), on_date)
+		roles = [r.training_role for r in matrix.roles]
+		codes = requirement_codes(roles)
+		needed_for = {course: {"Role"} for course in codes}
+		defs = sk.definitions()
+		skill_needed_for, development_due = sk.merge_skill_courses(
+			codes, needed_for, roles, matrix.target_skills, defs
+		)
+		reconcile_rows(matrix, codes, on_date, needed_for, development_due)
+		sk.set_skill_rows(matrix, skill_needed_for, defs)
 	matrix.flags.ignore_permissions = True
 	matrix.flags.on_date = on_date
 	matrix.save()
 	return matrix
 
 
-def reconcile_rows(matrix, codes: dict[str, str], on_date):
+def reconcile_rows(matrix, codes: dict[str, str], on_date, needed_for=None, development_due=None):
 	"""Add newly required courses, update codes, drop rows that no longer apply and have no history."""
 	existing = {}
 	for row in list(matrix.items):
@@ -215,28 +244,47 @@ def reconcile_rows(matrix, codes: dict[str, str], on_date):
 				"items", {"training_requirement": name, "requirement_code": code, "assigned_on": on_date}
 			)
 
+	needed_for, development_due = needed_for or {}, development_due or {}
+	for row in matrix.items:
+		labels = sorted(needed_for.get(row.training_requirement) or ())
+		row.needed_for = ", ".join(labels) if labels else None
+		row.development_due = development_due.get(row.training_requirement)
+
 	matrix.items.sort(key=lambda r: r.training_requirement)
 	for i, row in enumerate(matrix.items, 1):
 		row.idx = i
 
 
+def _fingerprint(matrix):
+	return (
+		[(r.name, r.status, r.qualification, str(r.due_date or "")) for r in matrix.items],
+		[(r.skill, r.status, str(r.eligible_since or ""), r.skill_authorization) for r in matrix.skills],
+	)
+
+
 def refresh_matrix_status(name: str, on_date=None) -> bool:
-	"""Daily job: recalculate statuses and write only what changed, without a new Version."""
+	"""Daily job: recalculate statuses. Saves (with a Version) only when a status changed, so
+	skill notifications and the HR skill map follow; otherwise just stamps last_refreshed."""
 	matrix = frappe.get_doc(MATRIX, name)
-	before = {r.name: (r.status, r.qualification, str(r.due_date or "")) for r in matrix.items}
-	apply_status(matrix, on_date=on_date)
-	changed = False
-	for row in matrix.items:
-		if before.get(row.name) != (row.status, row.qualification, str(row.due_date or "")):
-			row.db_update()
-			changed = True
-	matrix.db_update()
-	return changed
+	probe = copy.deepcopy(matrix)  # recalculate on a copy so save() still sees the transitions
+	apply_status(probe, on_date=on_date)
+	if _fingerprint(probe) == _fingerprint(matrix):
+		matrix.db_set("last_refreshed", now_datetime(), update_modified=False)
+		return False
+	matrix.flags.ignore_permissions = True
+	matrix.flags.on_date = on_date
+	matrix.save()
+	return True
 
 
 # ---------------------------------------------------------------- bulk
 def resync_all():
-	"""Re-sync every active employee (after a Training Requirement or Training Role change)."""
+	"""Re-sync every active employee (after a Training Requirement, Training Role or Skill
+	Definition change), and the skills each Designation lists in Frappe HR."""
+	try:
+		sk.sync_designation_skills()
+	except Exception:
+		frappe.log_error(title=_("Designation skills sync failed"))
 	for employee in frappe.get_all("Employee", filters={"status": "Active"}, pluck="name"):
 		try:
 			sync_matrix(employee)

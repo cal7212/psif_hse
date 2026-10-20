@@ -1,0 +1,137 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("My Training") }}{% endblock %}
+
+{% block page_content %}
+<style>
+	.tm-wrap { max-width: 960px; margin: 0 auto; }
+	.tm-card { border: 1px solid var(--border-color, #e2e2e2); border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+	.tm-summary { display: flex; gap: 24px; flex-wrap: wrap; }
+	.tm-figure { font-size: 1.6rem; font-weight: 600; }
+	.tm-label { color: var(--text-muted, #6b7280); font-size: 0.85rem; }
+	.tm-table { width: 100%; border-collapse: collapse; }
+	.tm-table th, .tm-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border-color, #eee); vertical-align: top; }
+	.tm-table-wrap { overflow-x: auto; }
+	.tm-badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+	.tm-Overdue { background: #fde8e8; color: #b42318; }
+	.tm-Due { background: #fff4e5; color: #b54708; }
+	.tm-In-Progress { background: #e8f1fd; color: #175cd3; }
+	.tm-Not-Started { background: #f2f4f7; color: #475467; }
+	.tm-Completed { background: #e7f6ec; color: #067647; }
+	.tm-Confirm-Applicability { background: #f4ebff; color: #6941c6; }
+	.tm-skill-Authorized { background: #e7f6ec; color: #067647; }
+	.tm-skill-Ready-for-Authorization { background: #f4ebff; color: #6941c6; }
+	.tm-skill-In-Training { background: #e8f1fd; color: #175cd3; }
+	.tm-skill-Not-Started { background: #f2f4f7; color: #475467; }
+	.tm-skill-Lapsed { background: #fde8e8; color: #b42318; }
+</style>
+<div class="tm-wrap">
+	<h1>{{ _("My Training") }}</h1>
+
+	{% if not employee %}
+	<div class="tm-card">
+		<p>{{ _("Your login is not linked to an employee record, so there is no training matrix to show. Please contact HR.") }}</p>
+	</div>
+	{% else %}
+
+	{% if matrix %}
+	<div class="tm-card tm-summary">
+		<div><div class="tm-figure">{{ frappe.format(matrix.percent_complete, {"fieldtype": "Percent"}) }}</div><div class="tm-label">{{ _("Complete") }}</div></div>
+		<div><div class="tm-figure">{{ matrix.overdue_count }}</div><div class="tm-label">{{ _("Overdue") }}</div></div>
+		<div><div class="tm-figure">{{ matrix.due_count }}</div><div class="tm-label">{{ _("Due in 30 days") }}</div></div>
+		<div><div class="tm-figure">{{ matrix.required_count }}</div><div class="tm-label">{{ _("Required courses") }}</div></div>
+	</div>
+	{% endif %}
+
+	{% if pending %}
+	<div class="tm-card">
+		<h3>{{ _("Please acknowledge") }}</h3>
+		<p class="tm-label">{{ _("Confirm that you attended and understood this training. It does not count until you do.") }}</p>
+		<div class="tm-table-wrap"><table class="tm-table">
+			<tr><th>{{ _("Course") }}</th><th>{{ _("Date") }}</th><th>{{ _("Trainer") }}</th><th></th></tr>
+			{% for r in pending %}
+			<tr>
+				<td><b>{{ r.training_requirement }}</b> {{ r.course_title or "" }}</td>
+				<td>{{ frappe.format(r.training_date, {"fieldtype": "Date"}) }}</td>
+				<td>{{ r.trainer_name or r.external_provider or "" }}</td>
+				<td><button class="btn btn-primary btn-sm tm-ack" data-record="{{ r.name }}">{{ _("Acknowledge") }}</button></td>
+			</tr>
+			{% endfor %}
+		</table></div>
+	</div>
+	{% endif %}
+
+	{% if skills %}
+	<div class="tm-card">
+		<h3>{{ _("My skills") }}</h3>
+		<p class="tm-label">{{ _("Complete every course for a skill, then your manager authorizes it.") }}</p>
+		<div class="tm-table-wrap"><table class="tm-table">
+			<tr><th>{{ _("Skill") }}</th><th>{{ _("Status") }}</th><th>{{ _("Courses") }}</th><th>{{ _("Still needed") }}</th></tr>
+			{% for s in skills %}
+			<tr>
+				<td><b>{{ s.skill }}</b>{% if s.needed_for == "Target" %} <span class="tm-label">({{ _("development target") }}{% if s.target_due %}, {{ frappe.format(s.target_due, {"fieldtype": "Date"}) }}{% endif %})</span>{% endif %}</td>
+				<td><span class="tm-badge tm-skill-{{ s.status | replace(' ', '-') }}">{{ _(s.status) }}</span></td>
+				<td>{{ s.progress or "" }}</td>
+				<td>{{ s.missing or "" }}</td>
+			</tr>
+			{% endfor %}
+		</table></div>
+	</div>
+	{% endif %}
+
+	<div class="tm-card">
+		<h3>{{ _("My training matrix") }}</h3>
+		{% if rows %}
+		<div class="tm-table-wrap"><table class="tm-table">
+			<tr><th>{{ _("Course") }}</th><th>{{ _("Status") }}</th><th>{{ _("Due") }}</th><th>{{ _("Completed") }}</th><th></th></tr>
+			{% for r in rows %}
+			<tr>
+				<td><b>{{ r.training_requirement }}</b> {{ r.course_title or "" }}</td>
+				<td><span class="tm-badge tm-{{ r.status | replace(' ', '-') }}">{{ _(r.status) }}</span></td>
+				<td>{{ frappe.format(r.due_date, {"fieldtype": "Date"}) if r.due_date else "" }}</td>
+				<td>{{ frappe.format(r.completed_on, {"fieldtype": "Date"}) if r.completed_on else "" }}</td>
+				<td>{% if courses.get(r.training_requirement) and r.status != "Completed" %}<a href="/lms/courses/{{ courses.get(r.training_requirement) }}">{{ _("Open course") }}</a>{% endif %}</td>
+			</tr>
+			{% endfor %}
+		</table></div>
+		{% else %}
+		<p>{{ _("No training is assigned to you yet.") }}</p>
+		{% endif %}
+	</div>
+
+	{% if records %}
+	<div class="tm-card">
+		<h3>{{ _("My training records") }}</h3>
+		<div class="tm-table-wrap"><table class="tm-table">
+			<tr><th>{{ _("Record") }}</th><th>{{ _("Course") }}</th><th>{{ _("Date") }}</th><th>{{ _("Source") }}</th></tr>
+			{% for r in records %}
+			<tr>
+				<td>{{ r.name }}</td>
+				<td><b>{{ r.training_requirement }}</b> {{ r.course_title or "" }}</td>
+				<td>{{ frappe.format(r.training_date, {"fieldtype": "Date"}) }}</td>
+				<td>{{ _(r.source) }}</td>
+			</tr>
+			{% endfor %}
+		</table></div>
+	</div>
+	{% endif %}
+	{% endif %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+	document.querySelectorAll(".tm-ack").forEach((button) => {
+		button.addEventListener("click", () => {
+			button.disabled = true;
+			frappe
+				.call({
+					method: "hse.training_matrix.portal.acknowledge_training",
+					args: { record: button.dataset.record },
+				})
+				.then(() => window.location.reload())
+				.catch(() => (button.disabled = false));
+		});
+	});
+</script>
+{% endblock %}

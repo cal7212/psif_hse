@@ -9,17 +9,22 @@
   "avenue",
   "requirement_code",
   "applicability",
+  "needed_for",
   "column_break_status",
   "status",
   "qualification",
   "assigned_on",
   "due_date",
+  "development_due",
   "section_completion",
   "in_progress",
   "completed_on",
   "first_completed_on",
   "column_break_completion",
   "expires_on",
+  "training_record",
+  "competency_evaluation",
+  "lms_reset_on",
   "evidence",
   "section_context",
   "is_required",
@@ -60,10 +65,11 @@
    "fieldname": "requirement_code",
    "fieldtype": "Select",
    "label": "Requirement",
-   "options": "R\nC\n—",
+   "options": "R\nC\nDev\n—",
    "read_only": 1,
    "in_list_view": 1,
-   "columns": 1
+   "columns": 1,
+   "description": "Dev = development training for a target skill (outside compliance)."
   },
   {
    "fieldname": "applicability",
@@ -72,6 +78,13 @@
    "options": "\nApplies\nNot Applicable",
    "depends_on": "eval:doc.requirement_code=='C'",
    "description": "Conditional courses: the Manager confirms whether the task or hazard applies."
+  },
+  {
+   "fieldname": "needed_for",
+   "fieldtype": "Data",
+   "label": "Needed For",
+   "read_only": 1,
+   "description": "Role, or the skills that need this course."
   },
   {
    "fieldname": "column_break_status",
@@ -108,6 +121,13 @@
    "columns": 1
   },
   {
+   "fieldname": "development_due",
+   "fieldtype": "Date",
+   "label": "Target Date",
+   "read_only": 1,
+   "depends_on": "eval:doc.requirement_code=='Dev'"
+  },
+  {
    "fieldname": "section_completion",
    "fieldtype": "Section Break",
    "label": "Completion"
@@ -140,6 +160,27 @@
    "fieldname": "expires_on",
    "fieldtype": "Date",
    "label": "Certificate Expires On"
+  },
+  {
+   "fieldname": "training_record",
+   "fieldtype": "Link",
+   "label": "Training Record",
+   "options": "Training Record",
+   "read_only": 1
+  },
+  {
+   "fieldname": "competency_evaluation",
+   "fieldtype": "Link",
+   "label": "Competency Evaluation",
+   "options": "Competency Evaluation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lms_reset_on",
+   "fieldtype": "Date",
+   "label": "LMS Course Reopened On",
+   "read_only": 1,
+   "description": "When the LMS course was reopened for a refresher."
   },
   {
    "fieldname": "evidence",
@@ -203,7 +244,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-21 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Employee Training Matrix Item",

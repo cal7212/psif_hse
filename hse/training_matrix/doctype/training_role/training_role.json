@@ -11,7 +11,9 @@
   "section_mapping",
   "designations",
   "column_break_m",
-  "departments"
+  "departments",
+  "column_break_g",
+  "employee_groups"
  ],
  "fields": [
   {
@@ -41,7 +43,7 @@
    "fieldname": "section_mapping",
    "fieldtype": "Section Break",
    "label": "HR Mapping",
-   "description": "Employees with any of these Designations or Departments get this role's training requirements."
+   "description": "Employees with any of these Designations or Departments, or in any of these Employee Groups, get this role's training requirements. Use Employee Groups for work that doesn't follow job titles, e.g. respirator wearers or forklift operators."
   },
   {
    "fieldname": "designations",
@@ -58,10 +60,20 @@
    "fieldtype": "Table MultiSelect",
    "label": "Departments",
    "options": "Training Role Department"
+  },
+  {
+   "fieldname": "column_break_g",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee_groups",
+   "fieldtype": "Table MultiSelect",
+   "label": "Employee Groups",
+   "options": "Training Role Employee Group"
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-21 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Training Role",

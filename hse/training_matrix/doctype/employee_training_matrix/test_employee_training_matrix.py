@@ -127,3 +127,80 @@ class IntegrationTestEmployeeTrainingMatrix(IntegrationTestCase):
 		matrix = self.matrix()
 		matrix.items[0].completed_on = add_days(today(), 5)
 		self.assertRaises(frappe.ValidationError, matrix.save)
+
+
+class IntegrationTestEmployeeGroupMapping(IntegrationTestCase):
+	def test_group_membership_assigns_role(self):
+		from erpnext.setup.doctype.employee.test_employee import make_employee
+
+		make_designation(OFFICE)  # created by the other class, but rolled back after it
+		employee = make_employee(
+			"_t_group_member@example.com",
+			company=ensure_company(),
+			gender=ensure_gender(),
+			designation=OFFICE,
+		)
+		if not frappe.db.exists("Employee Group", "_T Respirator Users"):
+			frappe.get_doc(
+				{"doctype": "Employee Group", "employee_group_name": "_T Respirator Users"}
+			).insert()
+		if not frappe.db.exists("Training Role", "_T Respirator"):
+			role = frappe.get_doc(
+				{
+					"doctype": "Training Role",
+					"role_name": "_T Respirator",
+					"employee_groups": [{"employee_group": "_T Respirator Users"}],
+				}
+			)
+			role.flags.skip_resync = True
+			role.insert()
+		make_requirement("_T-RESP", roles=[("_T Respirator", "R")])
+
+		group = frappe.get_doc("Employee Group", "_T Respirator Users")
+		group.append("employee_list", {"employee": employee})
+		group.save()
+		matrix = frappe.get_doc("Employee Training Matrix", employee)
+		self.assertIn("_T Respirator", [r.training_role for r in matrix.roles])
+		self.assertIn("_T-RESP", {r.training_requirement for r in matrix.items})
+
+		group.set("employee_list", [r for r in group.employee_list if r.employee != employee])
+		group.save()
+		matrix = frappe.get_doc("Employee Training Matrix", employee)
+		self.assertNotIn("_T Respirator", [r.training_role for r in matrix.roles])
+		self.assertNotIn("_T-RESP", {r.training_requirement for r in matrix.items})
+
+
+class IntegrationTestMatrixPermissions(IntegrationTestCase):
+	def make_user(self, email, roles):
+		if not frappe.db.exists("User", email):
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": email,
+					"first_name": email.split("@")[0],
+					"send_welcome_email": 0,
+				}
+			).insert(ignore_permissions=True)
+		user = frappe.get_doc("User", email)
+		user.add_roles(*roles)
+		return email
+
+	def test_role_with_read_permission_sees_every_matrix(self):
+		from frappe.permissions import add_permission
+
+		from hse.training_matrix.permissions import matrix_query_conditions
+
+		role = "_T Training Manager"
+		if not frappe.db.exists("Role", role):
+			frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert()
+		add_permission("Employee Training Matrix", role, 0, "read")  # as Role Permission Manager does
+		manager = self.make_user("_t_training_manager@example.com", [role])
+		employee = self.make_user("_t_plain_employee@example.com", ["Employee"])
+		self.assertEqual(matrix_query_conditions(manager), "")
+		self.assertIn("reports_to", matrix_query_conditions(employee))  # own and direct reports only
+
+	def test_qualified_trainer_role_stays_scoped(self):
+		from hse.training_matrix.permissions import record_query_conditions
+
+		trainer = self.make_user("_t_scoped_trainer@example.com", ["Employee", "Qualified Trainer"])
+		self.assertNotEqual(record_query_conditions(trainer), "")
