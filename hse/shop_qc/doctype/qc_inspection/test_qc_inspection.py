@@ -604,6 +604,47 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.make("_T Release")
 		self.assertEqual(self.status(), "Released")
 
+	def test_delete_unneeded_drafts_and_unit(self):
+		"""Draft inspections and their unit can be deleted despite the Required QC links."""
+		self.clear_unit(WO)
+		frappe.flags.skip_required_qc = False
+		try:
+			frappe.get_doc(
+				{
+					"doctype": "QC Unit",
+					"shop": SHOP,
+					"product_type": "Power Unit",
+					"job_type": "New Build",
+					"trulinx_work_order": WO,
+					"model": "HPU-30-460-3",
+					"company": self.company,
+					"relief_setting_psi": 0,
+				}
+			).insert()
+		finally:
+			frappe.flags.skip_required_qc = True
+		by_stage = {r.stage: r.inspection for r in frappe.get_doc("QC Unit", WO).qc_stages}
+		# One unneeded draft: deleting it empties the Draft Inspection link on its row.
+		frappe.delete_doc("QC Inspection", by_stage["_T Test"])
+		rows = {r.stage: r.inspection for r in frappe.get_doc("QC Unit", WO).qc_stages}
+		self.assertIsNone(rows["_T Test"])
+		self.assertEqual(rows["_T Assembly"], by_stage["_T Assembly"])
+		# A submitted inspection blocks deleting the unit.
+		asm = frappe.get_doc("QC Inspection", by_stage["_T Assembly"])
+		for row in asm.items:
+			row.result = PASS
+		asm.inspected_by = self.employee
+		asm.append("instruments", {"instrument": "_T-G1"})
+		asm.submit()
+		with self.assertRaisesRegex(frappe.ValidationError, "Cancel the submitted"):
+			frappe.delete_doc("QC Unit", WO)
+		# Once cancelled, the unit and all its inspections can be deleted.
+		asm.reload()
+		asm.cancel()
+		frappe.delete_doc("QC Unit", WO)
+		self.assertFalse(frappe.db.exists("QC Unit", WO))
+		self.assertFalse(frappe.db.exists("QC Inspection", {"qc_unit": WO}))
+
 	def test_shop_prefix_naming(self):
 		doc = self.make("_T Assembly", submit=False)
 		self.assertTrue(doc.name.startswith("TQA-"))
