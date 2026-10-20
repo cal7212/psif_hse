@@ -303,6 +303,7 @@ doc_events = {
 			"hse.housekeeping_inspection.events.on_update",
 			"hse.shop_qc.events.on_update",
 		],
+		"on_trash": "hse.quality_metrics.ncr.on_trash",  # clear source links so test NCRs can be deleted
 	},
 	"Quality Goal": {
 		"validate": "hse.quality_metrics.events.quality_goal_validate",

@@ -413,3 +413,36 @@ def validate_log_number(doc, fieldname: str, label: str) -> None:
 	other = frappe.db.get_value("Non Conformance", {fieldname: value, "name": ("!=", doc.name)}, "name")
 	if other:
 		frappe.throw(_("{0} {1} is already used on {2}.").format(label, value, other))
+
+
+# Source records that point back to the NCR that they raised. Each NCR also points to its
+# source, so without this neither could be deleted.
+NCR_SOURCE_LINKS = (
+	("QC Inspection", "non_conformance"),
+	("QC Hose Test", "non_conformance"),  # child of QC Inspection; docstatus follows the parent
+	("Asset Inspection", "non_conformance"),
+	("Housekeeping Inspection", "non_conformance"),
+)
+
+
+def on_trash(doc, method=None):
+	"""Deleting an NCR (e.g. test data) clears the link back to it on draft or cancelled source
+	records. A submitted source keeps its NCR: cancel it first. Runs before the link check."""
+	submitted, to_clear = [], []
+	for doctype, field in NCR_SOURCE_LINKS:
+		if not frappe.db.has_column(doctype, field):
+			continue
+		for row in frappe.get_all(doctype, filters={field: doc.name}, fields=["name", "docstatus"]):
+			if row.docstatus == 1:
+				submitted.append(f"{_(doctype)} {row.name}")
+			else:
+				to_clear.append((doctype, row.name, field))
+	if submitted:
+		frappe.throw(
+			_("Cancel these submitted records first; they raised NCR {0}: {1}").format(
+				frappe.bold(doc.name), ", ".join(submitted)
+			),
+			title=_("Linked Submitted Records"),
+		)
+	for doctype, name, field in to_clear:
+		frappe.db.set_value(doctype, name, field, None, update_modified=False)
