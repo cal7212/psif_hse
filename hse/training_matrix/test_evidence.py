@@ -62,3 +62,13 @@ class UnitTestEvidence(UnitTestCase):
 		self.assertTrue(passes(scores, "LMS Completion Record"))  # quiz's own pass mark
 		self.assertFalse(passes(scores, "Quiz (80%)"))  # TRN-700: 80% for quiz-verified courses
 		self.assertTrue(passes({}, "Quiz (80%)"))  # a course with no quizzes
+
+
+class UnitTestLmsHistoryClassify(UnitTestCase):
+	def test_classify(self):
+		from hse.training_matrix.lms_history import ALREADY, BELOW_PASS, NO_MATRIX, WILL_IMPORT, classify
+
+		self.assertEqual(classify(True, False, True), WILL_IMPORT)
+		self.assertEqual(classify(True, False, False), BELOW_PASS)
+		self.assertEqual(classify(True, True, True), ALREADY)
+		self.assertEqual(classify(False, False, True), NO_MATRIX)

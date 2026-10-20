@@ -19,6 +19,7 @@
   "column_break_t",
   "external_provider",
   "lms_course",
+  "imported_from",
   "section_document",
   "document_number",
   "document_revision",
@@ -138,6 +139,15 @@
    "read_only": 1
   },
   {
+   "fieldname": "imported_from",
+   "fieldtype": "Data",
+   "label": "Imported From LMS Certificate",
+   "read_only": 1,
+   "no_copy": 1,
+   "search_index": 1,
+   "description": "Set by Import LMS History for certificates issued before the Training Matrix."
+  },
+  {
    "fieldname": "section_document",
    "fieldtype": "Section Break",
    "label": "Controlled Document Trained On (TRN-700 §4.13)"
@@ -202,7 +212,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-25 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Training Record",
