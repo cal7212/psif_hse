@@ -184,3 +184,12 @@ Employees request training on My Training. The manager approves or rejects it (T
 *Decision* buttons on the request); approved requests go to the Training Coordinator. For external
 training the employee marks it completed, and the certificate is due to the Training Coordinator
 within 10 business days; a reminder goes out once if it is late.
+
+### Importing earlier LMS certificates
+
+LMS certificates issued before the Training Matrix existed don't count automatically. Training
+Requirement list → **Training Matrix → Import LMS History** previews every certificate held by an
+active employee for a course linked to a Training Requirement, then creates one TRN-702 record per
+certificate: dated its issue date, with its expiry, marked "Imported from LMS certificate" and
+revision "unknown (imported)". Certificates whose quiz scores are below the pass mark are listed
+but not imported, and nothing is imported twice, so it can be re-run safely.

@@ -35,6 +35,7 @@ class TrainingRecord(Document):
 		document_section: DF.Data | None
 		duration_minutes: DF.Int
 		external_provider: DF.Data | None
+		imported_from: DF.Data | None
 		lms_course: DF.Data | None
 		source: DF.Literal["Classroom", "OJT", "Read & Acknowledge", "LMS Course", "External Certificate"]
 		status: DF.Literal["Draft", "Awaiting Acknowledgment", "Complete", "Cancelled"]
