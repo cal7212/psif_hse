@@ -173,7 +173,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Training Request",
@@ -248,5 +248,6 @@
  "autoname": "format:TRN-703-{YYYY}-{#####}",
  "naming_rule": "Expression",
  "track_changes": 1,
- "title_field": "training_title"
+ "title_field": "training_title",
+ "default_print_format": "TRN-703 Training Request"
 }
