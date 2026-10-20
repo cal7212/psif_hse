@@ -20,11 +20,35 @@ def make_roles():
 			)
 
 
+def default_settings():
+	"""Escalations and the company-wide report go to the HR Manager until Settings say otherwise."""
+	if not frappe.db.exists("DocType", "Training Matrix Settings"):
+		return
+	settings = frappe.get_single("Training Matrix Settings")
+	if settings.escalation_days:
+		return  # already set up
+	settings.update(
+		{
+			"escalation_days": 14,
+			"monthly_email": 1,
+			"absence_days": 90,
+			"absence_due_days": 0,
+			"certificate_business_days": 10,
+		}
+	)
+	if not settings.escalation_roles and not settings.escalation_users:
+		settings.append("escalation_roles", {"role": "HR Manager"})
+	settings.flags.ignore_permissions = True
+	settings.save()
+
+
 def after_install():
 	make_roles()
 	lms.setup()
+	default_settings()
 
 
 def after_migrate():
 	make_roles()
+	default_settings()
 	lms.setup()

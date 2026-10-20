@@ -26,6 +26,7 @@ class EmployeeTrainingMatrixItem(Document):
 		due_date: DF.Date | None
 		employee: DF.Link | None
 		employee_name: DF.Data | None
+		escalated_on: DF.Date | None
 		evidence: DF.SmallText | None
 		expires_on: DF.Date | None
 		first_completed_on: DF.Date | None
@@ -33,12 +34,17 @@ class EmployeeTrainingMatrixItem(Document):
 		in_progress: DF.Check
 		is_required: DF.Check
 		lms_reset_on: DF.Date | None
+		manager_notified_on: DF.Date | None
 		needed_for: DF.Data | None
+		overdue_since: DF.Date | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
 		qualification: DF.Literal["Not Qualified", "Qualified"]
 		requirement_code: DF.Literal["R", "C", "Dev", "—"]
+		retrain_due: DF.Date | None
+		retrain_from: DF.Date | None
+		retraining_assignment: DF.Link | None
 		status: DF.Literal[
 			"Not Started",
 			"In Progress",

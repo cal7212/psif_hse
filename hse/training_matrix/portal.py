@@ -62,7 +62,16 @@ def my_training_context(employee: str) -> dict:
 				fields=["name", "lms_course"],
 			)
 		}
+	from hse.training_matrix.training_requests import my_requests
+
 	return {
+		"requests": my_requests(employee),
+		"request_courses": frappe.get_all(
+			"Training Requirement",
+			filters={"disabled": 0},
+			fields=["name", "course_title"],
+			order_by="name asc",
+		),
 		"matrix": matrix,
 		"skills": [
 			s for s in (matrix.skills if matrix else []) if s.needed_for != "Held" or s.status == "Authorized"

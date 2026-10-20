@@ -132,3 +132,55 @@ add *Report* to run the Training Matrix, Skill Matrix and Training Requirements 
 The Employee role (and the automatic Qualified Trainer role) is scoped instead: employees see
 their own records and their direct reports'; trainers also see the records they trained or
 evaluated.
+
+## Phase 3: automation
+
+### Settings
+
+**Training Matrix Settings** (single page): who escalations go to (roles and / or people; HR
+Manager by default), the escalation threshold (14 days overdue), whether the monthly email is
+sent and who gets the company-wide version, the return-from-absence threshold (90 days) and the
+certificate deadline for external training (10 business days).
+
+### Overdue notices and escalation (TRN-700 §4.9)
+
+- The day a required course goes overdue, the employee's manager (Reports To) gets a ToDo.
+- After the escalation threshold, the escalation recipients get one email listing every item and
+  a ToDo on each matrix. Each item escalates once; the dates are on the matrix row.
+
+### Monthly status report
+
+Every Monday at 07:00 the job checks for the first Monday of the month. Each manager gets their
+team's report (% complete, training completed last month, due in 30 days, overdue); the
+company-wide report by department goes to the report recipients.
+
+### Retraining (TRN-700 §4.10)
+
+A **Retraining Assignment** records every retraining trigger: who, which courses, effective date,
+due date and why. Training completed before the effective date no longer counts for those
+courses: the course shows Due (earlier training still holds) until the due date, then Overdue.
+
+- **Incidents and NCR / CAPA**: *Create → Retraining Required* on an Injury_Illness Report or a
+  Non Conformance opens an assignment linked to it (the injured employee is filled in).
+- **Return from Absence**: *Manager → Return from Absence* on the matrix. At 90 days or more
+  away it assigns the employee's high-hazard and practically evaluated courses, plus any added.
+- **Transfers and promotions**: Frappe HR's Employee Transfer and Employee Promotion update the
+  Employee, and the matrix follows (Supervisor Responsibilities is due 90 days after promotion).
+- **Manager observation, audit findings**: create a Retraining Assignment directly.
+
+### Document Revision (QM-005)
+
+The controlled documents stay on the secure share. When one is released, the document owner
+records a **Document Revision**: number, new revision, effective date, change summary and its
+location on the share. The courses trained on it are listed automatically; for each, the owner
+chooses No Retraining, Read & Acknowledge or Instructor-led, with a due date. On submit the course
+revision is updated, and everyone trained on the course gets a Retraining Assignment. For
+Read & Acknowledge, a training record is also created and each employee acknowledges it on My
+Training. Cancelling the revision reverses all of this.
+
+### Training Requests (TRN-703)
+
+Employees request training on My Training. The manager approves or rejects it (ToDo, then the
+*Decision* buttons on the request); approved requests go to the Training Coordinator. For external
+training the employee marks it completed, and the certificate is due to the Training Coordinator
+within 10 business days; a reminder goes out once if it is late.

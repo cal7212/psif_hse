@@ -139,6 +139,52 @@ function tm_manager_buttons(frm) {
 			group
 		);
 	}
+	frm.add_custom_button(
+		__("Return from Absence"),
+		() =>
+			frappe.prompt(
+				[
+					{
+						fieldname: "absence_from",
+						label: __("Away From"),
+						fieldtype: "Date",
+						reqd: 1,
+					},
+					{
+						fieldname: "return_date",
+						label: __("Returned On"),
+						fieldtype: "Date",
+						reqd: 1,
+					},
+					{
+						fieldname: "extra_courses",
+						label: __("Also Retrain On"),
+						fieldtype: "MultiSelectList",
+						get_data: () =>
+							(frm.doc.items || [])
+								.filter((r) => r.is_required)
+								.map((r) => ({
+									value: r.training_requirement,
+									description: r.course_title,
+								})),
+						description: __(
+							"High-hazard and practically evaluated courses are included automatically."
+						),
+					},
+				],
+				(values) =>
+					frappe
+						.call("hse.training_matrix.retraining.record_return_from_absence", {
+							employee: frm.doc.employee,
+							absence_from: values.absence_from,
+							return_date: values.return_date,
+							extra_courses: values.extra_courses || [],
+						})
+						.then(() => frm.reload_doc()),
+				__("Return from absence (TRN-700 §4.10)")
+			),
+		group
+	);
 	const conditional = (frm.doc.items || []).filter((r) => r.status === "Confirm Applicability");
 	if (conditional.length) {
 		frm.add_custom_button(

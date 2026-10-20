@@ -19,6 +19,12 @@ def refresh_all_matrices():
 			refresh_matrix_status(name)
 		except Exception:
 			frappe.log_error(title=_("Training matrix refresh failed for {0}").format(name))
+	try:
+		from hse.training_matrix.notifications import process_overdue
+
+		process_overdue()
+	except Exception:
+		frappe.log_error(title=_("Training overdue notices failed"))
 
 
 def write_monthly_snapshot(on_date=None):
