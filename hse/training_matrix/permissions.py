@@ -31,11 +31,14 @@ def _full_access(user: str, doctype: str) -> bool:
 	DocType, other than the scoped roles above, sees every record."""
 	if user == "Administrator":
 		return True
-	roles = [r for r in frappe.get_roles(user) if r not in SCOPED_ROLES]
-	if not roles:
+	if not any(r not in SCOPED_ROLES for r in frappe.get_roles(user)):
 		return False
-	# DocPerm and Custom DocPerm (Role Permission Manager), level 0, for these roles only
-	return any(p.get("read") for p in frappe.permissions.get_valid_perms(doctype, roles=roles))
+	# DocPerm and Custom DocPerm (Role Permission Manager), level 0, for the non-scoped roles only.
+	# get_valid_perms(doctype, user) works on every v16 release (the roles= argument is newer).
+	return any(
+		p.get("read") and not p.get("permlevel") and p.get("role") not in SCOPED_ROLES
+		for p in frappe.permissions.get_valid_perms(doctype, user)
+	)
 
 
 def _own_employees(user: str) -> list[str]:
