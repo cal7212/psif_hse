@@ -442,6 +442,23 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			self.make("_T Release")  # hold point: _T Test not accepted
 
+	def test_delete_ncr_and_its_inspection(self):
+		"""An NCR and the inspection that raised it can both be deleted once it is cancelled."""
+		self.make("_T Assembly")
+		bad = self.make("_T Test", reading=3200)
+		ncr = bad.non_conformance
+		self.assertTrue(ncr)
+		# A submitted source inspection keeps its NCR.
+		with self.assertRaisesRegex(frappe.ValidationError, "Cancel these submitted"):
+			frappe.delete_doc("Non Conformance", ncr)
+		bad.reload()
+		bad.cancel()
+		frappe.delete_doc("Non Conformance", ncr)
+		self.assertFalse(frappe.db.exists("Non Conformance", ncr))
+		self.assertIsNone(frappe.db.get_value("QC Inspection", bad.name, "non_conformance"))
+		frappe.delete_doc("QC Inspection", bad.name)
+		self.assertFalse(frappe.db.exists("QC Inspection", bad.name))
+
 	def test_photo_appendix_is_optional(self):
 		insp = self.make("_T Assembly")
 		row = insp.items[0]
