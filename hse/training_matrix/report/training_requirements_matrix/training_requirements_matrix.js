@@ -23,6 +23,7 @@ frappe.query_reports["Training Requirements Matrix"] = {
 	],
 	formatter(value, row, column, data, default_formatter) {
 		const formatted = default_formatter(value, row, column, data);
+		if (data && data.is_total) return `<b>${formatted}</b>`;
 		if (column.fieldname.startsWith("r_") && value === "R") return `<b>${formatted}</b>`;
 		if (column.fieldname.startsWith("r_") && value === "—")
 			return `<span style="color: var(--gray-400)">${formatted}</span>`;

@@ -1,0 +1,79 @@
+<!-- TRN-701 Part 1 print: PSIF header, the role grid, and the hours totals (TRN-700 Rev 1 Appendix A). -->
+<style>
+	.trn701 { font-size: 9px; color: #000; }
+	.trn701 table { width: 100%; border-collapse: collapse; }
+	.trn701 .hdr td { vertical-align: middle; font-size: 9px; border: none; }
+	.trn701 h1 { font-size: 18px; font-weight: bold; text-align: center; margin: 6px 0 2px 0; padding-bottom: 3px; border-bottom: 1px solid #555; }
+	.trn701 .meta { text-align: center; font-size: 9px; margin-bottom: 6px; }
+	.trn701 .grid th, .trn701 .grid td { border: 1px solid #000; padding: 2px 4px; vertical-align: middle; }
+	.trn701 .grid th { background: #f0b323; font-weight: bold; text-align: center; }
+	.trn701 .grid .avenue td { background: #fdf3d6; font-weight: bold; }
+	.trn701 .grid .code { text-align: center; width: 62px; }
+	.trn701 .grid .R { font-weight: bold; }
+	.trn701 .grid .tbd { color: #b54708; }
+	.trn701 .grid .total td { font-weight: bold; background: #f2f2f2; }
+	.trn701 .grid .num { text-align: right; width: 44px; }
+	.trn701 .legend { margin-top: 6px; font-size: 8.5px; }
+	.trn701 .foot { margin-top: 8px; font-size: 8px; color: #333; }
+</style>
+{% var roles = columns.filter(function(c) { return c.fieldname && c.fieldname.indexOf("r_") === 0; }); %}
+{% var esc = function(v) { return frappe.utils.escape_html(v == null ? "" : String(v)); }; %}
+<div class="trn701">
+	<table class="hdr">
+		<tr>
+			<td style="width:28%">355 Gus Hipp Blvd.<br>Rockledge, FL 32955</td>
+			<td style="width:44%; text-align:center"><img src="{%= frappe.urllib.get_base_url() %}/assets/hse/images/psif_logo.jpg" style="height:52px"></td>
+			<td style="width:28%; text-align:right">Tel: (321) 636-0085<br><b>www.psifla.com</b></td>
+		</tr>
+	</table>
+	<h1>{%= __("TRN-701 Training Requirements Matrix (by Role)") %}</h1>
+	<div class="meta">
+		{%= __("TRN-700 Rev 1 Appendix A, Part 1") %} &middot; {%= __("Printed") %} {%= frappe.datetime.str_to_user(frappe.datetime.get_today()) %}
+		{% if (filters.avenue) { %} &middot; {%= __("Avenue") %}: {%= esc(filters.avenue) %}{% } %}
+		{% if (filters.training_role) { %} &middot; {%= __("Training Role") %}: {%= esc(filters.training_role) %}{% } %}
+	</div>
+	<table class="grid">
+		<thead>
+			<tr>
+				<th style="width:70px">{%= __("Course ID") %}</th>
+				<th>{%= __("Training Topic") %}</th>
+				<th style="width:84px">{%= __("Delivery Method") %}</th>
+				<th style="width:120px">{%= __("Frequency") %}</th>
+				<th style="width:100px">{%= __("Competency Verification") %}</th>
+				{% for (var r = 0; r < roles.length; r++) { %}<th class="code">{%= esc(roles[r].label) %}</th>{% } %}
+				<th class="num">{%= __("Minutes") %}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% var last_avenue = null; %}
+			{% for (var i = 0; i < data.length; i++) { var row = data[i]; %}
+				{% if (row.is_total) { %}
+				<tr class="total">
+					<td></td>
+					<td colspan="4">{%= esc(row.course_title) %}</td>
+					{% for (var r = 0; r < roles.length; r++) { %}<td class="code">{%= esc(row[roles[r].fieldname]) %}</td>{% } %}
+					<td class="num">{%= row.duration_minutes ? row.duration_minutes : "" %}</td>
+				</tr>
+				{% } else { %}
+				{% if (row.avenue !== last_avenue) { last_avenue = row.avenue; %}
+				<tr class="avenue"><td colspan="{%= 6 + roles.length %}">{%= esc((row.avenue || "").toUpperCase()) %}</td></tr>
+				{% } %}
+				<tr>
+					<td><b>{%= esc(row.course) %}</b></td>
+					<td>{%= esc(row.course_title) %}</td>
+					<td class="{%= row.delivery_method === 'TBD' ? 'tbd' : '' %}">{%= esc(row.delivery_method) %}</td>
+					<td>{%= esc(row.frequency_summary) %}</td>
+					<td class="{%= row.verification_method === 'TBD' ? 'tbd' : '' %}">{%= esc(row.verification_method) %}</td>
+					{% for (var r = 0; r < roles.length; r++) { var code = row[roles[r].fieldname] || ""; %}<td class="code {%= code %}">{%= esc(code) %}</td>{% } %}
+					<td class="num">{%= row.duration_minutes ? row.duration_minutes : "" %}</td>
+				</tr>
+				{% } %}
+			{% } %}
+		</tbody>
+	</table>
+	<div class="legend">
+		<b>R</b> = {%= __("required for the role") %} &nbsp; <b>C</b> = {%= __("conditional: required only if the task or hazard applies") %} &nbsp; <b>&mdash;</b> = {%= __("not applicable") %}.
+		{%= __("Hours count courses with a recorded duration; courses with no duration yet are counted separately.") %}
+	</div>
+	<div class="foot">{%= __("Printed from the Training Matrix module. The controlled copy of TRN-700 is on the secure share.") %}</div>
+</div>
