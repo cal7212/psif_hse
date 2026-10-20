@@ -3,12 +3,17 @@
 """TRN-701 Part 1: Training Requirements Matrix by role (TRN-700 Rev 1 Appendix A).
 
 R = required for the role, C = conditional (required if the task or hazard applies), — = not applicable.
+Courses a role needs through a skill (Skill Definition) are included. Three total rows close the
+report: required hours and conditional hours per role, and how many of those courses have no
+duration yet, so a total is never silently short.
 """
 
 import frappe
 from frappe import _
 
-from hse.training_matrix.status import NOT_REQUIRED, REQUIRED
+from hse.training_matrix import skill_status as ss
+from hse.training_matrix import skills as sk
+from hse.training_matrix.status import CONDITIONAL, NOT_REQUIRED, REQUIRED
 
 AVENUE_ORDER = {"HR Onboarding": 0, "Safety / EHS": 1, "QMS": 2, "Technical": 3}
 
@@ -42,6 +47,7 @@ def execute(filters=None):
 		fields=["parent", "training_role", "requirement_code"],
 	):
 		codes[(r.parent, r.training_role)] = r.requirement_code
+	add_skill_courses(codes, roles)
 
 	columns = [
 		{
@@ -87,4 +93,41 @@ def execute(filters=None):
 	if filters.get("training_role"):
 		key = "r_" + frappe.scrub(filters.training_role)
 		data = [d for d in data if d.get(key) != NOT_REQUIRED]
-	return columns, data
+	return columns, data + total_rows(data, roles)
+
+
+def add_skill_courses(codes: dict, roles: list[str]) -> None:
+	"""Courses a role needs because the role needs a skill (stricter code wins)."""
+	defs = sk.definitions()
+	rank = {REQUIRED: 2, CONDITIONAL: 1}
+	for role in roles:
+		for skill, code in sk.role_skills([role]).items():
+			for course in ss.skill_courses(defs, skill):
+				if rank.get(code, 0) > rank.get(codes.get((course, role)), 0):
+					codes[(course, role)] = code
+
+
+def total_rows(data: list[dict], roles: list[str]) -> list[dict]:
+	"""Required hours, conditional hours and courses still missing a duration, per role."""
+	if not data:
+		return []
+	rows = [
+		{"course_title": _("Required training (hours)"), "is_total": 1},
+		{"course_title": _("Conditional training (hours)"), "is_total": 1},
+		{"course_title": _("Courses with no duration yet"), "is_total": 1},
+	]
+	for role in roles:
+		key = "r_" + frappe.scrub(role)
+		required = [d for d in data if d.get(key) == REQUIRED]
+		conditional = [d for d in data if d.get(key) == CONDITIONAL]
+		rows[0][key] = hours(required)
+		rows[1][key] = hours(conditional)
+		missing = sum(1 for d in required + conditional if not d.get("duration_minutes"))
+		rows[2][key] = str(missing) if missing else NOT_REQUIRED
+	rows[0]["duration_minutes"] = sum(d.get("duration_minutes") or 0 for d in data)
+	return rows
+
+
+def hours(rows: list[dict]) -> str:
+	minutes = sum(d.get("duration_minutes") or 0 for d in rows)
+	return f"{minutes / 60:.1f}" if rows else NOT_REQUIRED
