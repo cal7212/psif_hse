@@ -64,6 +64,15 @@ class IntegrationTestSkillAuthorization(IntegrationTestCase):
 		frappe.db.set_value("Employee", cls.worker, "reports_to", cls.manager)
 		frappe.get_doc("User", cls.manager_user).add_roles("Employee")
 
+	def setUp(self):
+		"""Each test starts from an untrained worker: no matrix, authorizations or HR skill map."""
+		frappe.set_user("Administrator")
+		frappe.db.delete("Skill Authorization", {"employee": self.worker})
+		if frappe.db.exists("Employee Training Matrix", self.worker):
+			frappe.delete_doc("Employee Training Matrix", self.worker, force=1, ignore_permissions=True)
+		if frappe.db.exists("Employee Skill Map", self.worker):
+			frappe.delete_doc("Employee Skill Map", self.worker, force=1, ignore_permissions=True)
+
 	def tearDown(self):
 		frappe.set_user("Administrator")
 

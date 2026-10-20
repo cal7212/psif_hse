@@ -48,7 +48,7 @@ class SkillAuthorization(Document):
 	def validate_authorizer(self):
 		user = self.authorized_by or frappe.session.user
 		if frappe.db.get_value("Employee", self.employee, "user_id") == user:
-			frappe.throw(_("You cannot authorize your own skills."))
+			frappe.throw(_("You cannot authorize your own skills."), frappe.PermissionError)
 		if set(frappe.get_roles(user)) & set(AUTHORIZER_ROLES):
 			return
 		manager = frappe.db.get_value("Employee", self.employee, "reports_to")

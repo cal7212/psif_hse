@@ -133,6 +133,7 @@ class IntegrationTestEmployeeGroupMapping(IntegrationTestCase):
 	def test_group_membership_assigns_role(self):
 		from erpnext.setup.doctype.employee.test_employee import make_employee
 
+		make_designation(OFFICE)  # created by the other class, but rolled back after it
 		employee = make_employee(
 			"_t_group_member@example.com",
 			company=ensure_company(),
