@@ -1098,6 +1098,11 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			self.make_order_unit(unit_qty=3, unit_no=4)
 		one = self.make_order_unit(unit_qty=3, unit_no=1, serial_no="_T-MU-SN1")
 		self.assertEqual(one.name, f"{MU_WO}-1")
+		# Missing parts belong to the physical unit, never copied to the other units.
+		one.append(
+			"missing_parts", {"item_description": "Filter element", "qty": 1, "reason": "Missing", "found": 1}
+		)
+		one.save()
 		with self.assertRaises(frappe.ValidationError):
 			self.make_order_unit(unit_qty=3, unit_no=1)
 		res = create_remaining_units(one.name)
@@ -1107,6 +1112,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual((two.unit_no, two.unit_qty, two.model), (2, 3, "HPU-MU"))
 		self.assertIsNone(two.serial_no)
 		self.assertEqual(two.status, "Pending Build")
+		self.assertEqual(two.missing_parts, [])
+		self.assertEqual(len(frappe.get_doc("QC Unit", one.name).missing_parts), 1)
 		self.assertEqual(create_remaining_units(one.name)["created"], [])
 		self.clear_order()
 
