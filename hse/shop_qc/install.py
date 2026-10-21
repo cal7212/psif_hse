@@ -170,6 +170,8 @@ def make_failure_causes():
 PMG_TEST_STAGES = ("Pressure & Function Test", "Repair - Test")
 PROOF_TEST_STAGES = ("Pressure & Function Test", "LA - Pressure & Function Test", "Repair - Test")
 COATING_STAGES = ("Coating",)
+# Testing waits until every missing part is found.
+ALL_PARTS_STAGES = tuple(dict.fromkeys(PMG_TEST_STAGES + PROOF_TEST_STAGES))
 
 
 def make_default_stages():
@@ -195,6 +197,7 @@ def make_default_stages():
 					"pmg_test": 1 if name in PMG_TEST_STAGES else 0,
 					"proof_test": 1 if name in PROOF_TEST_STAGES else 0,
 					"coating_record": 1 if name in COATING_STAGES else 0,
+					"requires_all_parts": 1 if name in ALL_PARTS_STAGES else 0,
 				}
 			).insert(ignore_permissions=True)
 
