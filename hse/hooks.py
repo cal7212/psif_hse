@@ -275,6 +275,7 @@ doctype_js = {
 		"public/js/non_conformance.js",
 		"public/js/non_conformance_qc.js",
 		"public/js/non_conformance_capa.js",
+		"public/js/non_conformance_rework.js",  # QM-104 Rev. 3: Rework records, escalation, print format
 		"public/js/training_retraining.js",  # Training Matrix: "Retraining Required" (TRN-700 §4.10)
 	],
 	"Injury_Illness Report": "public/js/training_retraining.js",
@@ -290,6 +291,7 @@ doctype_list_js = {
 
 doc_events = {
 	"Non Conformance": {
+		"before_insert": "hse.quality_metrics.rework.before_insert",  # Rework: QA-RW- name series
 		"validate": [
 			"hse.quality_metrics.ncr.validate",  # QM-104 NCR fields and closure rules; runs first
 			"hse.quality_metrics.capa.validate",  # QM-128 CAPA numbering, due dates and closure

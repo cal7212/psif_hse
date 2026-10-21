@@ -152,11 +152,29 @@ def repair_failure_causes(start, end):
 
 
 # ---------------------------------------------------------------- Non Conformance
+# QM-104 Rev. 3: the NCR metrics count formal NCRs only; Rework is counted separately.
+NOT_REWORK = {"record_type": ["!=", "Rework"]}
+
+
+def rework_opened(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Non Conformance",
+		filters={"creation": ["between", [s, e]], "record_type": "Rework"},
+		fields=["name", "status", "escalated_to"],
+	)
+	if not rows:
+		return 0, _("None opened.")
+	escalated = [r.name for r in rows if r.escalated_to]
+	still_open = [r.name for r in rows if r.status == "Open"]
+	return len(rows), _("Open: {0}; escalated to NCR: {1}").format(len(still_open), len(escalated))
+
+
 def nc_avg_days_to_resolve(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
 		"Non Conformance",
-		filters={"status": "Resolved", "resolved_on": ["between", [s, e]]},
+		filters={"status": "Resolved", "resolved_on": ["between", [s, e]], **NOT_REWORK},
 		fields=["name", "creation", "resolved_on"],
 	)
 	if not rows:
@@ -172,7 +190,7 @@ def nc_open_critical_over_7_days(start, end):
 	cutoff = now_datetime() - timedelta(days=7)
 	rows = frappe.get_all(
 		"Non Conformance",
-		filters={"status": "Open", "severity": "Critical", "creation": ["<", cutoff]},
+		filters={"status": "Open", "severity": "Critical", "creation": ["<", cutoff], **NOT_REWORK},
 		pluck="name",
 	)
 	return len(rows), (_("Open now: {0}").format(_names(rows)) if rows else _("None open."))
@@ -182,7 +200,7 @@ def nc_opened(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
 		"Non Conformance",
-		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"]},
+		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"], **NOT_REWORK},
 		fields=["name", "severity"],
 	)
 	if not rows:
@@ -372,20 +390,21 @@ METRICS = {
 	),
 	"repair_failure_causes": ("Repairs with a failure cause", repair_failure_causes, "Nos", False, "QC Unit"),
 	"nc_avg_days_to_resolve": (
-		"Average days to resolve a Non Conformance",
+		"Average days to resolve an NCR (excludes Rework)",
 		nc_avg_days_to_resolve,
 		"Day",
 		False,
 		"Non Conformance",
 	),
 	"nc_open_critical_over_7_days": (
-		"Critical Non Conformances open > 7 days (now)",
+		"Critical NCRs open > 7 days (now)",
 		nc_open_critical_over_7_days,
 		"Nos",
 		True,
 		"Non Conformance",
 	),
-	"nc_opened": ("Non Conformances opened", nc_opened, "Nos", False, "Non Conformance"),
+	"nc_opened": ("NCRs opened (excludes Rework)", nc_opened, "Nos", False, "Non Conformance"),
+	"rework_opened": ("Rework records opened", rework_opened, "Nos", False, "Non Conformance"),
 	"asset_inspection_on_time_pct": (
 		"Asset maintenance/inspections on time (%)",
 		asset_inspection_on_time_pct,

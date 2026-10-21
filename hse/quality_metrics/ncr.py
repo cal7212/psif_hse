@@ -34,6 +34,7 @@ SOURCES = (
 	"Housekeeping Inspection",
 	OTHER,
 )
+NOT_REWORK = "eval:doc.record_type!='Rework'"
 DISPOSITION_DEP = "eval:doc.disposition=='Other'"
 CUSTOMER_DEP = "eval:['Use As-Is','Repair'].includes(doc.disposition)"
 
@@ -53,7 +54,8 @@ def get_custom_fields() -> list[dict]:
 			"fieldname": "ncr_section",
 			"label": "NCR Information",
 			"fieldtype": "Section Break",
-			"insert_after": "resolved_on",
+			"insert_after": "crit_supplier",
+			"depends_on": NOT_REWORK,
 		},
 		{
 			"fieldname": "ncr_date",
@@ -146,6 +148,7 @@ def get_custom_fields() -> list[dict]:
 			"fieldtype": "Section Break",
 			"insert_after": "preventive_action",
 			"description": "To be completed by management or QA.",
+			"depends_on": NOT_REWORK,
 		},
 		{
 			"fieldname": "disposition",
@@ -212,6 +215,7 @@ def get_custom_fields() -> list[dict]:
 			"label": "Verification of Correction",
 			"fieldtype": "Section Break",
 			"insert_after": "auth_customer",
+			"depends_on": NOT_REWORK,
 		},
 		{
 			"fieldname": "quality_verification",
@@ -256,6 +260,10 @@ MOVED_FIELDS = {"verified_by": "ncr_verification_column", "verification_date": "
 def setup_ncr(module: str) -> None:
 	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+	from hse.quality_metrics.rework import setup_rework
+
+	# Record Type and the NCR criteria come first: the NCR Information section follows them.
+	setup_rework(module, SOURCES)
 	rows = get_custom_fields()
 	for row in rows:
 		row["module"] = module
@@ -291,7 +299,10 @@ def is_custom(fieldname: str) -> bool:
 
 # ---------------------------------------------------------------- document events
 def validate(doc, method=None):
+	from hse.quality_metrics import rework
+
 	fill_from_origin(doc)
+	rework.validate(doc)
 	validate_log_number(doc, "ncr_no", _("NCR No."))
 	if doc.get("disposition") == OTHER and not cstr(doc.get("disposition_other")).strip():
 		frappe.throw(_("Describe the Other disposition."))
@@ -318,7 +329,9 @@ def validate_closure(doc) -> None:
 		missing.append(_("Quality Verification: Accept"))
 	if missing:
 		frappe.throw(
-			_("Cannot resolve this NCR until these are completed: {0}").format(", ".join(missing)),
+			_("Cannot resolve this {0} until these are completed: {1}").format(
+				_("Rework") if doc.get("record_type") == "Rework" else _("NCR"), ", ".join(missing)
+			),
 			title=_("Resolution Blocked"),
 		)
 

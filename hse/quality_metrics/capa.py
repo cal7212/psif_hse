@@ -61,7 +61,7 @@ def get_custom_fields() -> list[dict]:
 			"fieldname": "capa_tab",
 			"label": "CAPA",
 			"fieldtype": "Tab Break",
-			"insert_after": "qc_reinspection",
+			"insert_after": "escalated_to",  # after the Rework tab
 		},
 		{
 			"fieldname": "capa_required",
