@@ -216,6 +216,8 @@
   "ship_service",
   "ship_trailer",
   "tab_qc",
+  "section_missing_parts",
+  "missing_parts",
   "section_qc",
   "stage_progress",
   "section_qc_status",
@@ -1457,6 +1459,19 @@
    "label": "QC Status"
   },
   {
+   "fieldname": "section_missing_parts",
+   "fieldtype": "Section Break",
+   "label": "Missing Parts",
+   "depends_on": "eval:doc.product_type=='Power Unit' || (doc.missing_parts || []).length",
+   "description": "One list for the whole build, shared by every QC check. Unfound parts raise a Non Conformance; it can be resolved once every part is marked Found. Stages marked All Parts Present (the test stages) cannot be completed while a part is outstanding."
+  },
+  {
+   "fieldname": "missing_parts",
+   "fieldtype": "Table",
+   "label": "Missing Parts",
+   "options": "QC Missing Part"
+  },
+  {
    "fieldname": "section_qc",
    "fieldtype": "Section Break",
    "label": "QC Status (Frappe-owned; never overwritten by sync)"
@@ -1591,7 +1606,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-15 17:00:00.000000",
+ "modified": "2026-10-21 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

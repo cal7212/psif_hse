@@ -20,6 +20,7 @@ from hse.hse.instruments import (
 	needs_instrument,
 	pick,
 )
+from hse.shop_qc import missing_parts
 from hse.shop_qc.doctype.qc_unit.qc_unit import format_iso_code, hose_spec, iso_within
 from hse.shop_qc.unit_stages import get_unit_stage_selection
 from hse.shop_qc.utils import (
@@ -189,8 +190,14 @@ class QCInspection(Document):
 		self.evaluate_circuit_tests()
 		self.sync_instruments()
 		self.stamp_checked_lines()
+		missing_parts.sync_from_inspection(self)
 		if self.docstatus == 0:
 			self.status = "Pending"
+
+	def onload(self):
+		if self.docstatus == 0 and self.qc_unit and self.stage:
+			if frappe.get_cached_value("QC Stage", self.stage, "requires_all_parts"):
+				self.set_onload("missing_parts_outstanding", len(missing_parts.outstanding(self.qc_unit)))
 
 	def stamp_checked_lines(self):
 		"""Record when and by whom each checklist line was checked.
@@ -500,6 +507,7 @@ class QCInspection(Document):
 		self.fill_missing_check_stamps()
 		self.check_test_equipment()
 		self.check_hold_points()
+		missing_parts.check_all_parts_present(self)
 		self.check_not_already_accepted()
 		self.status = "Rejected" if self.get_failed_rows() else "Accepted"
 		if self.status == "Accepted" and self.is_final_release():

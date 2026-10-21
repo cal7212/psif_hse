@@ -422,6 +422,7 @@ NCR_SOURCE_LINKS = (
 	("QC Hose Test", "non_conformance"),  # child of QC Inspection; docstatus follows the parent
 	("Asset Inspection", "non_conformance"),
 	("Housekeeping Inspection", "non_conformance"),
+	("QC Missing Part", "non_conformance"),  # rows on a QC Unit, and the copies on its checks
 )
 
 

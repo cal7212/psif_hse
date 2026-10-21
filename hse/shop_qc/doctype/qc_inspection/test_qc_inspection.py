@@ -339,6 +339,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				"QC Accumulator Test",
 				"QC Proof Test",
 				"QC Coating Layer",
+				"QC Missing Part",
 			):
 				frappe.db.delete(child, {"parent": ("in", names)})
 		frappe.db.delete("QC Inspection", {"qc_unit": unit})
@@ -441,6 +442,69 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(self.status(), "QC Hold")
 		with self.assertRaises(frappe.ValidationError):
 			self.make("_T Release")  # hold point: _T Test not accepted
+
+	def test_missing_parts_shared_ncr_and_test_gate(self):
+		"""One missing-parts list across checks: it raises an NCR, blocks testing, and the NCR
+		can be resolved once every part is Found."""
+		frappe.db.set_value("QC Stage", "_T Test", "requires_all_parts", 1)
+		self.addCleanup(frappe.db.set_value, "QC Stage", "_T Test", "requires_all_parts", 0)
+		asm = self.make("_T Assembly", submit=False)
+		asm.append(
+			"missing_parts",
+			{"item_description": "Relief valve", "part_number": "_T-RV-1", "qty": 1, "reason": "Missing"},
+		)
+		asm.save()
+		unit = frappe.get_doc("QC Unit", WO)
+		self.assertEqual(len(unit.missing_parts), 1)
+		part = unit.missing_parts[0]
+		self.assertEqual(part.reported_stage, "_T Assembly")
+		self.assertEqual(part.reported_inspection, asm.name)
+		self.assertEqual(part.reported_by, self.employee)
+		self.assertTrue(part.non_conformance)
+		self.assertEqual(asm.missing_parts[0].part_id, part.name)
+		ncr = part.non_conformance
+		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "qc_unit"), WO)
+		self.assertEqual(self.status(), "QC Hold")
+
+		# The NCR cannot be resolved while a part is outstanding.
+		nc = frappe.get_doc("Non Conformance", ncr)
+		nc.update(
+			{"status": "Resolved", "disposition": "Rework to Specification", "quality_verification": "Accept"}
+		)
+		with self.assertRaisesRegex(frappe.ValidationError, "every missing part"):
+			nc.save()
+
+		# Testing cannot be completed with a part outstanding; the draft shows the shared list.
+		with self.assertRaisesRegex(frappe.ValidationError, "missing parts outstanding"):
+			self.make("_T Test", reading=3000)
+		test = frappe.get_doc("QC Inspection", {"qc_unit": WO, "stage": "_T Test", "docstatus": 0})
+		self.assertEqual([r.part_id for r in test.missing_parts], [part.name])
+
+		# An older open copy of another check must not undo a part found meanwhile.
+		stale = frappe.get_doc("QC Inspection", asm.name)
+		test.missing_parts[0].found = 1
+		test.save()
+		part.reload()
+		self.assertTrue(part.found)
+		self.assertTrue(part.found_on)
+		self.assertEqual(part.found_by, self.employee)
+		self.assertEqual(part.found_inspection, test.name)
+		self.assertTrue(frappe.get_doc("QC Inspection", asm.name).missing_parts[0].found)  # copy refreshed
+		stale.remarks = "Saved from an older copy"
+		stale.save()
+		part.reload()
+		self.assertTrue(part.found)
+
+		test.reload()
+		test.submit()
+		self.assertEqual(test.status, "Accepted")
+		self.assertTrue(test.missing_parts[0].found)  # snapshot kept on the completed check
+		nc = frappe.get_doc("Non Conformance", ncr)
+		nc.update(
+			{"status": "Resolved", "disposition": "Rework to Specification", "quality_verification": "Accept"}
+		)
+		nc.save()
+		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "status"), "Resolved")
 
 	def test_delete_ncr_and_its_inspection(self):
 		"""An NCR and the inspection that raised it can both be deleted once it is cancelled."""

@@ -8,6 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
+from hse.shop_qc import missing_parts
 from hse.shop_qc.multi_unit import (
 	hose_build_name,
 	unit_base,
@@ -116,8 +117,10 @@ class QCUnit(Document):
 		self.set_post_shipment_review()
 		self.set_repair_costing()
 		self.validate_status_change()
+		missing_parts.validate_unit(self)
 
 	def on_update(self):
+		missing_parts.on_update_unit(self)
 		# Ticking or unticking Required QC can change Ready for Release. The status is written
 		# without touching modified, so the open form can be saved again straight away.
 		if not self.get("qc_stages") or self.flags.in_insert or self.status in LOCKED_STATUSES:

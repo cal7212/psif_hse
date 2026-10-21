@@ -296,6 +296,7 @@ doc_events = {
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
 			"hse.shop_qc.events.validate",
+			"hse.shop_qc.missing_parts.validate_ncr_closure",  # resolve only once every part is Found
 			"hse.quality_metrics.events.non_conformance_validate",
 		],
 		"on_update": [

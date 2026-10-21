@@ -33,6 +33,8 @@
   "section_items",
   "instructions",
   "items",
+  "section_missing_parts",
+  "missing_parts",
   "section_pmg_tests",
   "pmg_tests",
   "device_tests",
@@ -253,6 +255,19 @@
    "reqd": 1
   },
   {
+   "fieldname": "section_missing_parts",
+   "fieldtype": "Section Break",
+   "label": "Missing Parts",
+   "depends_on": "eval:doc.product_type=='Power Unit' || (doc.missing_parts || []).length",
+   "description": "The unit's missing-parts list, shared by every check on this unit. Add parts that are not on the BOM, still in fab or missing; tick Found as they turn up. Saving updates the unit and its Non Conformance."
+  },
+  {
+   "fieldname": "missing_parts",
+   "fieldtype": "Table",
+   "label": "Missing Parts",
+   "options": "QC Missing Part"
+  },
+  {
    "depends_on": "eval:(doc.pmg_tests || []).length",
    "fieldname": "section_pmg_tests",
    "fieldtype": "Section Break",
@@ -365,7 +380,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-15 17:00:00.000000",
+ "modified": "2026-10-21 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",
