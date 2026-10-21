@@ -465,7 +465,6 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		ncr = part.non_conformance
 		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "qc_unit"), WO)
 		self.assertEqual(self.status(), "QC Hold")
-
 		# The NCR cannot be resolved while a part is outstanding.
 		nc = frappe.get_doc("Non Conformance", ncr)
 		nc.update(
@@ -474,10 +473,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		with self.assertRaisesRegex(frappe.ValidationError, "every missing part"):
 			nc.save()
 
-		# Testing cannot be completed with a part outstanding; the draft shows the shared list.
-		with self.assertRaisesRegex(frappe.ValidationError, "missing parts outstanding"):
-			self.make("_T Test", reading=3000)
-		test = frappe.get_doc("QC Inspection", {"qc_unit": WO, "stage": "_T Test", "docstatus": 0})
+		# A later check shows the same shared list.
+		test = self.make("_T Test", reading=3000, submit=False)
 		self.assertEqual([r.part_id for r in test.missing_parts], [part.name])
 
 		# An older open copy of another check must not undo a part found meanwhile.
@@ -494,6 +491,27 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		stale.save()
 		part.reload()
 		self.assertTrue(part.found)
+
+		# A second part reported from the test check joins the same NCR.
+		test.reload()
+		test.append(
+			"missing_parts",
+			{"item_description": "Pressure gauge", "part_number": "_T-PG-1", "qty": 1, "reason": "In Fab"},
+		)
+		test.save()
+		unit.reload()
+		self.assertEqual(len(unit.missing_parts), 2)
+		self.assertEqual(unit.missing_parts[1].non_conformance, ncr)
+
+		# Earlier checks can be completed; testing cannot while a part is outstanding.
+		asm.reload()
+		asm.submit()
+		test.reload()
+		with self.assertRaisesRegex(frappe.ValidationError, "missing parts outstanding"):
+			test.submit()
+		test.reload()
+		test.missing_parts[1].found = 1
+		test.save()
 
 		test.reload()
 		test.submit()
