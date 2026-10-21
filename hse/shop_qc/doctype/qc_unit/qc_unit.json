@@ -17,6 +17,8 @@
   "trulinx_work_order",
   "parent_qc_unit",
   "parent_work_order",
+  "installed_in",
+  "installed_in_work_order",
   "trulinx_line",
   "trulinx_sales_order",
   "customer_po",
@@ -325,6 +327,23 @@
    "read_only": 1,
    "fetch_from": "parent_qc_unit.trulinx_work_order",
    "depends_on": "eval:doc.parent_qc_unit"
+  },
+  {
+   "fieldname": "installed_in",
+   "fieldtype": "Link",
+   "label": "Installed In (Parent Unit)",
+   "options": "QC Unit",
+   "search_index": 1,
+   "depends_on": "eval:!doc.parent_qc_unit && doc.job_type!='Repair'",
+   "description": "For a sub-assembly built on its own work order, such as a control panel: the unit it is installed in and tested with. That unit's test and final release wait until this one has passed its build checks with no open NCR or missing parts. It is released with that unit."
+  },
+  {
+   "fieldname": "installed_in_work_order",
+   "fieldtype": "Data",
+   "label": "Parent Unit Work Order",
+   "read_only": 1,
+   "fetch_from": "installed_in.trulinx_work_order",
+   "depends_on": "eval:doc.installed_in"
   },
   {
    "description": "Only if TrulinX uses line numbers or suffixes for multi-unit work orders.",
@@ -1606,7 +1625,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-21 10:00:00.000000",
+ "modified": "2026-10-21 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

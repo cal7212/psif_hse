@@ -42,6 +42,8 @@ PER_UNIT_FIELDS = (
 	"qc_flag",
 	"open_non_conformances",
 	"sync_note",
+	"installed_in",
+	"installed_in_work_order",
 )
 PER_UNIT_TABLES = ("repair_parts", "accessory_items", "post_shipment_reviews")
 

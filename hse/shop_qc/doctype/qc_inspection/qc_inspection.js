@@ -51,16 +51,29 @@ frappe.ui.form.on("QC Inspection", {
 
 	refresh(frm) {
 		hse_set_photo_items(frm);
-		const outstanding = (frm.doc.__onload || {}).missing_parts_outstanding;
-		if (frm.doc.docstatus === 0 && outstanding) {
-			frm.set_intro(
+		const onload = frm.doc.__onload || {};
+		const notes = [];
+		if (onload.missing_parts_outstanding) {
+			notes.push(
 				__(
 					"{0} missing part(s) are not yet found on this unit. This test stage cannot be completed until every part in Missing Parts is marked Found.",
-					[outstanding]
-				),
-				"red"
+					[onload.missing_parts_outstanding]
+				)
 			);
 		}
+		if ((onload.sub_assembly_blockers || []).length) {
+			notes.push(
+				__(
+					"This stage cannot be completed until the sub-assemblies installed in this unit are ready: {0}",
+					[
+						onload.sub_assembly_blockers
+							.map((b) => frappe.utils.escape_html(b))
+							.join("; "),
+					]
+				)
+			);
+		}
+		if (frm.doc.docstatus === 0 && notes.length) frm.set_intro(notes.join("<br>"), "red");
 		frm.trigger("load_applicable_stages");
 		frm.trigger("set_indicator");
 		frm.trigger("render_instructions");

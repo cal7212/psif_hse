@@ -45,6 +45,7 @@ PROC = "_Test QC Procedure"
 WO = "_TEST-WO-1"
 HOSE_WO = "_TEST-HOSE-WO-1"
 MU_WO = "_TEST-MU-1"
+CP_WO = "_TEST-CP-1"
 SHOP = "_T Shop"
 HOSE_SHOP = "_T Hose Shop"
 REPAIR_SHOP = "_T Repair Shop"
@@ -347,7 +348,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		frappe.delete_doc("QC Unit", unit, force=1)
 
 	def setUp(self):
-		for unit in (f"{WO}-H", WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100", "RGA-_T101"):
+		for unit in (CP_WO, f"{WO}-H", WO, HOSE_WO, "_TEST-HOSE-WO-2", "RGA-_T100", "RGA-_T101"):
 			self.clear_unit(unit)
 		frappe.get_doc(
 			{
@@ -523,6 +524,56 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		)
 		nc.save()
 		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "status"), "Resolved")
+
+	def test_control_panel_sub_assembly_tested_with_hpu(self):
+		"""A control panel on its own work order is linked to the HPU, must pass its build checks
+		before the HPU test, and is released with the HPU."""
+		frappe.db.set_value("QC Stage", "_T Test", "requires_all_parts", 1)
+		self.addCleanup(frappe.db.set_value, "QC Stage", "_T Test", "requires_all_parts", 0)
+		panel = frappe.get_doc(
+			{
+				"doctype": "QC Unit",
+				"shop": SHOP,
+				"product_type": "Power Unit",
+				"job_type": "New Build",
+				"trulinx_work_order": CP_WO,
+				"model": "CP-460-3",
+				"serial_no": "_T-CP-SN1",
+				"company": self.company,
+				"installed_in": WO,
+			}
+		).insert()
+		self.addCleanup(self.clear_unit, CP_WO)
+		self.assertEqual(panel.installed_in_work_order, WO)
+		# One level only, and never itself.
+		host = frappe.get_doc("QC Unit", WO)
+		host.installed_in = CP_WO
+		with self.assertRaises(frappe.ValidationError):
+			host.save()
+		panel.installed_in = CP_WO
+		with self.assertRaises(frappe.ValidationError):
+			panel.save()
+		panel.reload()
+
+		self.make("_T Assembly")
+		with self.assertRaisesRegex(frappe.ValidationError, "sub-assemblies installed in"):
+			self.make("_T Test", reading=3000)
+		test = frappe.get_doc("QC Inspection", {"qc_unit": WO, "stage": "_T Test", "docstatus": 0})
+		test.run_method("onload")
+		self.assertTrue(test.get_onload().get("sub_assembly_blockers"))
+
+		# The panel's own build check; its test stage is covered by the HPU test.
+		self.make("_T Assembly", unit=CP_WO)
+		self.assertEqual(frappe.db.get_value("QC Unit", CP_WO, "status"), "Ready for Release")
+		test.reload()
+		test.submit()
+		self.assertEqual(test.status, "Accepted")
+		self.make("_T Release")
+		self.assertEqual(self.status(), "Released")
+		released = frappe.db.get_value("QC Unit", CP_WO, ["status", "released_on"], as_dict=True)
+		self.assertEqual(released.status, "Released")
+		self.assertEqual(released.released_on, frappe.db.get_value("QC Unit", WO, "released_on"))
+		self.assertEqual([u.name for u in get_qc_certificate_data(WO).sub_units], [CP_WO])
 
 	def test_delete_ncr_and_its_inspection(self):
 		"""An NCR and the inspection that raised it can both be deleted once it is cancelled."""
