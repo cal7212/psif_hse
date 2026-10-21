@@ -82,8 +82,10 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 	if not qc_unit or not frappe.db.exists("QC Unit", qc_unit):
 		return None
 
+	from hse.shop_qc import sub_assemblies
+
 	unit = frappe.db.get_value(
-		"QC Unit", qc_unit, ["status", "open_non_conformances", "released_on"], as_dict=True
+		"QC Unit", qc_unit, ["status", "open_non_conformances", "released_on", "installed_in"], as_dict=True
 	)
 	open_ncs = count_open_ncs(qc_unit)
 	values = {"open_non_conformances": open_ncs}
@@ -95,6 +97,9 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 		accepted = get_accepted_by_stage(qc_unit)
 		final = get_final_stage(stages)
 		required_build = [s.name for s in stages if s.is_required and not s.is_final_release]
+		if unit.installed_in:
+			# A sub-assembly is tested with the unit it is installed in.
+			required_build = [s for s in required_build if not sub_assemblies.tested_with_host(s)]
 		has_any = frappe.db.exists("QC Inspection", {"qc_unit": qc_unit, "docstatus": 1})
 
 		if open_ncs:
@@ -115,6 +120,10 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 		elif unit.released_on:
 			values["released_on"] = None
 			values["released_by"] = None
+		values["status"] = new_status
+		if unit.installed_in and new_status != "Released":
+			sub_assemblies.apply_host_release(qc_unit, values, open_ncs)
+		new_status = values["status"]
 
 	values["status"] = new_status
 	# db.set_value: no version noise and does not disturb the TrulinX sync hash
@@ -123,6 +132,8 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 		frappe.get_doc("QC Unit", qc_unit).add_comment(
 			"Info", _("QC Status changed from {0} to {1}").format(unit.status, new_status)
 		)
+	if not unit.installed_in:
+		sub_assemblies.refresh_sub_units(qc_unit)
 	return new_status
 
 
@@ -274,9 +285,12 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		for row in doc.get("instruments") or []:
 			entry = instruments.setdefault(row.instrument, frappe._dict(row.as_dict(), stages=[]))
 			entry.stages.append(doc.stage)
+	from hse.shop_qc.sub_assemblies import get_sub_units
+
 	return frappe._dict(
 		unit=unit,
 		shop=shop,
+		sub_units=get_sub_units(unit.name),
 		instruments=list(instruments.values()),
 		title=shop.get("certificate_title") or _("{0} Quality Control Certificate").format(unit.shop or ""),
 		statement=shop.get("certificate_statement"),

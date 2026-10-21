@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt
 
-from hse.shop_qc import missing_parts
+from hse.shop_qc import missing_parts, sub_assemblies
 from hse.shop_qc.multi_unit import (
 	hose_build_name,
 	unit_base,
@@ -108,6 +108,7 @@ class QCUnit(Document):
 		self.validate_unique_serial()
 		validate_unit_numbers(self)
 		validate_hose_build(self)
+		sub_assemblies.validate_installed_in(self)
 		self.set_test_pressures()
 		self.validate_hoses()
 		self.validate_pump_motor_groups()
@@ -121,6 +122,11 @@ class QCUnit(Document):
 
 	def on_update(self):
 		missing_parts.on_update_unit(self)
+		if self.has_value_changed("installed_in") and not self.flags.in_insert:
+			# Linked or unlinked: its test stages now follow (or no longer follow) the parent unit.
+			status = update_unit_status(self.name, update_modified=False)
+			if status:
+				self.update({"status": status})
 		# Ticking or unticking Required QC can change Ready for Release. The status is written
 		# without touching modified, so the open form can be saved again straight away.
 		if not self.get("qc_stages") or self.flags.in_insert or self.status in LOCKED_STATUSES:

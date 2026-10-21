@@ -194,6 +194,7 @@ frappe.ui.form.on("QC Unit", {
 			);
 		}
 		if (!frm.is_new()) frm.trigger("hose_build");
+		if (!frm.is_new()) frm.trigger("sub_assemblies");
 		frm.trigger("required_qc");
 		if (!frm.is_new()) {
 			frm.add_custom_button(
@@ -276,6 +277,87 @@ frappe.ui.form.on("QC Unit", {
 					),
 					indicator: "blue",
 				});
+			});
+	},
+
+	// Sub-assemblies on their own work order (e.g. a control panel), tested with this unit.
+	sub_assemblies(frm) {
+		const link = (name) =>
+			`<a href="/app/qc-unit/${encodeURIComponent(name)}">${frappe.utils.escape_html(
+				name
+			)}</a>`;
+		if (frm.doc.installed_in) {
+			frm.dashboard.add_comment(
+				__("Installed in QC Unit {0}: tested and released with that unit", [
+					link(frm.doc.installed_in),
+				]),
+				"blue",
+				true
+			);
+			return;
+		}
+		if (frm.doc.job_type === "Repair" || frm.doc.parent_qc_unit) return;
+		frappe
+			.xcall("hse.shop_qc.sub_assemblies.get_sub_assembly_info", { qc_unit: frm.doc.name })
+			.then((r) => {
+				(r.sub_units || []).forEach((u) => {
+					const wo = u.trulinx_work_order
+						? ` WO ${frappe.utils.escape_html(u.trulinx_work_order)}`
+						: "";
+					const sn = u.serial_no ? `, S/N ${frappe.utils.escape_html(u.serial_no)}` : "";
+					frm.dashboard.add_comment(
+						__("Sub-assembly {0}{1}{2}: {3}", [link(u.name), wo, sn, __(u.status)]),
+						"blue",
+						true
+					);
+				});
+				if ((r.blockers || []).length) {
+					frm.dashboard.add_comment(
+						__("Testing and final release wait for: {0}", [
+							r.blockers.map((b) => frappe.utils.escape_html(b)).join("; "),
+						]),
+						"red",
+						true
+					);
+				}
+				if (frm.doc.status === "Cancelled") return;
+				frm.add_custom_button(
+					__("Link Sub-Assembly"),
+					() => {
+						const d = new frappe.ui.Dialog({
+							title: __("Link Sub-Assembly"),
+							fields: [
+								{
+									fieldname: "sub_unit",
+									fieldtype: "Link",
+									options: "QC Unit",
+									label: __("QC Unit (e.g. control panel work order)"),
+									reqd: 1,
+									get_query: () => ({
+										filters: {
+											name: ["!=", frm.doc.name],
+											job_type: ["!=", "Repair"],
+											status: ["!=", "Cancelled"],
+										},
+									}),
+								},
+							],
+							primary_action_label: __("Link"),
+							primary_action: (v) =>
+								frappe
+									.xcall("hse.shop_qc.sub_assemblies.link_sub_assembly", {
+										qc_unit: frm.doc.name,
+										sub_unit: v.sub_unit,
+									})
+									.then(() => {
+										d.hide();
+										frm.reload_doc();
+									}),
+						});
+						d.show();
+					},
+					__("Create")
+				);
 			});
 	},
 
