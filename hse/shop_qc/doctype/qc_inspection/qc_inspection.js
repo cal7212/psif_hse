@@ -473,19 +473,3 @@ frappe.ui.form.on("QC Inspection", {
 	photos_add: (frm) => hse_set_photo_items(frm),
 	items_remove: (frm) => hse_set_photo_items(frm),
 });
-
-// QM-104 Rev. 3: the NCR Criteria questions show once any line fails.
-for (const dt of [
-	"QC Inspection Reading",
-	"QC Hose Test",
-	"QC PMG Test",
-	"QC Device Test",
-	"QC Accumulator Test",
-	"QC Proof Test",
-]) {
-	frappe.ui.form.on(dt, {
-		result(frm) {
-			frm.layout.refresh_dependency();
-		},
-	});
-}

@@ -514,24 +514,8 @@ class QCInspection(Document):
 		sub_assemblies.check_sub_assemblies(self)
 		self.check_not_already_accepted()
 		self.status = "Rejected" if self.get_failed_rows() else "Accepted"
-		if self.status == "Rejected":
-			self.check_ncr_criteria()
 		if self.status == "Accepted" and self.is_final_release():
 			self.check_release_allowed()
-
-	def check_ncr_criteria(self):
-		"""QM-104 Rev. 3 §3.3: every in-house NCR criterion is answered before a failed check is
-		completed. Any Yes raises a formal NCR; all No raises a Rework."""
-		from hse.quality_metrics.rework import CRITERIA
-
-		unanswered = [f for f in CRITERIA if self.get(f) not in ("Yes", "No")]
-		if unanswered:
-			frappe.throw(
-				_("A line failed. Answer the NCR Criteria (QM-104) questions first: {0}").format(
-					"; ".join(_(self.meta.get_label(f)) for f in unanswered)
-				),
-				title=_("NCR Criteria Required"),
-			)
 
 	def check_readings_complete(self):
 		errors = []
@@ -1026,21 +1010,19 @@ class QCInspection(Document):
 		if self.remarks:
 			details += f"<p>{_('Remarks')}: {escape_html(self.remarks)}</p>"
 
-		from hse.quality_metrics.rework import CRITERIA, NCR, REWORK, criteria_met
+		# QM-104 Rev. 3: every failure starts as a Rework. The NCR criteria are answered on the
+		# Rework as it is evaluated; any Yes forces Escalate to NCR.
+		from hse.quality_metrics.rework import REWORK
 
-		met = criteria_met(self.as_dict())
-		record_type = NCR if met else REWORK
-		kind = "QC failure" if met else "QC rework"
 		nc = frappe.get_doc(
 			{
 				"doctype": "Non Conformance",
-				"record_type": record_type,
-				**{f: 1 if f in met else 0 for f in CRITERIA},
-				"subject": f"{self.shop or 'QC'} {kind} - {self.qc_unit} {self.stage} ({self.name})",
+				"record_type": REWORK,
+				"subject": f"{self.shop or 'QC'} QC rework - {self.qc_unit} {self.stage} ({self.name})",
 				"procedure": self.quality_procedure,
 				"status": "Open",
 				"details": details,
-				"rw_requirement": details if record_type == REWORK else None,
+				"rw_requirement": details,
 				"qc_unit": self.qc_unit,
 				"qc_inspection": self.name,
 				"severity": "Critical" if critical else "Medium",
@@ -1050,11 +1032,7 @@ class QCInspection(Document):
 					else _("Unit on QC Hold pending corrective action.")
 				)
 				+ " "
-				+ (
-					_("Red QC Hold/Quarantine Tag; quarantine per QM-104.")
-					if met
-					else _("Yellow QC Rework Tag detailing the quality requirement.")
-				),
+				+ _("Yellow QC Rework Tag detailing the quality requirement."),
 			}
 		)
 		nc.flags.ignore_permissions = True
@@ -1063,10 +1041,8 @@ class QCInspection(Document):
 		for h in failed_hoses:
 			h.db_set("non_conformance", nc.name)
 		frappe.msgprint(
-			(
-				_("NCR {0} created and {1} placed on QC Hold.")
-				if met
-				else _("Rework {0} created and {1} placed on QC Hold. It does not meet the NCR criteria.")
+			_(
+				"Rework {0} created and {1} placed on QC Hold. Complete its NCR Criteria Evaluation: any Yes needs an NCR."
 			).format(frappe.get_desk_link("Non Conformance", nc.name), self.qc_unit),
 			indicator="red",
 			alert=True,
