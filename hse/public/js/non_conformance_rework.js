@@ -7,8 +7,14 @@ const HSE_NCR_CRITERIA = [
 			"Can't be reworked to the drawing or spec (needs use-as-is, repair or deviation per QM-144, or Engineering or customer approval)"
 		),
 	],
-	["crit_customer_safety", __("Affects a customer requirement, safety or the promised ship date")],
-	["crit_supplier", __("Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)")],
+	[
+		"crit_customer_safety",
+		__("Affects a customer requirement, safety or the promised ship date"),
+	],
+	[
+		"crit_supplier",
+		__("Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)"),
+	],
 ];
 
 frappe.ui.form.on("Non Conformance", {
@@ -49,14 +55,20 @@ frappe.ui.form.on("Non Conformance", {
 		}
 
 		if (rework && frm.doc.status === "Open" && frm.perm[0] && frm.perm[0].write) {
-			frm.add_custom_button(__("Escalate to NCR"), () => hse_escalate_dialog(frm), __("Create"));
+			frm.add_custom_button(
+				__("Escalate to NCR"),
+				() => hse_escalate_dialog(frm),
+				__("Create")
+			);
 		}
 	},
 });
 
 function hse_rework_print_format(frm) {
 	frm.meta.default_print_format =
-		frm.doc.record_type === "Rework" ? "QM-104 Rework Report" : "QM-104 Non-Conformance Report";
+		frm.doc.record_type === "Rework"
+			? "QM-104 Rework Report"
+			: "QM-104 Non-Conformance Report";
 }
 
 function hse_open_print(frm, format) {
@@ -81,7 +93,11 @@ function hse_escalate_dialog(frm) {
 					"Tick each QM-104 in-house NCR criterion that applies. A formal NCR is raised with the details, cause and links from this Rework, and this Rework is closed as Cancelled. The unit stays on QC Hold until the NCR is resolved."
 				)}</p>`,
 			},
-			...HSE_NCR_CRITERIA.map(([fieldname, label]) => ({ fieldname, label, fieldtype: "Check" })),
+			...HSE_NCR_CRITERIA.map(([fieldname, label]) => ({
+				fieldname,
+				label,
+				fieldtype: "Check",
+			})),
 			{ fieldname: "reason", label: __("Reason for escalation"), fieldtype: "Small Text" },
 		],
 		primary_action_label: __("Escalate to NCR"),
