@@ -74,6 +74,12 @@ MIRROR = {
 NCR_ONLY_SECTIONS = ("section_break_4",)
 
 
+EVAL_HELP = (
+	"Answer all four as the rework is evaluated. Any Yes: this must become a formal NCR "
+	"(Create > Escalate to NCR). The Rework cannot be accepted or resolved until all four are No."
+)
+
+
 def get_custom_fields(sources: tuple) -> list[dict]:
 	crit = [
 		{
@@ -171,19 +177,17 @@ def get_custom_fields(sources: tuple) -> list[dict]:
 			"NCR Criteria Evaluation (QM-104)",
 			"Section Break",
 			"rw_reject_qty",
-			description=(
-				"Answer all four as the rework is evaluated. Any Yes: this must become a formal NCR "
-				"(Create > Escalate to NCR). The Rework cannot be accepted or resolved until all four "
-				"are No."
-			),
+			description=EVAL_HELP,
 		),
 	]
 	prev = "rw_eval_section"
-	for i, (fieldname, crit) in enumerate(EVAL.items()):
+	for i, (fieldname, crit_key) in enumerate(EVAL.items()):
 		if i == 2:
 			tab.append(f("rw_eval_column", None, "Column Break", prev))
 			prev = "rw_eval_column"
-		tab.append(f(fieldname, CRITERIA[crit] + "?", "Select", prev, options=f"\n{NO}\n{YES}", no_copy=1))
+		tab.append(
+			f(fieldname, CRITERIA[crit_key] + "?", "Select", prev, options=f"\n{NO}\n{YES}", no_copy=1)
+		)
 		prev = fieldname
 	tab += [
 		f("rw_evaluated_by", "Evaluated By", "Link", prev, options="User", read_only=1, no_copy=1),
