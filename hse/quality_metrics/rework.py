@@ -9,6 +9,10 @@ Rework is "rework to specification" by definition, so the NCR disposition and au
 blocks do not apply. If the criteria turn out to apply, Escalate to NCR raises a formal NCR
 and the Rework is closed as Cancelled with a link to it.
 
+Every QC inspection failure raises a Rework. The four criteria are then answered on the
+Rework's NCR Criteria Evaluation as it is evaluated: any Yes forces Escalate to NCR, and the
+Rework cannot be accepted or resolved until all four are answered No.
+
 The Rework tab fields are the master copy for a Rework. They are mirrored into the matching
 NCR fields so the existing closure rules, QC hold and reports keep working unchanged.
 """
@@ -19,7 +23,7 @@ import frappe
 from frappe import _
 from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.model.naming import make_autoname
-from frappe.utils import cstr, nowdate
+from frappe.utils import cstr, now_datetime, nowdate
 
 NCR = "NCR"
 REWORK = "Rework"
@@ -39,6 +43,10 @@ CRITERIA = {
 	"crit_customer_safety": "Affects a customer requirement, safety or the promised ship date",
 	"crit_supplier": "Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)",
 }
+
+# NCR Criteria Evaluation on the Rework tab (Yes/No) -> criterion.
+EVAL = {f"rw_{c}": c for c in CRITERIA}
+YES, NO = "Yes", "No"
 
 # Rework tab field -> matching NCR field.
 MIRROR = {
@@ -66,6 +74,12 @@ MIRROR = {
 NCR_ONLY_SECTIONS = ("section_break_4",)
 
 
+EVAL_HELP = (
+	"Answer all four as the rework is evaluated. Any Yes: this must become a formal NCR "
+	"(Create > Escalate to NCR). The Rework cannot be accepted or resolved until all four are No."
+)
+
+
 def get_custom_fields(sources: tuple) -> list[dict]:
 	crit = [
 		{
@@ -74,6 +88,7 @@ def get_custom_fields(sources: tuple) -> list[dict]:
 			"fieldtype": "Section Break",
 			"insert_after": "escalated_from",
 			"collapsible": 0,
+			"depends_on": NOT_REWORK,
 			"description": (
 				"Any one applies: formal NCR (Red QC Hold/Quarantine Tag). None applies: Rework "
 				"(Yellow QC Rework Tag); it is not an NCR. Work stops until either is resolved."
@@ -157,7 +172,27 @@ def get_custom_fields(sources: tuple) -> list[dict]:
 		f("rw_job_no", "Job No.", "Data", "rw_info_column"),
 		f("rw_lot_qty", "Lot Quantity", "Float", "rw_job_no"),
 		f("rw_reject_qty", "Reject Quantity", "Float", "rw_lot_qty"),
-		f("rw_details_section", "Rework Details", "Section Break", "rw_reject_qty"),
+		f(
+			"rw_eval_section",
+			"NCR Criteria Evaluation (QM-104)",
+			"Section Break",
+			"rw_reject_qty",
+			description=EVAL_HELP,
+		),
+	]
+	prev = "rw_eval_section"
+	for i, (fieldname, crit_key) in enumerate(EVAL.items()):
+		if i == 2:
+			tab.append(f("rw_eval_column", None, "Column Break", prev))
+			prev = "rw_eval_column"
+		tab.append(
+			f(fieldname, CRITERIA[crit_key] + "?", "Select", prev, options=f"\n{NO}\n{YES}", no_copy=1)
+		)
+		prev = fieldname
+	tab += [
+		f("rw_evaluated_by", "Evaluated By", "Link", prev, options="User", read_only=1, no_copy=1),
+		f("rw_evaluated_on", "Evaluated On", "Datetime", "rw_evaluated_by", read_only=1, no_copy=1),
+		f("rw_details_section", "Rework Details", "Section Break", "rw_evaluated_on"),
 		f(
 			"rw_requirement",
 			"Quality Requirement Not Met",
@@ -231,6 +266,13 @@ def criteria_met(values: dict) -> list[str]:
 	return [f for f in CRITERIA if values.get(f) in (1, "1", "Yes", True)]
 
 
+def evaluation(doc) -> tuple[list[str], list[str]]:
+	"""Rework NCR Criteria Evaluation: (criteria answered Yes, criteria not answered)."""
+	yes = [c for f, c in EVAL.items() if doc.get(f) == YES]
+	unanswered = [c for f, c in EVAL.items() if doc.get(f) not in (YES, NO)]
+	return yes, unanswered
+
+
 def description_values(name: str, html: str) -> dict:
 	"""The deficiency description, written to the Rework tab too when the record is a Rework."""
 	values = {"details": html}
@@ -256,19 +298,41 @@ def validate(doc, method=None):
 		doc.record_type = NCR
 	if doc.record_type != REWORK:
 		return
-	met = criteria_met(doc.as_dict())
+	yes, unanswered = evaluation(doc)
+	met = list(dict.fromkeys(criteria_met(doc.as_dict()) + yes))
 	if met and not doc.get("escalated_to"):
 		frappe.throw(
 			_(
-				"This meets the QM-104 NCR criteria ({0}). Use Escalate to NCR, or raise an NCR instead."
+				"This meets the QM-104 NCR criteria ({0}). Use Create > Escalate to NCR to raise the formal NCR."
 			).format("; ".join(_(CRITERIA[f]) for f in met)),
 			title=_("NCR Required"),
 		)
+	stamp_evaluation(doc, unanswered)
 	sync_mirror(doc)
+	accepting = doc.get("rw_quality_verification") == "Accept" and (
+		doc.is_new() or doc.has_value_changed("rw_quality_verification")
+	)
+	resolving = doc.status == "Resolved" and (doc.is_new() or doc.has_value_changed("status"))
+	if unanswered and (accepting or resolving):
+		frappe.throw(
+			_("Complete the NCR Criteria Evaluation on the Rework tab first: {0}").format(
+				"; ".join(_(CRITERIA[c]) for c in unanswered)
+			),
+			title=_("NCR Criteria Evaluation Required"),
+		)
 	doc.disposition = "Rework to Specification"
 	from hse.quality_metrics.ncr import validate_log_number
 
 	validate_log_number(doc, "rework_no", _("Rework No."))
+
+
+def stamp_evaluation(doc, unanswered: list[str]) -> None:
+	"""Who completed the evaluation and when; cleared if an answer is taken back."""
+	if unanswered:
+		doc.rw_evaluated_by = doc.rw_evaluated_on = None
+	elif doc.is_new() or not doc.get("rw_evaluated_by") or any(doc.has_value_changed(f) for f in EVAL):
+		doc.rw_evaluated_by = frappe.session.user
+		doc.rw_evaluated_on = now_datetime()
 
 
 def sync_mirror(doc) -> None:
@@ -360,6 +424,8 @@ def escalate_to_ncr(name: str, criteria: str | list, reason: str | None = None) 
 
 	rw.escalated_to = nc.name
 	rw.status = "Cancelled"
+	for c in criteria:
+		rw.set(f"rw_{c}", YES)
 	rw.save()
 	rw.add_comment("Info", _("Escalated to NCR {0}.").format(nc.name))
 	nc.add_comment("Info", _("Escalated from Rework {0}.").format(rw.name))

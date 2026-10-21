@@ -61,13 +61,9 @@ STAGES = [("_T Assembly", 10, 0), ("_T Test", 20, 0), ("_T Release", 30, 1)]
 HOSE_STAGES = [("_T Hose Test", 10, 0, 1), ("_T Hose Release", 20, 1, 0)]
 
 
-CRITERIA_NCR = {
-	"crit_scrap": "No",
-	"crit_cannot_rework": "No",
-	"crit_customer_safety": "Yes",
-	"crit_supplier": "No",
-}
-CRITERIA_REWORK = dict.fromkeys(CRITERIA_NCR, "No")
+CRITERIA = ("crit_scrap", "crit_cannot_rework", "crit_customer_safety", "crit_supplier")
+# Rework NCR Criteria Evaluation answered: none applies.
+EVAL_NO = {f"rw_{c}": "No" for c in CRITERIA}
 
 
 class UnitTestQCInspection(UnitTestCase):
@@ -401,10 +397,6 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		instruments=None,
 		**kw,
 	):
-		# QM-104 NCR criteria: by default a failed check affects a customer requirement, so it
-		# raises a formal NCR. Pass all "No" to raise a Rework.
-		for crit, answer in CRITERIA_NCR.items():
-			kw.setdefault(crit, answer)
 		doc = frappe.get_doc(
 			{
 				"doctype": "QC Inspection",
@@ -452,16 +444,12 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		bad = self.make("_T Test", reading=3200)
 		self.assertEqual(bad.status, "Rejected")
 		self.assertTrue(bad.non_conformance)
-		self.assertTrue(bad.non_conformance.startswith("QA-NC-"))
+		self.assertTrue(bad.non_conformance.startswith("QA-RW-"))  # every failure starts as Rework
 		nc = frappe.db.get_value(
-			"Non Conformance",
-			bad.non_conformance,
-			["severity", "record_type", "crit_customer_safety"],
-			as_dict=True,
+			"Non Conformance", bad.non_conformance, ["severity", "record_type"], as_dict=True
 		)
 		self.assertEqual(nc.severity, "Critical")
-		self.assertEqual(nc.record_type, "NCR")
-		self.assertTrue(nc.crit_customer_safety)
+		self.assertEqual(nc.record_type, "Rework")
 		self.assertEqual(self.status(), "QC Hold")
 		with self.assertRaises(frappe.ValidationError):
 			self.make("_T Release")  # hold point: _T Test not accepted
@@ -496,7 +484,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(self.status(), "QC Hold")
 		# The Rework cannot be resolved while a part is outstanding.
 		nc = frappe.get_doc("Non Conformance", ncr)
-		nc.update({"status": "Resolved", "rw_quality_verification": "Accept"})
+		nc.update({"status": "Resolved", "rw_quality_verification": "Accept", **EVAL_NO})
 		with self.assertRaisesRegex(frappe.ValidationError, "every missing part"):
 			nc.save()
 
@@ -546,23 +534,18 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(test.status, "Accepted")
 		self.assertTrue(test.missing_parts[0].found)  # snapshot kept on the completed check
 		nc = frappe.get_doc("Non Conformance", ncr)
-		nc.update({"status": "Resolved", "rw_quality_verification": "Accept"})
+		nc.update({"status": "Resolved", "rw_quality_verification": "Accept", **EVAL_NO})
 		nc.save()
 		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "status"), "Resolved")
 		self.assertEqual(nc.quality_verification, "Accept")  # mirrored for the closure rules
 		self.assertEqual(nc.disposition, "Rework to Specification")
 
-	def test_rework_when_ncr_criteria_not_met(self):
-		"""QM-104 Rev. 3: a failed check that meets none of the NCR criteria raises a Rework,
-		which still holds the unit until it is verified and resolved."""
+	def test_every_failure_is_rework_evaluated_on_the_rework(self):
+		"""QM-104 Rev. 3: a failed check always raises a Rework, which holds the unit. The four
+		NCR criteria are answered on the Rework: any Yes forces an NCR, and the Rework cannot be
+		accepted or resolved until all four are No."""
 		self.make("_T Assembly")
-		bad = self.make("_T Test", reading=3200, submit=False, **{**CRITERIA_REWORK, "crit_scrap": None})
-		with self.assertRaisesRegex(frappe.ValidationError, "NCR Criteria"):
-			bad.submit()
-		bad.reload()
-		bad.crit_scrap = "No"
-		bad.save()
-		bad.submit()
+		bad = self.make("_T Test", reading=3200)
 		self.assertEqual(bad.status, "Rejected")
 		self.assertTrue(bad.non_conformance.startswith("QA-RW-"))
 		rw = frappe.get_doc("Non Conformance", bad.non_conformance)
@@ -570,16 +553,40 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("rework", rw.subject)
 		self.assertTrue(rw.rw_requirement)
 		self.assertEqual(rw.rw_job_no, rw.job_no)
-		self.assertFalse(any(rw.get(f) for f in CRITERIA_NCR))
+		self.assertFalse(any(rw.get(f) for f in CRITERIA))
+		self.assertFalse(any(rw.get(f) for f in EVAL_NO))
 		self.assertEqual(self.status(), "QC Hold")
 
-		# Ticking a criterion on a Rework is refused: escalate instead.
+		# Ticking a criterion, or answering Yes on the evaluation, is refused: escalate instead.
 		rw.crit_scrap = 1
 		with self.assertRaisesRegex(frappe.ValidationError, "NCR criteria"):
 			rw.save()
 		rw.reload()
+		rw.rw_crit_supplier = "Yes"
+		with self.assertRaisesRegex(frappe.ValidationError, "Escalate to NCR"):
+			rw.save()
+		rw.reload()
 
-		# Resolving needs the rework verified, like an NCR.
+		# Partly answered: saved, but not yet stamped, and it cannot be accepted or resolved.
+		rw.rw_crit_scrap = "No"
+		rw.save()
+		self.assertFalse(rw.rw_evaluated_by)
+		rw.rw_quality_verification = "Accept"
+		with self.assertRaisesRegex(frappe.ValidationError, "NCR Criteria Evaluation"):
+			rw.save()
+		rw.reload()
+		rw.status = "Resolved"
+		with self.assertRaisesRegex(frappe.ValidationError, "NCR Criteria Evaluation"):
+			rw.save()
+		rw.reload()
+
+		# All four No: the evaluation is stamped.
+		rw.update(EVAL_NO)
+		rw.save()
+		self.assertEqual(rw.rw_evaluated_by, frappe.session.user)
+		self.assertTrue(rw.rw_evaluated_on)
+
+		# Resolving still needs the rework verified, like an NCR.
 		rw.status = "Resolved"
 		with self.assertRaisesRegex(frappe.ValidationError, "Cannot resolve this Rework"):
 			rw.save()
@@ -604,6 +611,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			"Non Conformance", rw.name, print_format="QM-104 Rework Report", no_letterhead=1
 		)
 		self.assertIn("QM-104 Rework Report", html)
+		self.assertIn("NCR CRITERIA EVALUATION", html)
 		self.assertIn("REWORK PERFORMED", html)
 		self.assertIn("Reset relief valve", html)
 		self.assertIn("Rev. 3: 10/26", html)
@@ -612,7 +620,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		from hse.quality_metrics.rework import escalate_to_ncr
 
 		self.make("_T Assembly")
-		bad = self.make("_T Test", reading=3200, **CRITERIA_REWORK)
+		bad = self.make("_T Test", reading=3200)
 		rw_name = bad.non_conformance
 		with self.assertRaises(frappe.ValidationError):
 			escalate_to_ncr(rw_name, [], "No criteria")
@@ -625,9 +633,12 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("QC failure", nc.subject)
 		self.assertIn("Supplier relief valve", nc.details)
 		self.assertEqual(frappe.db.get_value("QC Inspection", bad.name, "non_conformance"), ncr)
-		rw = frappe.db.get_value("Non Conformance", rw_name, ["status", "escalated_to"], as_dict=True)
+		rw = frappe.db.get_value(
+			"Non Conformance", rw_name, ["status", "escalated_to", "rw_crit_supplier"], as_dict=True
+		)
 		self.assertEqual(rw.status, "Cancelled")
 		self.assertEqual(rw.escalated_to, ncr)
+		self.assertEqual(rw.rw_crit_supplier, "Yes")  # the evaluation records why
 		self.assertEqual(self.status(), "QC Hold")  # the NCR now holds the unit
 		with self.assertRaises(frappe.ValidationError):
 			escalate_to_ncr(rw_name, ["crit_supplier"])  # only an open Rework
@@ -816,6 +827,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				"quality_verification": "Accept",
 				"verified_by": self.employee,
 				"verification_date": frappe.utils.nowdate(),
+				**EVAL_NO,
 			}
 		)
 		nc.save()

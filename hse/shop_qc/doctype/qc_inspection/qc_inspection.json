@@ -354,40 +354,49 @@
    "fieldname": "section_ncr_criteria",
    "fieldtype": "Section Break",
    "label": "NCR Criteria (QM-104)",
-   "depends_on": "eval:(doc.items||[]).some(r=>r.result=='Fail') || (doc.hose_tests||[]).some(r=>r.result=='Fail') || (doc.pmg_tests||[]).some(r=>r.result=='Fail') || (doc.device_tests||[]).some(r=>r.result=='Fail') || (doc.accumulator_tests||[]).some(r=>r.result=='Fail') || (doc.proof_tests||[]).some(r=>r.result=='Fail') || doc.crit_scrap || doc.crit_cannot_rework || doc.crit_customer_safety || doc.crit_supplier",
-   "description": "Answer for any failed line. Any Yes: a formal NCR is raised (Red QC Hold/Quarantine Tag). All No: a Rework is raised (Yellow QC Rework Tag). Either way the unit is on QC Hold until it is resolved."
+   "description": "Retired: QC inspection failures always raise a Rework, and the NCR criteria are answered on the Rework (QM-104 Rev. 3). Kept for older records.",
+   "hidden": 1
   },
   {
    "fieldname": "crit_scrap",
    "fieldtype": "Select",
    "label": "Results in scrap of a finished part?",
    "options": "\nYes\nNo",
-   "no_copy": 1
+   "no_copy": 1,
+   "hidden": 1,
+   "read_only": 1
   },
   {
    "fieldname": "crit_cannot_rework",
    "fieldtype": "Select",
    "label": "Can't be reworked to the drawing or spec (needs use-as-is, repair or deviation per QM-144, or Engineering or customer approval)?",
    "options": "\nYes\nNo",
-   "no_copy": 1
+   "no_copy": 1,
+   "hidden": 1,
+   "read_only": 1
   },
   {
    "fieldname": "column_break_crit",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "hidden": 1
   },
   {
    "fieldname": "crit_customer_safety",
    "fieldtype": "Select",
    "label": "Affects a customer requirement, safety or the promised ship date?",
    "options": "\nYes\nNo",
-   "no_copy": 1
+   "no_copy": 1,
+   "hidden": 1,
+   "read_only": 1
   },
   {
    "fieldname": "crit_supplier",
    "fieldtype": "Select",
    "label": "Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)?",
    "options": "\nYes\nNo",
-   "no_copy": 1
+   "no_copy": 1,
+   "hidden": 1,
+   "read_only": 1
   },
   {
    "fieldname": "section_sign",
@@ -425,7 +434,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-21 14:00:00.000000",
+ "modified": "2026-10-21 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

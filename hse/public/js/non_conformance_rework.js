@@ -17,7 +17,16 @@ const HSE_NCR_CRITERIA = [
 	],
 ];
 
+// NCR Criteria Evaluation on the Rework tab: rw_<criterion>, answered No or Yes.
+const HSE_RW_EVAL = HSE_NCR_CRITERIA.map(([f]) => "rw_" + f);
+
+const hse_eval_handlers = {};
+for (const ev of HSE_RW_EVAL) {
+	hse_eval_handlers[ev] = (frm) => hse_eval_changed(frm, ev);
+}
+
 frappe.ui.form.on("Non Conformance", {
+	...hse_eval_handlers,
 	onload(frm) {
 		hse_rework_print_format(frm);
 	},
@@ -61,6 +70,18 @@ frappe.ui.form.on("Non Conformance", {
 				__("Create")
 			);
 		}
+		if (rework && frm.doc.status === "Open" && !frm.doc.escalated_to) {
+			const open = HSE_RW_EVAL.filter((f) => !["Yes", "No"].includes(frm.doc[f]));
+			if (open.length) {
+				frm.dashboard.set_headline_alert(
+					__(
+						"Complete the NCR Criteria Evaluation on the Rework tab ({0} of 4 answered). Any Yes needs an NCR; all No is needed to accept and resolve the Rework.",
+						[4 - open.length]
+					),
+					"orange"
+				);
+			}
+		}
 	},
 });
 
@@ -83,7 +104,28 @@ function hse_open_print(frm, format) {
 	window.open(url, "_blank");
 }
 
-function hse_escalate_dialog(frm) {
+// Answering Yes means this must be a formal NCR: offer Escalate to NCR straight away.
+// The Yes is not saved on the Rework; escalating records it, cancelling clears it.
+function hse_eval_changed(frm, fieldname) {
+	if (frm.doc[fieldname] !== "Yes" || frm.doc.record_type !== "Rework") return;
+	const crit = fieldname.slice(3);
+	const preset = HSE_RW_EVAL.filter((f) => frm.doc[f] === "Yes").map((f) => f.slice(3));
+	frm.set_value(
+		HSE_RW_EVAL.filter((f) => frm.doc[f] === "Yes").reduce((o, f) => ((o[f] = ""), o), {})
+	).then(() => {
+		if (frm.is_new()) {
+			frappe.msgprint(
+				__("Save the Rework first, then answer Yes to escalate it to an NCR.")
+			);
+			return;
+		}
+		const go = () => hse_escalate_dialog(frm, preset.length ? preset : [crit]);
+		if (frm.is_dirty()) frm.save().then(go);
+		else go();
+	});
+}
+
+function hse_escalate_dialog(frm, preset = []) {
 	const d = new frappe.ui.Dialog({
 		title: __("Escalate {0} to an NCR", [frm.doc.name]),
 		fields: [
@@ -97,6 +139,7 @@ function hse_escalate_dialog(frm) {
 				fieldname,
 				label,
 				fieldtype: "Check",
+				default: preset.includes(fieldname) ? 1 : 0,
 			})),
 			{ fieldname: "reason", label: __("Reason for escalation"), fieldtype: "Small Text" },
 		],
