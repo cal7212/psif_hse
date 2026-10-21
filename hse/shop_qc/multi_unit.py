@@ -45,7 +45,7 @@ PER_UNIT_FIELDS = (
 	"installed_in",
 	"installed_in_work_order",
 )
-PER_UNIT_TABLES = ("repair_parts", "accessory_items", "post_shipment_reviews")
+PER_UNIT_TABLES = ("repair_parts", "accessory_items", "post_shipment_reviews", "missing_parts")
 
 
 def unit_base(doc) -> str | None:
