@@ -13,8 +13,9 @@ def validate(doc, method=None):
 	if not doc.get("qc_inspection") or doc.status != "Resolved":
 		return
 
+	rework = doc.get("record_type") == "Rework"
 	required = {
-		"corrective_action": _("Correction"),
+		"corrective_action": _("Rework Performed") if rework else _("Correction"),
 		"verified_by": _("Inspected By"),
 		"verification_date": _("Inspected Date"),
 		"qc_reinspection": _("QC Re-inspection"),
@@ -22,8 +23,8 @@ def validate(doc, method=None):
 	missing = [label for field, label in required.items() if not doc.get(field)]
 	if missing:
 		frappe.throw(
-			_("Cannot resolve this Non Conformance until these are completed: {0}").format(
-				", ".join(missing)
+			_("Cannot resolve this {0} until these are completed: {1}").format(
+				_("Rework") if rework else _("Non Conformance"), ", ".join(missing)
 			),
 			title=_("Resolution Blocked"),
 		)

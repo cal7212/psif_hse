@@ -42,7 +42,11 @@ frappe.ui.form.on("Non Conformance", {
 		}
 		if (frm.doc.status === "Open") {
 			frm.dashboard.set_headline_alert(
-				__("{0} is on QC Hold until this Non Conformance is resolved.", [frm.doc.qc_unit]),
+				frm.doc.record_type === "Rework"
+					? __("{0} is on QC Hold until this Rework is verified and resolved.", [
+							frm.doc.qc_unit,
+					  ])
+					: __("{0} is on QC Hold until this NCR is resolved.", [frm.doc.qc_unit]),
 				frm.doc.severity === "Critical" ? "red" : "orange"
 			);
 		}

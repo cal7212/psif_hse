@@ -13,6 +13,8 @@ import frappe
 from frappe import _
 from frappe.utils import cstr, escape_html, flt, format_datetime, now_datetime
 
+from hse.quality_metrics.rework import REWORK, description_values
+
 TABLE = "missing_parts"
 CHILD = "QC Missing Part"
 OPEN = "Open"
@@ -255,10 +257,10 @@ def sync_ncr(qc_unit: str, procedure: str | None = None) -> None:
 		parts = [r for r in rows if r.non_conformance == ncr]
 		html = parts_table(qc_unit, parts)
 		if cstr(frappe.db.get_value("Non Conformance", ncr, "details")) != html:
-			frappe.db.set_value("Non Conformance", ncr, "details", html)
+			frappe.db.set_value("Non Conformance", ncr, description_values(ncr, html))
 			if parts and all(r.found for r in parts):
 				frappe.get_doc("Non Conformance", ncr).add_comment(
-					"Info", _("All missing parts are found. This NCR can now be resolved.")
+					"Info", _("All missing parts are found. This record can now be resolved.")
 				)
 				frappe.msgprint(
 					_("All missing parts are found; {0} can now be resolved.").format(
@@ -272,16 +274,20 @@ def sync_ncr(qc_unit: str, procedure: str | None = None) -> None:
 def create_ncr(qc_unit: str, parts, procedure: str | None) -> str:
 	unit = frappe.db.get_value("QC Unit", qc_unit, ["shop"], as_dict=True) or frappe._dict()
 	if not procedure:
-		frappe.throw(_("Set a Quality Procedure on the inspection template so the NCR can be raised."))
+		frappe.throw(_("Set a Quality Procedure on the inspection template so the Rework can be raised."))
 	nc = frappe.get_doc(
 		{
 			"doctype": "Non Conformance",
+			# QM-104 Rev. 3: a missing part is reworked to drawing once found; it is not an NCR.
+			# If it turns out to meet the NCR criteria, Escalate to NCR moves the parts across.
+			"record_type": REWORK,
 			"subject": f"{unit.shop or 'QC'} missing parts - {qc_unit}",
 			"procedure": procedure,
 			"status": OPEN,
 			"source": "In-Process Inspection",
 			"severity": "Medium",
 			"details": parts_table(qc_unit, parts),
+			"rw_requirement": parts_table(qc_unit, parts),
 			"qc_unit": qc_unit,
 			"interim_control": _("Unit on QC Hold; testing and release wait until every part is found."),
 		}
@@ -289,7 +295,7 @@ def create_ncr(qc_unit: str, parts, procedure: str | None) -> str:
 	nc.flags.ignore_permissions = True
 	nc.insert()
 	frappe.msgprint(
-		_("Non Conformance {0} raised for missing parts on {1}.").format(
+		_("Rework {0} raised for missing parts on {1}.").format(
 			frappe.get_desk_link("Non Conformance", nc.name), qc_unit
 		),
 		indicator="orange",
@@ -340,7 +346,7 @@ def parts_table(qc_unit: str, parts) -> str:
 
 
 def validate_ncr_closure(doc, method=None) -> None:
-	"""An NCR carrying missing parts can be resolved only once every part is Found."""
+	"""An NCR or Rework carrying missing parts can be resolved only once every part is Found."""
 	if doc.status != "Resolved" or doc.is_new():
 		return
 	missing = frappe.get_all(
@@ -351,7 +357,7 @@ def validate_ncr_closure(doc, method=None) -> None:
 	)
 	if missing:
 		frappe.throw(
-			_("Cannot resolve this NCR until every missing part is marked Found: {0}").format(
+			_("Cannot resolve this record until every missing part is marked Found: {0}").format(
 				", ".join(_part_label(p) for p in missing)
 			),
 			title=_("Resolution Blocked"),
