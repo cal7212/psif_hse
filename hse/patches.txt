@@ -18,3 +18,4 @@ hse.patches.shop_qc_disable_power_unit_certificate
 hse.patches.shop_qc_enable_light_assembly_certificate
 hse.patches.shop_qc_repair_shop
 hse.patches.shop_qc_missing_parts_test_stages
+hse.patches.shop_qc_manifold_general_templates

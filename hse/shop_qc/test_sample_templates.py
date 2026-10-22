@@ -37,3 +37,16 @@ class TestSampleTemplates(IntegrationTestCase):
 	def test_light_assembly_seeded(self):
 		self.assertEqual(frappe.db.get_value("Build Shop", "Light Assembly", "inspection_prefix"), "LAI")
 		self.assertFalse(frappe.db.exists("Build Shop", "Small Assembly"))
+
+	def test_template_choice_by_product_type(self):
+		from hse.shop_qc.utils import get_default_template
+
+		create_sample_templates()
+		for product_type, expected in (
+			("Power Unit", "HPU - Final Release"),
+			("Manifold", "Manifold - Final Release"),
+			("Component", "General - Final Release"),
+			("Other", "General - Final Release"),
+		):
+			self.assertEqual(get_default_template("Final Release", "AHH-0000-0010", product_type), expected)
+		self.assertEqual(get_default_template("Coating", "AHH-0000-0010", "Manifold"), "HPU - Coating")

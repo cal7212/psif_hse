@@ -1604,5 +1604,804 @@
     "record_text": 0
    }
   ]
+ },
+ {
+  "template_name": "Manifold - Frame & Weld",
+  "stage": "Frame & Weld",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Design reviewed",
+    "criteria": "Size, arrangement, dimensions and settings reviewed against the order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Construction documentation",
+    "criteria": "Drawings, schematics and procedures listed on the unit are present, legible and current revision",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Welds visually inspected",
+    "criteria": "Per drawing weld symbols; no cracks, porosity, undercut or incomplete fusion. Mark N/A if no welding",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   },
+   {
+    "check_item": "Welding to code",
+    "criteria": "Welds to the specified code, process, material and inspection method; free of spatter, slag and irregularities",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fabrication",
+    "criteria": "Frames, stands and brackets square, level and structurally sound; free of burrs and deformities",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Lifting points",
+    "criteria": "Lifting lugs/eyes per drawing, rated and marked; mark N/A if none",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Dimensions to drawing",
+    "criteria": "Overall, mounting and port locations checked to drawing rev",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Mechanical Assembly",
+  "stage": "Mechanical Assembly",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Parts match work order / BOM",
+    "criteria": "Body, cartridges, valves, accumulators and fittings match the work order and drawing",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Body / manifold part number",
+    "criteria": "Record body part number and serial or heat number",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cartridges and valves installed per drawing",
+    "criteria": "Correct cavity, correct orientation, correct part in every position",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cartridge and fastener torque",
+    "criteria": "Torqued to manufacturer value; record torque wrench ID",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Torque marked",
+    "criteria": "Torque stripe on cartridges, plugs and mounting bolts",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Port plugs and O-rings",
+    "criteria": "Correct plug type, O-rings lubricated and undamaged",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Port identification",
+    "criteria": "Port markings or stamps match the drawing",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Mounting and brackets",
+    "criteria": "Manifolds, accumulators, gauges and brackets mounted secure per drawing",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Hydraulic Plumbing",
+  "stage": "Hydraulic Plumbing",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Hose, tube and fitting pressure ratings",
+    "criteria": "Every hose, tube and fitting rated at or above max operating pressure",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Plumbing to schematic",
+    "criteria": "Components and port connections match hydraulic schematic rev",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Connectors",
+    "criteria": "Proper connection type, material, pressure rating and torque; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Tubing",
+    "criteria": "Correct material, size, wall thickness, bend radius and flare; routed and clamped securely",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Hose and hose ends",
+    "criteria": "Correct size, rating and fluid compatibility; insertion depth and crimp verified; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Flanges",
+    "criteria": "Gasket / O-ring present; fastener size and length correct; marked tight. Mark N/A if none",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Tubes clamped and supported",
+    "criteria": "Clamped per spacing standard; no rubbing points",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports capped and tagged",
+    "criteria": "All open ports capped; customer connections tagged",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Electrical & Controls",
+  "stage": "Electrical & Controls",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Coil voltage",
+    "criteria": "Coil voltage and type match the work order; record. Mark N/A if no coils",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Connectors",
+    "criteria": "Connector type (DIN, Deutsch, flying lead) matches the work order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Coil resistance / continuity",
+    "criteria": "Record per coil",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Instrumentation",
+    "criteria": "Transducers, switches and gauges match the order, range and voltage; record part numbers",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Wiring and strain relief",
+    "criteria": "Terminations tight, strain relief fitted, no pinched conductors",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Labels",
+    "criteria": "Coils, valves, instruments and wires labeled per schematic",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Grounding and bonding",
+    "criteria": "Ground conductor terminated where an enclosure or junction box is present",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Flush & Cleanliness",
+  "stage": "Flush & Cleanliness",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Internal passages clean",
+    "criteria": "Deburred and free of chips; inspect cross-drills with a light",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   },
+   {
+    "check_item": "Flush performed",
+    "criteria": "Flushed per procedure; record fluid and flush time",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cleanliness result",
+    "criteria": "Record ISO code; must meet the unit's target cleanliness",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports capped after flush",
+    "criteria": "All ports capped or plugged immediately after flushing",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Pressure & Function Test",
+  "stage": "Pressure & Function Test",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "Proof pressure reached (psi)",
+    "criteria": "Reading must reach the unit's Proof Test psi; edit the tolerance to match your procedure",
+    "is_critical": 1,
+    "numeric": 1,
+    "record_text": 0,
+    "requires_photo": 0,
+    "unit_spec_field": "proof_test_psi",
+    "tolerance_plus_pct": 10
+   },
+   {
+    "check_item": "Pressure hold",
+    "criteria": "Hold at proof pressure for the time in the procedure; no decay beyond limit",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "External leak check",
+    "criteria": "No leakage at any plug, cartridge, port, fitting or seal",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Valve and cartridge settings",
+    "criteria": "Relief, reducing and flow settings set and recorded; match the unit's Valve / Cartridge Settings",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Valve function",
+    "criteria": "Every valve shifts and each port flows as drawn",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Accumulator pre-charge",
+    "criteria": "Pre-charge set to the design value and recorded; mark N/A if no accumulators",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Test bench and instrument",
+    "criteria": "Record test bench and gauge ID",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "Manifold - Final Release",
+  "stage": "Final Release",
+  "product_type": "Manifold",
+  "items": [
+   {
+    "check_item": "All stages accepted",
+    "criteria": "Every required stage accepted and no open Non Conformances",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Settings tag",
+    "criteria": "Final valve settings tagged or stamped on the assembly",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports capped",
+    "criteria": "All ports capped or plugged; clean caps",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Nameplate / tag",
+    "criteria": "Nameplate or tag attached; serial matches QC Unit record",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 1
+   },
+   {
+    "check_item": "Finish",
+    "criteria": "Paint or plating complete; no damage, leaks or residue",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Quality package",
+    "criteria": "Test record, schematics and parts list present and current",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Packaging",
+    "criteria": "Protected and secured for shipment; ports and coils protected",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Final photos",
+    "criteria": "Photos of the completed assembly showing the tag",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   }
+  ]
+ },
+ {
+  "template_name": "General - Frame & Weld",
+  "stage": "Frame & Weld",
+  "items": [
+   {
+    "check_item": "Design reviewed",
+    "criteria": "Arrangement, dimensions and settings reviewed against the order",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Construction documentation",
+    "criteria": "Drawings and procedures listed on the unit are present, legible and current revision",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Welds visually inspected",
+    "criteria": "Per drawing weld symbols; no cracks, porosity, undercut or incomplete fusion. Mark N/A if no welding",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   },
+   {
+    "check_item": "Fabrication",
+    "criteria": "Enclosures, frames and brackets square and sound; free of burrs and deformities. Mark N/A if none",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Dimensions to drawing",
+    "criteria": "Overall and mounting dimensions checked to drawing rev",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Mechanical Assembly",
+  "stage": "Mechanical Assembly",
+  "items": [
+   {
+    "check_item": "Parts match work order / BOM",
+    "criteria": "Every part number, revision and quantity matches the work order and drawing",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Quantities counted",
+    "criteria": "Record quantity of each line counted against the BOM or kit list",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Part condition",
+    "criteria": "No shipping damage, corrosion or missing parts",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Fasteners",
+    "criteria": "Appropriate material, size, grade and torque; marked tight",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Mounting and hardware",
+    "criteria": "Components, sub-plates and brackets mounted secure per drawing. Mark N/A for loose kits",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Hydraulic Plumbing",
+  "stage": "Hydraulic Plumbing",
+  "items": [
+   {
+    "check_item": "Pressure ratings",
+    "criteria": "Every hose, tube and fitting rated at or above max operating pressure. Mark N/A if no hydraulics",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Plumbing to schematic",
+    "criteria": "Components and port connections match hydraulic schematic rev",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Connectors",
+    "criteria": "Proper connection type, material, pressure rating and torque; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Hose ends",
+    "criteria": "Correct size and pressure rating; insertion depth and crimp verified; marked tight",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports capped and tagged",
+    "criteria": "All open ports capped; customer connections tagged",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Electrical & Controls",
+  "stage": "Electrical & Controls",
+  "items": [
+   {
+    "check_item": "Wiring to schematic",
+    "criteria": "Wiring, wire numbers and terminations match electrical schematic rev",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Equipment grounding continuity",
+    "criteria": "Panel, door and back-plate bonded; record reading per procedure",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Overcurrent / motor protection set",
+    "criteria": "Breakers, fuses and overloads sized and set per schematic; record settings",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Emergency stop function",
+    "criteria": "E-stop removes power and requires manual reset; mark N/A if none",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Wire sizing and segregation",
+    "criteria": "Wire sized for current and run; high and low voltage segregated",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Panel construction",
+    "criteria": "Devices mounted securely; terminations tight; spare terminals provided",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Enclosure and penetrations",
+    "criteria": "Enclosure rating maintained; cord grips and seals installed",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Labels and markings",
+    "criteria": "Nameplate, voltage, SCCR (if applicable), device tags and warning labels in place and spelled correctly",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Flush & Cleanliness",
+  "stage": "Flush & Cleanliness",
+  "items": [
+   {
+    "check_item": "Components clean",
+    "criteria": "Free of chips, debris and residue; mark N/A if no fluid passages",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Flush performed",
+    "criteria": "If required by the order: flushed per procedure; record fluid and flush time",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Cleanliness result",
+    "criteria": "If required: record ISO code; must meet the unit's target cleanliness",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Ports capped",
+    "criteria": "All ports capped or plugged after cleaning",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Pressure & Function Test",
+  "stage": "Pressure & Function Test",
+  "items": [
+   {
+    "check_item": "Functional test",
+    "criteria": "Every function or I/O point operated per schematic / sequence of operation; record results",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Control panel power-up",
+    "criteria": "Supply voltage, control voltage and indicators verified; mark N/A if no panel",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Proof pressure reached (psi)",
+    "criteria": "Reading must reach the unit's Proof Test psi; edit the tolerance to match your procedure. Mark N/A if no pressure test",
+    "is_critical": 1,
+    "numeric": 1,
+    "record_text": 0,
+    "requires_photo": 0,
+    "unit_spec_field": "proof_test_psi",
+    "tolerance_plus_pct": 10
+   },
+   {
+    "check_item": "External leak check",
+    "criteria": "No leakage at any joint, fitting or seal; mark N/A if no pressure test",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Test equipment",
+    "criteria": "Record test bench, meter and gauge IDs",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 0
+   }
+  ]
+ },
+ {
+  "template_name": "General - Final Release",
+  "stage": "Final Release",
+  "items": [
+   {
+    "check_item": "All stages accepted",
+    "criteria": "Every required stage accepted and no open Non Conformances",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Contents match packing list",
+    "criteria": "Every item and quantity on the BOM or kit list present and packed",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Nameplate / tag",
+    "criteria": "Nameplate or tag attached; serial matches QC Unit record",
+    "is_critical": 1,
+    "numeric": 0,
+    "record_text": 1,
+    "requires_photo": 1
+   },
+   {
+    "check_item": "Ports and openings protected",
+    "criteria": "Ports capped; enclosure openings and connectors protected",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Documentation",
+    "criteria": "Schematics, parts list, test record and manuals included as ordered",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Packaging",
+    "criteria": "Packaging, protection and crating per the order; secured for transport",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 0
+   },
+   {
+    "check_item": "Final photos",
+    "criteria": "Photos of the completed item or kit showing the tag",
+    "is_critical": 0,
+    "numeric": 0,
+    "record_text": 0,
+    "requires_photo": 1
+   }
+  ]
  }
 ]
