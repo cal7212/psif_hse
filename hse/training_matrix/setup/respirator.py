@@ -40,14 +40,13 @@ COURSES = {
 		"course_title": "Respirator Fit Test",
 		"delivery_method": "Fit test (qualitative or quantitative)",
 		"verification_method": FIT_TEST,
-		"frequency_notes": "before first use; annually; when the respirator or the employee's physical condition changes",
+		"frequency_notes": "before first use; when the respirator or the employee's physical condition changes",
 	},
 	TESTER_COURSE: {
 		"course_title": "Respirator Fit Test Administration",
 		"delivery_method": "Instructor-led and hands-on",
 		"verification_method": "Practical Evaluation",
-		"frequency_notes": "OSHA 1910.134 Appendix A: prepare test agents, set up and check the instrument, "
-		"run the protocol and recognize invalid tests",
+		"frequency_notes": "when protocols or instruments change",
 	},
 }
 SKILLS = {
@@ -60,7 +59,9 @@ SKILLS = {
 	},
 	TESTER_SKILL: {
 		"skill_description": "Qualified to administer respirator fit tests (OSHA 1910.134 Appendix A).",
-		"description": "Needs a current, passed practical evaluation in fit-test administration. Name the "
+		"description": "Needs a current, passed practical evaluation in fit-test administration (OSHA 1910.134 "
+		"Appendix A): prepare test agents, set up and check the instrument, run the protocol and recognize "
+		"invalid tests. Name the "
 		"protocols and instruments in the Skill Authorization scope. An in-house tester must hold this "
 		"skill to submit a Respirator Fit Test.",
 		"courses": (TESTER_COURSE,),
