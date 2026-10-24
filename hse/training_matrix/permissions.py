@@ -122,6 +122,29 @@ def evaluation_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
 	return ptype in ("read", "print") and doc.employee in own
 
 
+# ---------------------------------------------------------------- Respirator Fit Test
+# Employees see their own tests and managers their direct reports'; testers see the tests they ran.
+def fit_test_query_conditions(user: str | None = None, **kwargs) -> str:
+	user = user or frappe.session.user
+	if _full_access(user, "Respirator Fit Test"):
+		return ""
+	return (
+		f"(`tabRespirator Fit Test`.`employee` in {_visible_employees_sql(user)}"
+		f" or `tabRespirator Fit Test`.`tester` in {_employees_sql(user)}"
+		f" or `tabRespirator Fit Test`.`owner` = {frappe.db.escape(user)})"
+	)
+
+
+def fit_test_has_permission(doc, ptype=None, user=None, **kwargs) -> bool:
+	user = user or frappe.session.user
+	if _full_access(user, "Respirator Fit Test") or doc.is_new():
+		return True
+	own = set(_own_employees(user))
+	if doc.owner == user or doc.tester in own:
+		return True
+	return ptype in ("read", "print") and doc.employee in _visible_employees(user)
+
+
 # ---------------------------------------------------------------- Skill Authorization
 def authorization_query_conditions(user: str | None = None, **kwargs) -> str:
 	user = user or frappe.session.user

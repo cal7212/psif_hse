@@ -73,7 +73,9 @@ class EmployeeTrainingMatrix(Document):
 		names = {
 			r.training_requirement
 			for r in self.items
-			if r.completed_on and not r.expires_on and not (r.training_record or r.competency_evaluation)
+			if r.completed_on
+			and not r.expires_on
+			and not (r.training_record or r.competency_evaluation or r.respirator_fit_test)
 		}
 		if not names:
 			return

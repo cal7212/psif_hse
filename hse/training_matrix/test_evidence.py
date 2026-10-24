@@ -72,3 +72,48 @@ class UnitTestLmsHistoryClassify(UnitTestCase):
 		self.assertEqual(classify(True, False, False), BELOW_PASS)
 		self.assertEqual(classify(True, True, True), ALREADY)
 		self.assertEqual(classify(False, False, True), NO_MATRIX)
+
+
+def ft(name, date, passed=True, size="M"):
+	return frappe._dict(
+		name=name,
+		date=getdate(date),
+		passed=passed,
+		manufacturer="3M",
+		model="6502QL",
+		style="Half",
+		size=size,
+	)
+
+
+class UnitTestFitTestEvidence(UnitTestCase):
+	def test_latest_pass_qualifies(self):
+		from hse.training_matrix.evidence import resolve_fit_tests
+
+		result = resolve_fit_tests([ft("T2", "2026-06-01"), ft("T1", "2025-06-01")])
+		self.assertEqual(
+			(result["completed_on"], result["respirator_fit_test"]), (getdate("2026-06-01"), "T2")
+		)
+		self.assertEqual(result["in_progress"], 0)
+
+	def test_failed_retest_withdraws_the_respirator(self):
+		from hse.training_matrix.evidence import resolve_fit_tests
+
+		result = resolve_fit_tests([ft("T2", "2026-06-01", passed=False), ft("T1", "2025-06-01")])
+		self.assertIsNone(result["completed_on"])
+		self.assertEqual(result["in_progress"], 1)
+
+	def test_other_respirator_keeps_the_course(self):
+		from hse.training_matrix.evidence import resolve_fit_tests
+
+		result = resolve_fit_tests([ft("T2", "2026-06-01", passed=False), ft("T1", "2026-05-01", size="L")])
+		self.assertEqual(result["respirator_fit_test"], "T1")
+		self.assertEqual(result["in_progress"], 1)
+
+	def test_same_respirator_ignores_case_and_spacing(self):
+		from hse.training_matrix.evidence import respirator_key
+
+		self.assertEqual(
+			respirator_key(ft("A", "2026-01-01")),
+			respirator_key({**ft("B", "2026-01-01"), "model": " 6502ql "}),
+		)

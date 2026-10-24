@@ -11,6 +11,9 @@ records don't support.
   passing, acknowledged training record (or a passing evaluation) qualifies.
 - Courses verified by practical demonstration, observation or a TRN-704 checklist: only a passing
   Competency Evaluation qualifies. Training without one leaves the row In Progress.
+- Courses verified by "Respirator Fit Test" (OSHA 1910.134(f)): only a submitted Respirator Fit Test
+  qualifies. A respirator counts while its latest test is a pass; the newest such pass is the
+  completion date, so the annual refresher runs from it.
 - Completion dates entered by hand (history loaded before Phase 2) are kept unless newer evidence
   replaces them.
 """
@@ -28,6 +31,8 @@ NEEDS_EVALUATION = {
 	"Certificate and Observed Audit",
 	"Quiz and MVR Review",
 }
+# Courses whose only evidence is a submitted Respirator Fit Test.
+FIT_TEST = "Respirator Fit Test"
 # Pass mark for quiz-verified courses (TRN-700 Rev 1 Appendix A).
 QUIZ_PASS_MARK = 80
 QUIZ_METHODS = {"Quiz (80%)", "Quiz and MVR Review"}
@@ -132,6 +137,47 @@ def resolve(records: list[dict], evals: list[dict], needs_eval: bool) -> dict:
 	}
 
 
+def respirator_key(test) -> tuple:
+	"""One respirator: the same make, model, style and size (case and spacing ignored)."""
+	return tuple(
+		" ".join(str(test.get(f) or "").upper().split()) for f in ("manufacturer", "model", "style", "size")
+	)
+
+
+def fit_tests(employee: str) -> list[dict]:
+	"""Submitted fit tests for the employee, newest first."""
+	return [
+		frappe._dict(t, date=getdate(t.test_date), passed=t.result == "Pass")
+		for t in frappe.get_all(
+			FIT_TEST,
+			filters={"employee": employee, "docstatus": 1},
+			fields=["name", "test_date", "result", "manufacturer", "model", "style", "size"],
+			order_by="test_date desc, creation desc",
+		)
+	]
+
+
+def resolve_fit_tests(tests: list[dict]) -> dict:
+	"""Pure decision for fit-test courses. tests: newest first.
+
+	A respirator is current while its latest test passed; a later failed test on the same
+	respirator withdraws it. The newest current pass qualifies the course."""
+	latest = {}
+	for t in tests:
+		latest.setdefault(respirator_key(t), t)
+	passed = sorted((t for t in latest.values() if t.passed), key=lambda t: (t.date, t.name), reverse=True)
+	best = passed[0] if passed else None
+	failed_since = any(not t.passed and (not best or t.date >= best.date) for t in latest.values())
+	return {
+		"completed_on": best.date if best else None,
+		"expires_on": None,
+		"training_record": None,
+		"competency_evaluation": None,
+		"respirator_fit_test": best.name if best else None,
+		"in_progress": 1 if failed_since else 0,
+	}
+
+
 def recalculate(employee: str, requirement: str) -> None:
 	"""Update the employee's matrix row for the course from its evidence."""
 	if not frappe.db.exists(MATRIX, employee):
@@ -141,12 +187,23 @@ def recalculate(employee: str, requirement: str) -> None:
 	if not row:
 		return
 	verification = frappe.db.get_value("Training Requirement", requirement, "verification_method")
-	result = resolve(
-		training_records(employee, requirement),
-		evaluations(employee, requirement),
-		needs_evaluation(verification),
+	if verification == FIT_TEST:
+		result = resolve_fit_tests(fit_tests(employee))
+	else:
+		result = {
+			**resolve(
+				training_records(employee, requirement),
+				evaluations(employee, requirement),
+				needs_evaluation(verification),
+			),
+			"respirator_fit_test": None,
+		}
+	manual = bool(
+		row.completed_on
+		and not row.training_record
+		and not row.competency_evaluation
+		and not row.respirator_fit_test
 	)
-	manual = bool(row.completed_on and not row.training_record and not row.competency_evaluation)
 	if result["completed_on"] and not (manual and getdate(row.completed_on) > result["completed_on"]):
 		row.update(result)  # evidence qualifies (and is at least as recent as any hand-entered date)
 	elif manual:
@@ -155,3 +212,11 @@ def recalculate(employee: str, requirement: str) -> None:
 		row.update({**result, "completed_on": None, "expires_on": None})  # evidence cancelled or failed
 	matrix.flags.ignore_permissions = True
 	matrix.save()
+
+
+def recalculate_fit_test_courses(employee: str) -> None:
+	"""Every course verified by a fit test (normally just one)."""
+	for requirement in frappe.get_all(
+		"Training Requirement", filters={"verification_method": FIT_TEST, "disabled": 0}, pluck="name"
+	):
+		recalculate(employee, requirement)

@@ -42,6 +42,7 @@ class EmployeeTrainingMatrixItem(Document):
 		parenttype: DF.Data
 		qualification: DF.Literal["Not Qualified", "Qualified"]
 		requirement_code: DF.Literal["R", "C", "Dev", "—"]
+		respirator_fit_test: DF.Link | None
 		retrain_due: DF.Date | None
 		retrain_from: DF.Date | None
 		retraining_assignment: DF.Link | None
