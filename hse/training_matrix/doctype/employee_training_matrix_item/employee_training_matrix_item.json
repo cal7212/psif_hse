@@ -24,6 +24,7 @@
   "expires_on",
   "training_record",
   "competency_evaluation",
+  "respirator_fit_test",
   "lms_reset_on",
   "evidence",
   "section_retraining",
@@ -184,6 +185,13 @@
    "read_only": 1
   },
   {
+   "fieldname": "respirator_fit_test",
+   "fieldtype": "Link",
+   "label": "Respirator Fit Test",
+   "options": "Respirator Fit Test",
+   "read_only": 1
+  },
+  {
    "fieldname": "lms_reset_on",
    "fieldtype": "Date",
    "label": "LMS Course Reopened On",
@@ -299,7 +307,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-23 12:00:00.000000",
+ "modified": "2026-10-24 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Employee Training Matrix Item",

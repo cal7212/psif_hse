@@ -1,0 +1,345 @@
+{
+ "actions": [],
+ "autoname": "format:RFT-{YYYY}-{#####}",
+ "creation": "2026-10-24 16:00:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "column_break_a",
+  "test_date",
+  "result",
+  "next_due_date",
+  "section_respirator",
+  "respirator_item",
+  "manufacturer",
+  "model",
+  "column_break_r",
+  "style",
+  "size",
+  "section_test",
+  "test_type",
+  "protocol",
+  "fit_factor",
+  "column_break_t",
+  "instrument",
+  "test_record",
+  "section_tester",
+  "tester",
+  "tester_name",
+  "column_break_p",
+  "provider",
+  "section_medical",
+  "medical_clearance_date",
+  "written_recommendation",
+  "column_break_m",
+  "medical_limitations",
+  "section_comments",
+  "comments",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "fetch_from": "employee.employee_name",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "test_date",
+   "fieldtype": "Date",
+   "label": "Test Date",
+   "reqd": 1,
+   "default": "Today",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "\nPass\nFail",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "next_due_date",
+   "fieldtype": "Date",
+   "label": "Next Test Due",
+   "read_only": 1,
+   "description": "Test Date + 12 months (OSHA 1910.134(f)(2)). Retest sooner after changes in the employee's physical condition or a different respirator."
+  },
+  {
+   "fieldname": "section_respirator",
+   "fieldtype": "Section Break",
+   "label": "Respirator"
+  },
+  {
+   "fieldname": "respirator_item",
+   "fieldtype": "Link",
+   "label": "Respirator Item",
+   "options": "Item",
+   "description": "Optional: fills the details below from the item."
+  },
+  {
+   "fieldname": "manufacturer",
+   "fieldtype": "Data",
+   "label": "Make / Manufacturer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "column_break_r",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Select",
+   "label": "Style",
+   "reqd": 1,
+   "options": "\nFiltering Facepiece (e.g. N95)\nElastomeric Half Mask\nElastomeric Full Facepiece\nTight-Fitting PAPR\nTight-Fitting Supplied Air / SCBA"
+  },
+  {
+   "fieldname": "size",
+   "fieldtype": "Data",
+   "label": "Size",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_test",
+   "fieldtype": "Section Break",
+   "label": "Test"
+  },
+  {
+   "fieldname": "test_type",
+   "fieldtype": "Select",
+   "label": "Test Type",
+   "reqd": 1,
+   "options": "\nQualitative (QLFT)\nQuantitative (QNFT)"
+  },
+  {
+   "fieldname": "protocol",
+   "fieldtype": "Select",
+   "label": "Protocol",
+   "reqd": 1,
+   "options": "\nIsoamyl Acetate (banana oil)\nSaccharin\nBitrex\nIrritant Smoke\nGenerated Aerosol\nAmbient Aerosol CNC (standard)\nModified Ambient Aerosol CNC\nControlled Negative Pressure (CNP)\nCNP REDON",
+   "description": "OSHA 1910.134 Appendix A protocol."
+  },
+  {
+   "fieldname": "fit_factor",
+   "fieldtype": "Float",
+   "label": "Overall Fit Factor",
+   "depends_on": "eval:doc.test_type==\"Quantitative (QNFT)\"",
+   "mandatory_depends_on": "eval:doc.test_type==\"Quantitative (QNFT)\""
+  },
+  {
+   "fieldname": "column_break_t",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Link",
+   "label": "Fit Test Instrument",
+   "options": "Measuring Instrument",
+   "depends_on": "eval:doc.test_type==\"Quantitative (QNFT)\"",
+   "description": "Quantitative tests: the fit-test instrument from the Measuring Instrument register."
+  },
+  {
+   "fieldname": "test_record",
+   "fieldtype": "Attach",
+   "label": "Test Record / Printout",
+   "description": "Required for quantitative tests (the instrument printout or recording)."
+  },
+  {
+   "fieldname": "section_tester",
+   "fieldtype": "Section Break",
+   "label": "Administered By"
+  },
+  {
+   "fieldname": "tester",
+   "fieldtype": "Link",
+   "label": "Tester (Employee)",
+   "options": "Employee",
+   "description": "In-house tester: must hold the Respirator Fit Tester skill, authorized and current, to submit. Leave blank for an outside provider."
+  },
+  {
+   "fieldname": "tester_name",
+   "fieldtype": "Data",
+   "label": "Tester Name",
+   "reqd": 1,
+   "fetch_from": "tester.employee_name",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "column_break_p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Data",
+   "label": "Outside Provider",
+   "description": "Required when no in-house tester is selected.",
+   "mandatory_depends_on": "eval:!doc.tester"
+  },
+  {
+   "fieldname": "section_medical",
+   "fieldtype": "Section Break",
+   "label": "Medical Clearance",
+   "description": "Record only the clearance from the physician or other licensed health care professional (PLHCP). Keep the medical questionnaire and evaluation with the provider or in the confidential medical file, not here."
+  },
+  {
+   "fieldname": "medical_clearance_date",
+   "fieldtype": "Date",
+   "label": "Medical Clearance Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "written_recommendation",
+   "fieldtype": "Check",
+   "label": "PLHCP Written Recommendation on File",
+   "description": "Required to submit (OSHA 1910.134(e)(6))."
+  },
+  {
+   "fieldname": "column_break_m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "medical_limitations",
+   "fieldtype": "Small Text",
+   "label": "Limitations on Respirator Use",
+   "description": "As stated in the written recommendation, e.g. PAPR only. Leave blank if none."
+  },
+  {
+   "fieldname": "section_comments",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Respirator Fit Test",
+   "read_only": 1,
+   "no_copy": 1,
+   "print_hide": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-10-24 16:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Training Matrix",
+ "name": "Respirator Fit Test",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Training Coordinator",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "role": "Qualified Trainer",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 0,
+   "amend": 0
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "Employee",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1,
+   "email": 1,
+   "share": 1
+  }
+ ],
+ "search_fields": "employee_name,model",
+ "sort_field": "test_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

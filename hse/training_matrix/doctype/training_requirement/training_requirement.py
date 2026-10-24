@@ -62,6 +62,7 @@ class TrainingRequirement(Document):
 			"Quiz and MVR Review",
 			"Certificate and Observed Audit",
 			"TRN-704 Checklist",
+			"Respirator Fit Test",
 		]
 	# end: auto-generated types
 

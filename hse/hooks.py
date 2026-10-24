@@ -363,6 +363,7 @@ permission_query_conditions = {
 	"Training Record": "hse.training_matrix.permissions.record_query_conditions",
 	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_query_conditions",
 	"Skill Authorization": "hse.training_matrix.permissions.authorization_query_conditions",
+	"Respirator Fit Test": "hse.training_matrix.permissions.fit_test_query_conditions",
 	"Retraining Assignment": "hse.training_matrix.permissions.assignment_query_conditions",
 	"Training Request": "hse.training_matrix.permissions.request_query_conditions",
 }
@@ -371,6 +372,7 @@ has_permission = {
 	"Training Record": "hse.training_matrix.permissions.record_has_permission",
 	"Competency Evaluation": "hse.training_matrix.permissions.evaluation_has_permission",
 	"Skill Authorization": "hse.training_matrix.permissions.authorization_has_permission",
+	"Respirator Fit Test": "hse.training_matrix.permissions.fit_test_has_permission",
 	"Retraining Assignment": "hse.training_matrix.permissions.assignment_has_permission",
 	"Training Request": "hse.training_matrix.permissions.request_has_permission",
 }
