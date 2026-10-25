@@ -9,6 +9,7 @@
   "column_break_a",
   "proficiency",
   "authorization_valid_months",
+  "authorizer_role",
   "section_requirements",
   "description",
   "prerequisites",
@@ -51,6 +52,13 @@
    "description": "0 = no expiry. Otherwise the manager re-authorizes after this many months."
   },
   {
+   "fieldname": "authorizer_role",
+   "fieldtype": "Link",
+   "label": "Also Authorized By (Role)",
+   "options": "Role",
+   "description": "Users with this role can also authorize this skill for any employee, in addition to the employee's manager and HR Manager."
+  },
+  {
    "fieldname": "section_requirements",
    "fieldtype": "Section Break",
    "label": "What It Takes"
@@ -88,7 +96,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-10-25 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Skill Definition",
