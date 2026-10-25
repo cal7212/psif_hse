@@ -10,10 +10,12 @@ MODULE = "Training Matrix"
 TRAINING_COORDINATOR = "Training Coordinator"
 # TRN-700 Rev 1 §4.8: given automatically to trainers with an active Qualified Trainer course.
 QUALIFIED_TRAINER = "Qualified Trainer"
+# Authorizes the skills that name it in Also Authorized By (e.g. Respirator Fit Tester).
+SAFETY_MANAGER = "Safety Manager"
 
 
 def make_roles():
-	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER):
+	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER, SAFETY_MANAGER):
 		if not frappe.db.exists("Role", role):
 			frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(
 				ignore_permissions=True

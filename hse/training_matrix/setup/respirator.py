@@ -17,6 +17,7 @@ Existing records are left as they are, so edits made in Frappe are never overwri
 import frappe
 
 from hse.training_matrix.evidence import FIT_TEST
+from hse.training_matrix.install import SAFETY_MANAGER, make_roles
 from hse.training_matrix.matrix import enqueue_resync
 from hse.training_matrix.status import ASSIGNED
 
@@ -66,6 +67,7 @@ SKILLS = {
 		"skill to submit a Respirator Fit Test.",
 		"courses": (TESTER_COURSE,),
 		"role": TESTER_ROLE,
+		"authorizer_role": SAFETY_MANAGER,
 	},
 }
 ROLES = {ROLE: GROUP, TESTER_ROLE: TESTER_GROUP}
@@ -119,9 +121,23 @@ def create_skill(skill: str) -> bool:
 			"description": spec["description"],
 			"courses": [{"training_requirement": c} for c in courses],
 			"roles": [{"training_role": spec["role"], "requirement_code": "R"}],
+			"authorizer_role": spec.get("authorizer_role"),
 		}
 	)
 	return True
+
+
+def set_authorizer_roles() -> list[str]:
+	"""Fill Also Authorized By on existing definitions where it is still blank (never overwritten)."""
+	make_roles()
+	updated = []
+	for skill, spec in SKILLS.items():
+		role = spec.get("authorizer_role")
+		if role and frappe.db.exists("Skill Definition", skill):
+			if not frappe.db.get_value("Skill Definition", skill, "authorizer_role"):
+				frappe.db.set_value("Skill Definition", skill, "authorizer_role", role)
+				updated.append(skill)
+	return updated
 
 
 def setup() -> list[str]:

@@ -135,3 +135,23 @@ class IntegrationTestSkillAuthorization(IntegrationTestCase):
 		row = next(r for r in matrix.items if r.training_requirement == "_T-TECH")
 		self.assertEqual((row.requirement_code, row.is_required), (st.DEVELOPMENT, 0))
 		self.assertEqual(self.skill_row(TECH).needed_for, "Target")
+
+	def test_skill_authorizer_role(self):
+		from hse.training_matrix.install import SAFETY_MANAGER, make_roles
+
+		make_roles()
+		user = "_t_safety_manager@example.com"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc({"doctype": "User", "email": user, "first_name": "Safety"}).insert()
+		frappe.get_doc("User", user).add_roles(SAFETY_MANAGER)
+		sync_matrix(self.worker)
+		self.complete("_T-MECH", today())
+		self.assertRaises(frappe.PermissionError, self.authorize, user)  # role not named on the skill
+		frappe.set_user("Administrator")
+		frappe.db.set_value("Skill Definition", MECH, "authorizer_role", SAFETY_MANAGER)
+		try:
+			self.authorize(user)
+			self.assertEqual(self.skill_row(MECH).status, ss.AUTHORIZED)
+		finally:
+			frappe.set_user("Administrator")
+			frappe.db.set_value("Skill Definition", MECH, "authorizer_role", None)

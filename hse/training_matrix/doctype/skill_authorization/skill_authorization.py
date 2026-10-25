@@ -49,14 +49,19 @@ class SkillAuthorization(Document):
 		user = self.authorized_by or frappe.session.user
 		if frappe.db.get_value("Employee", self.employee, "user_id") == user:
 			frappe.throw(_("You cannot authorize your own skills."), frappe.PermissionError)
-		if set(frappe.get_roles(user)) & set(AUTHORIZER_ROLES):
+		roles = set(frappe.get_roles(user))
+		skill_role = frappe.db.get_value("Skill Definition", self.skill, "authorizer_role")
+		if roles & set(AUTHORIZER_ROLES) or (skill_role and skill_role in roles):
 			return
 		manager = frappe.db.get_value("Employee", self.employee, "reports_to")
 		if not manager or frappe.db.get_value("Employee", manager, "user_id") != user:
+			who = (
+				_("Only {0}'s manager (Reports To), an HR Manager or a {1} can authorize {2}.")
+				if skill_role
+				else _("Only {0}'s manager (Reports To) or an HR Manager can authorize {2}.")
+			)
 			frappe.throw(
-				_("Only {0}'s manager (Reports To) or an HR Manager can authorize skills.").format(
-					self.employee_name
-				),
+				who.format(self.employee_name, skill_role, frappe.bold(self.skill)),
 				frappe.PermissionError,
 			)
 

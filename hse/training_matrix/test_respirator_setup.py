@@ -25,8 +25,13 @@ class IntegrationTestRespiratorSetup(IntegrationTestCase):
 		tester = frappe.get_doc("Skill Definition", respirator.TESTER_SKILL)
 		self.assertEqual([c.training_requirement for c in tester.courses], [respirator.TESTER_COURSE])
 		self.assertEqual([r.training_role for r in tester.roles], [respirator.TESTER_ROLE])
+		self.assertEqual(tester.authorizer_role, "Safety Manager")
+		self.assertIsNone(frappe.get_doc("Skill Definition", respirator.SKILL).authorizer_role)
 		self.assertEqual(
 			frappe.db.get_value("Training Requirement", respirator.TESTER_COURSE, "verification_method"),
 			"Practical Evaluation",
 		)
 		self.assertEqual(respirator.setup(), [])
+		frappe.db.set_value("Skill Definition", respirator.TESTER_SKILL, "authorizer_role", None)
+		self.assertEqual(respirator.set_authorizer_roles(), [respirator.TESTER_SKILL])
+		self.assertEqual(respirator.set_authorizer_roles(), [])
