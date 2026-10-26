@@ -1,0 +1,20 @@
+{
+ "app": "hse",
+ "creation": "2026-10-26 12:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "shield-check",
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "Shop QC",
+ "link_to": "Shop QC",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-10-26 12:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "Shop QC",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}
