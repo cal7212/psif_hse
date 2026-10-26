@@ -54,6 +54,17 @@ class UnitTestShopQCDashboard(UnitTestCase):
 			elif block["type"] == "card":
 				self.assertIn(data["card_name"], link_cards)
 
+	def test_sidebar_opens_the_workspace(self):
+		sidebar = json.loads((HERE / "sidebar" / "shop_qc" / "shop_qc.json").read_text())
+		self.assertEqual(
+			(sidebar["doctype"], sidebar["module"], sidebar["title"]), ("Sidebar", "Shop QC", "Shop QC")
+		)
+		home = sidebar["items"][0]
+		self.assertEqual((home["link_type"], home["link_to"]), ("Workspace", "Shop QC"))
+		linked = {i["link_to"] for i in sidebar["items"] if i["type"] == "Link"}
+		self.assertIn("QC Unit Build Status", linked)
+		self.assertIn("QC Inspection Template", linked)
+
 	def test_custom_cards_call_whitelisted_methods(self):
 		for card in _files("number_card"):
 			if card["type"] != "Custom":
@@ -71,6 +82,8 @@ class IntegrationTestShopQCDashboard(IntegrationTestCase):
 		for chart in _files("dashboard_chart"):
 			self.assertTrue(frappe.db.exists("Dashboard Chart", chart["name"]), chart["name"])
 		self.assertTrue(frappe.db.exists("Report", "QC Unit Build Status"))
+		if frappe.db.exists("DocType", "Sidebar"):
+			self.assertTrue(frappe.db.exists("Sidebar", "Shop QC"))
 
 	def test_custom_cards_run(self):
 		for fn in (
