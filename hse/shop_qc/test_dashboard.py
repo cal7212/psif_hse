@@ -43,12 +43,16 @@ class UnitTestShopQCDashboard(UnitTestCase):
 		self.assertEqual(blocks, set(dashboard.WORKSPACE_BLOCKS))
 		self.assertEqual({c["number_card_name"] for c in ws["number_cards"]}, cards)
 		self.assertEqual({c["chart_name"] for c in ws["charts"]}, charts)
+		# The desk matches a content block to its widget row by the row's label, not the record name.
+		card_labels = {c["label"] for c in ws["number_cards"]}
+		chart_labels = {c["label"] for c in ws["charts"]}
+		block_labels = {b["label"] for b in ws["custom_blocks"]}
 		for block in json.loads(ws["content"]):
 			data = block["data"]
 			if block["type"] == "number_card":
-				self.assertIn(data["number_card_name"], cards)
+				self.assertIn(data["number_card_name"], card_labels)
 			elif block["type"] == "chart":
-				self.assertIn(data["chart_name"], charts)
+				self.assertIn(data["chart_name"], chart_labels)
 			elif block["type"] == "quick_list":
 				self.assertIn(data["quick_list_name"], quick_lists)
 			elif block["type"] == "shortcut":
@@ -56,7 +60,7 @@ class UnitTestShopQCDashboard(UnitTestCase):
 			elif block["type"] == "card":
 				self.assertIn(data["card_name"], link_cards)
 			elif block["type"] == "custom_block":
-				self.assertIn(data["custom_block_name"], blocks)
+				self.assertIn(data["custom_block_name"], block_labels)
 
 	def test_block_files_exist(self):
 		for stem in dashboard.WORKSPACE_BLOCKS.values():
