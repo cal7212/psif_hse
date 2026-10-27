@@ -6,6 +6,8 @@ The quality cards reuse the Quality Metrics functions so the workspace and the
 Quality Reviews always calculate the same way.
 """
 
+from pathlib import Path
+
 import frappe
 from frappe.utils import add_days, getdate
 
@@ -129,3 +131,52 @@ def units_with_missing_parts(filters: str | dict | list | None = None):
 	units = frappe.get_all("QC Unit", filters={"status": ["in", ACTIVE_STATUSES]}, pluck="name")
 	value = len(open_missing_parts(units))
 	return _card(value, route=["query-report", "QC Unit Build Status"], route_options={"missing_parts": 1})
+
+
+@frappe.whitelist()
+def active_units() -> list[dict]:
+	"""Active QC Units for the workspace block: WO (unit ID), model, status and next stage."""
+	_check_access()
+	units = frappe.get_list(
+		"QC Unit",
+		filters={"status": ["in", ACTIVE_STATUSES]},
+		fields=["name", "model", "status"],
+		order_by="name asc",
+	)
+	rank = {s: i for i, s in enumerate(("QC Hold", "In Build", "Ready for Release", "Pending Build"))}
+	for u in units:
+		u.next_stage = unit_progress(u.name)["next_stage"]
+	units.sort(key=lambda u: (rank.get(u.status, len(rank)), u.name))
+	return units
+
+
+# ---------------------------------------------------------------- workspace blocks
+BLOCKS_DIR = Path(__file__).parent / "workspace_blocks"
+WORKSPACE_BLOCKS = {
+	# Custom HTML Block name: file stem in workspace_blocks/
+	"Shop QC Active Units": "active_units",
+}
+
+
+def make_workspace_blocks():
+	"""Create or refresh the Custom HTML Blocks used by the Shop QC workspace.
+
+	Custom HTML Block is not synced from app files, so it is kept here and rewritten on migrate.
+	"""
+	for name, stem in WORKSPACE_BLOCKS.items():
+		values = {
+			"html": (BLOCKS_DIR / f"{stem}.html").read_text(),
+			"script": (BLOCKS_DIR / f"{stem}.js").read_text(),
+			"style": (BLOCKS_DIR / f"{stem}.css").read_text(),
+			"private": 0,
+		}
+		if frappe.db.exists("Custom HTML Block", name):
+			doc = frappe.get_doc("Custom HTML Block", name)
+			if all(doc.get(k) == v for k, v in values.items()):
+				continue
+			doc.update(values)
+			doc.save(ignore_permissions=True)
+		else:
+			doc = frappe.new_doc("Custom HTML Block")
+			doc.update(values)
+			doc.insert(ignore_permissions=True, set_name=name)
