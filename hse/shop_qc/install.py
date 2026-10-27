@@ -264,9 +264,12 @@ def make_document_templates():
 
 
 def after_migrate():
+	from hse.shop_qc.dashboard import make_workspace_blocks
+
 	make_role()
 	make_custom_fields()
 	make_shops()
 	make_failure_causes()
 	make_default_stages()
 	make_document_templates()
+	make_workspace_blocks()

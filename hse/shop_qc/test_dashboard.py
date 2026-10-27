@@ -39,6 +39,8 @@ class UnitTestShopQCDashboard(UnitTestCase):
 		quick_lists = {q["label"] for q in ws["quick_lists"]}
 		shortcuts = {s["label"] for s in ws["shortcuts"]}
 		link_cards = {lnk["label"] for lnk in ws["links"] if lnk["type"] == "Card Break"}
+		blocks = {b["custom_block_name"] for b in ws["custom_blocks"]}
+		self.assertEqual(blocks, set(dashboard.WORKSPACE_BLOCKS))
 		self.assertEqual({c["number_card_name"] for c in ws["number_cards"]}, cards)
 		self.assertEqual({c["chart_name"] for c in ws["charts"]}, charts)
 		for block in json.loads(ws["content"]):
@@ -53,6 +55,13 @@ class UnitTestShopQCDashboard(UnitTestCase):
 				self.assertIn(data["shortcut_name"], shortcuts)
 			elif block["type"] == "card":
 				self.assertIn(data["card_name"], link_cards)
+			elif block["type"] == "custom_block":
+				self.assertIn(data["custom_block_name"], blocks)
+
+	def test_block_files_exist(self):
+		for stem in dashboard.WORKSPACE_BLOCKS.values():
+			for ext in ("html", "js", "css"):
+				self.assertTrue((dashboard.BLOCKS_DIR / f"{stem}.{ext}").is_file(), f"{stem}.{ext}")
 
 	def test_sidebar_opens_the_workspace(self):
 		sidebar = json.loads((HERE / "sidebar" / "shop_qc" / "shop_qc.json").read_text())
@@ -96,6 +105,16 @@ class IntegrationTestShopQCDashboard(IntegrationTestCase):
 		):
 			out = fn()
 			self.assertTrue(out == dashboard.NO_VALUE or "value" in out, fn.__name__)
+
+	def test_active_units_block(self):
+		dashboard.make_workspace_blocks()
+		block = frappe.get_doc("Custom HTML Block", "Shop QC Active Units")
+		self.assertFalse(block.private)
+		self.assertIn("hse.shop_qc.dashboard.active_units", block.script)
+		dashboard.make_workspace_blocks()  # idempotent
+		for u in dashboard.active_units():
+			self.assertIn(u.status, dashboard.ACTIVE_STATUSES)
+			self.assertIn("next_stage", u)
 
 	def test_report_runs(self):
 		columns, data, _msg, _chart = report.execute({"include_completed": 1})
