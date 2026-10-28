@@ -42,7 +42,7 @@ frappe.ui.form.on("Housekeeping Inspection", {
 		}
 		if (frm.doc.non_conformance) {
 			frm.add_custom_button(
-				__("Nonconformance Report"),
+				__("Rework / NCR"),
 				() => {
 					frappe.set_route("Form", "Nonconformance Report", frm.doc.non_conformance);
 				},
@@ -140,7 +140,7 @@ frappe.ui.form.on("Housekeeping Inspection Item", {
 		if (row.is_critical) {
 			frappe.show_alert({
 				message: __(
-					"Critical item failed: {0}. Correct it now and tick Corrected on the Spot, or a Critical Nonconformance Report will be raised on submit.",
+					"Critical item failed: {0}. Correct it now and tick Corrected on the Spot, or a Critical Rework will be raised on submit.",
 					[row.check_item]
 				),
 				indicator: "red",

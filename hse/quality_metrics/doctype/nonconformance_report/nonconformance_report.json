@@ -38,6 +38,7 @@
   "asset_inspection_section",
   "asset",
   "asset_inspection",
+  "reinspection",
   "severity",
   "si_column_break",
   "interim_control",
@@ -63,7 +64,6 @@
   "verification_date",
   "approved_by",
   "approved_date",
-  "reinspection",
   "housekeeping_section",
   "housekeeping_area",
   "housekeeping_inspection",
@@ -393,6 +393,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "reinspection",
+   "fieldtype": "Link",
+   "label": "Re-inspection",
+   "options": "Asset Inspection",
+   "read_only": 1,
+   "depends_on": "eval:doc.asset_inspection || doc.reinspection"
+  },
+  {
    "fieldname": "severity",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -536,13 +544,6 @@
    "fieldname": "approved_date",
    "fieldtype": "Date",
    "label": "Approved Date"
-  },
-  {
-   "fieldname": "reinspection",
-   "fieldtype": "Link",
-   "label": "Re-inspection",
-   "options": "Asset Inspection",
-   "read_only": 1
   },
   {
    "depends_on": "eval:doc.housekeeping_area || doc.housekeeping_inspection",
@@ -1293,7 +1294,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-10-27 19:00:00.000000",
  "modified_by": "Administrator",
  "module": "Quality Metrics",
  "name": "Nonconformance Report",

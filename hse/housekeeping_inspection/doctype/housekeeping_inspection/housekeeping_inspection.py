@@ -20,6 +20,7 @@ from hse.housekeeping_inspection.utils import (
 
 PASS, FAIL, NA = "Pass", "Fail", "N/A"
 TEMPLATE_ROW_FIELDS = ("category", "check_item", "criteria", "is_critical", "reference")
+from hse.quality_metrics.rework import REWORK
 
 
 def summarize(rows, passing_score=0):
@@ -359,8 +360,10 @@ class HousekeepingInspection(Document):
 				"doctype": "Nonconformance Report",
 				"subject": "Housekeeping - " + self.housekeeping_area + " (" + self.name + ")",
 				"procedure": self.quality_procedure,
+				"record_type": REWORK,
 				"status": "Open",
 				"details": details,
+				"rw_requirement": details,
 				"housekeeping_area": self.housekeeping_area,
 				"housekeeping_inspection": self.name,
 				"severity": s.severity,
@@ -375,7 +378,7 @@ class HousekeepingInspection(Document):
 		self.assign_to_area_owner(nc)
 
 		frappe.msgprint(
-			_("Nonconformance Report {0} created ({1}).").format(
+			_("Rework {0} created ({1}). Complete its NCR Criteria Evaluation: any Yes needs an NCR.").format(
 				frappe.get_desk_link("Nonconformance Report", nc.name), _(s.severity)
 			),
 			indicator="red",
