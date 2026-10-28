@@ -211,6 +211,8 @@ def escalate_to_ncr(name: str, criteria: str | list, reason: str | None = None) 
 		"asset_inspection",
 		"housekeeping_area",
 		"housekeeping_inspection",
+		"reinspection",
+		"housekeeping_reinspection",
 	):
 		if rw.get(fieldname):
 			values[fieldname] = rw.get(fieldname)

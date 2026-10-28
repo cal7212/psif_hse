@@ -55,7 +55,7 @@ frappe.ui.form.on("Asset Inspection", {
 		}
 		if (frm.doc.non_conformance) {
 			frm.add_custom_button(
-				__("Nonconformance Report"),
+				__("Rework / NCR"),
 				() => {
 					frappe.set_route("Form", "Nonconformance Report", frm.doc.non_conformance);
 				},

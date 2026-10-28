@@ -190,7 +190,7 @@ INSTRUCTIONS = (
 	"<ul><li>Mark each item Pass, Fail or N/A.</li>"
 	"<li>For every Fail, describe what you found and where. Attach a photo when you can.</li>"
 	"<li>If you fix the condition during the walk (for example, move a pallet out of an exit route), "
-	"tick <b>Corrected on the Spot</b>. Critical items that are not corrected raise a Critical Nonconformance Report.</li>"
+	"tick <b>Corrected on the Spot</b>. Critical items that are not corrected raise a Critical Rework.</li>"
 	"<li>Sign and submit before leaving the area.</li></ul>"
 )
 

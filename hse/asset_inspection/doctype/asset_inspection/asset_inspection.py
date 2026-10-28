@@ -25,6 +25,7 @@ TEMPLATE_ROW_FIELDS = (
 	"max_value",
 	"uom",
 )
+from hse.quality_metrics.rework import REWORK
 
 
 def evaluate_numeric(reading_value, min_value=None, max_value=None):
@@ -263,8 +264,10 @@ class AssetInspection(Document):
 				"doctype": "Nonconformance Report",
 				"subject": f"Inspection failure - {self.asset_name or self.asset} ({self.name})",
 				"procedure": self.quality_procedure,
+				"record_type": REWORK,
 				"status": "Open",
 				"details": details,
+				"rw_requirement": details,
 				"asset": self.asset,
 				"asset_inspection": self.name,
 				"severity": "Critical" if critical else "Medium",
@@ -279,9 +282,13 @@ class AssetInspection(Document):
 		self.db_set("non_conformance", nc.name)
 		nc_link = frappe.get_desk_link("Nonconformance Report", nc.name)
 		frappe.msgprint(
-			_("Nonconformance Report {0} created and asset placed Out of Service.").format(nc_link)
-			if critical
-			else _("Nonconformance Report {0} created.").format(nc_link),
+			(
+				_("Rework {0} created and asset placed Out of Service.").format(nc_link)
+				if critical
+				else _("Rework {0} created.").format(nc_link)
+			)
+			+ " "
+			+ _("Complete its NCR Criteria Evaluation: any Yes needs an NCR."),
 			indicator="red",
 			alert=True,
 		)
