@@ -284,6 +284,8 @@ doctype_js = {
 	"Quality Goal": "public/js/quality_goal.js",
 	"QC Inspection": "public/js/inspection_instruments.js",
 	"Asset Inspection": "public/js/inspection_instruments.js",
+	# Shop Supplies: Issue Supplies against a QC Unit's work order.
+	"QC Unit": ["public/js/shop_supplies.js", "public/js/shop_supplies_qc_unit.js"],
 }
 
 doctype_list_js = {
@@ -291,6 +293,10 @@ doctype_list_js = {
 	# Quick Add Asset: create an Existing Asset without purchase details.
 	"Asset": ["public/js/quick_asset.js", "public/js/asset_list.js"],
 	"Asset Inspection": "public/js/quick_asset.js",
+	# Shop Supplies: Add Supply Item, Receive, Issue and Count (hse/hse/supplies.py).
+	"Item": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
+	"Stock Entry": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
+	"Stock Reconciliation": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 }
 
 doc_events = {
@@ -406,6 +412,7 @@ after_install = [
 	"hse.shop_qc.install.after_install",
 	"hse.quality_metrics.install.after_install",
 	"hse.training_matrix.install.after_install",
+	"hse.hse.supplies.after_install",
 ]
 after_migrate = [
 	"hse.module_setup.ensure_module_defs",  # must run first
@@ -415,6 +422,7 @@ after_migrate = [
 	"hse.shop_qc.install.after_migrate",
 	"hse.quality_metrics.install.after_migrate",
 	"hse.training_matrix.install.after_migrate",
+	"hse.hse.supplies.after_migrate",
 ]
 #
 # If you ALREADY have them, either convert to a list (Frappe v16 accepts lists):
