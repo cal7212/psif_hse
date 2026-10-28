@@ -17,16 +17,13 @@ EXISTING_ASSET = "Existing Asset"
 
 def placeholder_amount() -> float:
 	"""Placeholder Net Purchase Amount: the saved setting, else the field default."""
-	value = frappe.db.get_single_value(SETTINGS, "placeholder_purchase_amount")
-	if value in (None, ""):
-		value = frappe.get_meta(SETTINGS).get_field("placeholder_purchase_amount").default
-	amount = flt(value)
+	# A blank or zero setting can't be used (ERPNext requires a Net Purchase Amount),
+	# so it falls back to the field default.
+	amount = flt(frappe.db.get_single_value(SETTINGS, "placeholder_purchase_amount"))
 	if amount <= 0:
-		frappe.throw(
-			_("Set a Placeholder Purchase Amount above zero in {0}.").format(
-				frappe.get_desk_link(SETTINGS, SETTINGS)
-			)
-		)
+		amount = flt(frappe.get_meta(SETTINGS).get_field("placeholder_purchase_amount").default)
+	if amount <= 0:
+		frappe.throw(_("Set a Placeholder Purchase Amount above zero in HSE Asset Settings."))
 	return amount
 
 

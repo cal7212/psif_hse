@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests import IntegrationTestCase, UnitTestCase
 from frappe.utils import add_days, flt, nowdate
@@ -49,21 +51,17 @@ class IntegrationTestQuickAsset(IntegrationTestCase):
 			frappe.db.set_single_value(SETTINGS, "placeholder_purchase_amount", saved)
 
 	def test_stock_item_is_rejected(self):
-		code = "_T-HSE-STOCK-ITEM"
-		if not frappe.db.exists("Item", code):
-			frappe.get_doc(
-				{
-					"doctype": "Item",
-					"item_code": code,
-					"item_name": code,
-					"item_group": frappe.db.get_value("Item Group", {"is_group": 0}, "name")
-					or "All Item Groups",
-					"stock_uom": frappe.db.get_value("UOM", {}, "name"),
-					"is_stock_item": 1,
-				}
-			).insert()
-		with self.assertRaises(frappe.ValidationError):
-			get_asset_item(code)
+		stock_item = frappe._dict(
+			name="_T-STOCK",
+			item_name="Rag",
+			asset_category=None,
+			is_fixed_asset=0,
+			is_stock_item=1,
+			disabled=0,
+		)
+		with patch("hse.asset_inspection.quick_asset.frappe.db.get_value", return_value=stock_item):
+			with self.assertRaisesRegex(frappe.ValidationError, "Fixed Asset"):
+				get_asset_item("_T-STOCK")
 
 	def test_future_in_service_date_is_rejected(self):
 		with self.assertRaisesRegex(frappe.ValidationError, "future"):
