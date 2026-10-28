@@ -63,10 +63,15 @@ def fill_from_ncr(doc) -> None:
 	for target, (ncr_field, rework_field) in FILL_FROM.items():
 		source = rework_field if rework else ncr_field
 		value = doc.get(source) or doc.get(ncr_field)
-		if is_blank(doc.get(target)) and not is_blank(value):
+		if is_empty(doc.get(target)) and not is_empty(value):
 			doc.set(target, value)
 	if not doc.get("scar_part_description") and doc.get("capa_part_description"):
 		doc.scar_part_description = doc.capa_part_description
+
+
+def is_empty(value) -> bool:
+	"""Zero quantities count as blank; text is blank when it has no visible content."""
+	return not value or (isinstance(value, str) and is_blank(value))
 
 
 def validate_scar(doc) -> None:
