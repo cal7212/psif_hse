@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "creation": "2026-10-28 12:00:00.000000",
+ "description": "Defaults for the Quick Add Asset form.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_quick_add",
+  "placeholder_purchase_amount",
+  "column_break_q",
+  "default_location"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_quick_add",
+   "fieldtype": "Section Break",
+   "label": "Quick Add Asset",
+   "description": "Quick Add creates and submits an Existing Asset with depreciation off. ERPNext requires a Net Purchase Amount, so this value is used instead of the purchase price."
+  },
+  {
+   "default": "0.01",
+   "description": "Net Purchase Amount given to every quick-added asset. It shows in ERPNext asset value reports.",
+   "fieldname": "placeholder_purchase_amount",
+   "fieldtype": "Currency",
+   "label": "Placeholder Purchase Amount",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_q",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_location",
+   "fieldtype": "Link",
+   "label": "Default Location",
+   "options": "Location"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Asset Inspection",
+ "name": "HSE Asset Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -22,3 +22,4 @@ hse.patches.shop_qc_manifold_general_templates
 hse.patches.training_matrix_respirator_wearer
 hse.patches.training_matrix_safety_manager_authorizer
 hse.patches.move_non_conformance_to_nonconformance_report
+hse.patches.hse_asset_settings_defaults
