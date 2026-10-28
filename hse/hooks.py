@@ -288,6 +288,9 @@ doctype_js = {
 
 doctype_list_js = {
 	"Quality Goal": "public/js/quality_goal_list.js",
+	# Quick Add Asset: create an Existing Asset without purchase details.
+	"Asset": ["public/js/quick_asset.js", "public/js/asset_list.js"],
+	"Asset Inspection": "public/js/quick_asset.js",
 }
 
 doc_events = {
