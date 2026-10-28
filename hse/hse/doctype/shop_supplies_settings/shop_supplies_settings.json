@@ -1,0 +1,77 @@
+{
+ "actions": [],
+ "creation": "2026-10-28 18:00:00.000000",
+ "description": "Defaults for the Shop Supplies forms (Add Supply Item, Receive, Issue, Count).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_defaults",
+  "default_warehouse",
+  "default_item_group",
+  "column_break_d",
+  "issue_expense_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_defaults",
+   "fieldtype": "Section Break",
+   "label": "Defaults",
+   "description": "The forms create normal Stock Entries and Stock Reconciliations. Perpetual inventory applies, so receipts, issues and count changes post to accounting."
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse",
+   "description": "Pre-selected on every form. Any department warehouse can still be picked."
+  },
+  {
+   "fieldname": "default_item_group",
+   "fieldtype": "Link",
+   "label": "Default Item Group",
+   "options": "Item Group",
+   "description": "Pre-selected when adding a supply item."
+  },
+  {
+   "fieldname": "column_break_d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issue_expense_account",
+   "fieldtype": "Link",
+   "label": "Issue Expense Account",
+   "options": "Account",
+   "description": "Optional. Account charged when supplies are issued. Blank uses the item or item group expense account, then the company Stock Adjustment account."
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-10-28 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Shop Supplies Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Stock Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Stock User"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
