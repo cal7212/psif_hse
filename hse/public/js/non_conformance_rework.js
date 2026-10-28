@@ -1,4 +1,4 @@
-// QM-104 Rev. 3 Rework on Non Conformance (loaded alongside non_conformance.js)
+// QM-104 Rev. 3 Rework on Nonconformance Report (loaded alongside non_conformance.js)
 const HSE_NCR_CRITERIA = [
 	["crit_scrap", __("Results in scrap of a finished part")],
 	[
@@ -25,7 +25,7 @@ for (const ev of HSE_RW_EVAL) {
 	hse_eval_handlers[ev] = (frm) => hse_eval_changed(frm, ev);
 }
 
-frappe.ui.form.on("Non Conformance", {
+frappe.ui.form.on("Nonconformance Report", {
 	...hse_eval_handlers,
 	onload(frm) {
 		hse_rework_print_format(frm);
@@ -48,7 +48,7 @@ frappe.ui.form.on("Non Conformance", {
 		if (frm.doc.escalated_to) {
 			frm.add_custom_button(
 				__("NCR {0}", [frm.doc.escalated_to]),
-				() => frappe.set_route("Form", "Non Conformance", frm.doc.escalated_to),
+				() => frappe.set_route("Form", "Nonconformance Report", frm.doc.escalated_to),
 				__("View")
 			);
 			frm.dashboard.set_headline_alert(
@@ -58,7 +58,7 @@ frappe.ui.form.on("Non Conformance", {
 		} else if (frm.doc.escalated_from) {
 			frm.add_custom_button(
 				__("Rework {0}", [frm.doc.escalated_from]),
-				() => frappe.set_route("Form", "Non Conformance", frm.doc.escalated_from),
+				() => frappe.set_route("Form", "Nonconformance Report", frm.doc.escalated_from),
 				__("View")
 			);
 		}
@@ -156,7 +156,7 @@ function hse_escalate_dialog(frm, preset = []) {
 				freeze: true,
 				callback: (r) => {
 					d.hide();
-					if (r.message) frappe.set_route("Form", "Non Conformance", r.message);
+					if (r.message) frappe.set_route("Form", "Nonconformance Report", r.message);
 				},
 			});
 		},

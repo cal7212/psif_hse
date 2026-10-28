@@ -349,7 +349,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			):
 				frappe.db.delete(child, {"parent": ("in", names)})
 		frappe.db.delete("QC Inspection", {"qc_unit": unit})
-		frappe.db.delete("Non Conformance", {"qc_unit": unit})
+		frappe.db.delete("Nonconformance Report", {"qc_unit": unit})
 		frappe.delete_doc("QC Unit", unit, force=1)
 
 	def setUp(self):
@@ -446,7 +446,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(bad.non_conformance)
 		self.assertTrue(bad.non_conformance.startswith("QA-RW-"))  # every failure starts as Rework
 		nc = frappe.db.get_value(
-			"Non Conformance", bad.non_conformance, ["severity", "record_type"], as_dict=True
+			"Nonconformance Report", bad.non_conformance, ["severity", "record_type"], as_dict=True
 		)
 		self.assertEqual(nc.severity, "Critical")
 		self.assertEqual(nc.record_type, "Rework")
@@ -476,14 +476,14 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		ncr = part.non_conformance
 		self.assertTrue(ncr.startswith("QA-RW-"))  # QM-104 Rev. 3: missing parts are Rework
 		rw = frappe.db.get_value(
-			"Non Conformance", ncr, ["qc_unit", "record_type", "rw_requirement"], as_dict=True
+			"Nonconformance Report", ncr, ["qc_unit", "record_type", "rw_requirement"], as_dict=True
 		)
 		self.assertEqual(rw.qc_unit, WO)
 		self.assertEqual(rw.record_type, "Rework")
 		self.assertIn("_T-RV-1", rw.rw_requirement)
 		self.assertEqual(self.status(), "QC Hold")
 		# The Rework cannot be resolved while a part is outstanding.
-		nc = frappe.get_doc("Non Conformance", ncr)
+		nc = frappe.get_doc("Nonconformance Report", ncr)
 		nc.update({"status": "Resolved", "rw_quality_verification": "Accept", **EVAL_NO})
 		with self.assertRaisesRegex(frappe.ValidationError, "every missing part"):
 			nc.save()
@@ -517,7 +517,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		unit.reload()
 		self.assertEqual(len(unit.missing_parts), 2)
 		self.assertEqual(unit.missing_parts[1].non_conformance, ncr)
-		self.assertIn("_T-PG-1", frappe.db.get_value("Non Conformance", ncr, "rw_requirement"))
+		self.assertIn("_T-PG-1", frappe.db.get_value("Nonconformance Report", ncr, "rw_requirement"))
 
 		# Earlier checks can be completed; testing cannot while a part is outstanding.
 		asm.reload()
@@ -533,10 +533,10 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		test.submit()
 		self.assertEqual(test.status, "Accepted")
 		self.assertTrue(test.missing_parts[0].found)  # snapshot kept on the completed check
-		nc = frappe.get_doc("Non Conformance", ncr)
+		nc = frappe.get_doc("Nonconformance Report", ncr)
 		nc.update({"status": "Resolved", "rw_quality_verification": "Accept", **EVAL_NO})
 		nc.save()
-		self.assertEqual(frappe.db.get_value("Non Conformance", ncr, "status"), "Resolved")
+		self.assertEqual(frappe.db.get_value("Nonconformance Report", ncr, "status"), "Resolved")
 		self.assertEqual(nc.quality_verification, "Accept")  # mirrored for the closure rules
 		self.assertEqual(nc.disposition, "Rework to Specification")
 
@@ -548,7 +548,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		bad = self.make("_T Test", reading=3200)
 		self.assertEqual(bad.status, "Rejected")
 		self.assertTrue(bad.non_conformance.startswith("QA-RW-"))
-		rw = frappe.get_doc("Non Conformance", bad.non_conformance)
+		rw = frappe.get_doc("Nonconformance Report", bad.non_conformance)
 		self.assertEqual(rw.record_type, "Rework")
 		self.assertIn("rework", rw.subject)
 		self.assertTrue(rw.rw_requirement)
@@ -608,7 +608,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(rw.verified_by, self.employee)
 		self.assertEqual(self.status(), "Ready for Release")
 		html = frappe.get_print(
-			"Non Conformance", rw.name, print_format="QM-104 Rework Report", no_letterhead=1
+			"Nonconformance Report", rw.name, print_format="QM-104 Rework Report", no_letterhead=1
 		)
 		self.assertIn("QM-104 Rework Report", html)
 		self.assertIn("NCR CRITERIA EVALUATION", html)
@@ -626,7 +626,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			escalate_to_ncr(rw_name, [], "No criteria")
 		ncr = escalate_to_ncr(rw_name, ["crit_supplier"], "Supplier relief valve out of spec")
 		self.assertTrue(ncr.startswith("QA-NC-"))
-		nc = frappe.get_doc("Non Conformance", ncr)
+		nc = frappe.get_doc("Nonconformance Report", ncr)
 		self.assertEqual(nc.record_type, "NCR")
 		self.assertEqual(nc.escalated_from, rw_name)
 		self.assertTrue(nc.crit_supplier)
@@ -634,7 +634,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("Supplier relief valve", nc.details)
 		self.assertEqual(frappe.db.get_value("QC Inspection", bad.name, "non_conformance"), ncr)
 		rw = frappe.db.get_value(
-			"Non Conformance", rw_name, ["status", "escalated_to", "rw_crit_supplier"], as_dict=True
+			"Nonconformance Report", rw_name, ["status", "escalated_to", "rw_crit_supplier"], as_dict=True
 		)
 		self.assertEqual(rw.status, "Cancelled")
 		self.assertEqual(rw.escalated_to, ncr)
@@ -649,7 +649,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		for i in range(2):
 			doc = frappe.get_doc(
 				{
-					"doctype": "Non Conformance",
+					"doctype": "Nonconformance Report",
 					"record_type": "Rework",
 					"subject": f"_T rework log {i}",
 					"procedure": proc,
@@ -665,7 +665,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				names.append(doc.name)
 				self.assertTrue(doc.name.startswith("QA-RW-"))
 		for n in names:
-			frappe.delete_doc("Non Conformance", n, force=1)
+			frappe.delete_doc("Nonconformance Report", n, force=1)
 
 	def test_control_panel_sub_assembly_tested_with_hpu(self):
 		"""A control panel on its own work order is linked to the HPU, must pass its build checks
@@ -725,11 +725,11 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(ncr)
 		# A submitted source inspection keeps its NCR.
 		with self.assertRaisesRegex(frappe.ValidationError, "Cancel these submitted"):
-			frappe.delete_doc("Non Conformance", ncr)
+			frappe.delete_doc("Nonconformance Report", ncr)
 		bad.reload()
 		bad.cancel()
-		frappe.delete_doc("Non Conformance", ncr)
-		self.assertFalse(frappe.db.exists("Non Conformance", ncr))
+		frappe.delete_doc("Nonconformance Report", ncr)
+		self.assertFalse(frappe.db.exists("Nonconformance Report", ncr))
 		self.assertIsNone(frappe.db.get_value("QC Inspection", bad.name, "non_conformance"))
 		frappe.delete_doc("QC Inspection", bad.name)
 		self.assertFalse(frappe.db.exists("QC Inspection", bad.name))
@@ -817,7 +817,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		bad = self.make("_T Test", reading=3200)
 		re = self.make("_T Test", reading=3010, is_reinspection=1, reinspection_of=bad.name)
 		self.assertEqual(re.status, "Accepted")
-		nc = frappe.get_doc("Non Conformance", bad.non_conformance)
+		nc = frappe.get_doc("Nonconformance Report", bad.non_conformance)
 		self.assertEqual(nc.qc_reinspection, re.name)
 		nc.update(
 			{
@@ -965,7 +965,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertTrue(first.name.startswith("TQH-"))
 		self.assertEqual(first.status, "Rejected")
 		nc = frappe.db.get_value(
-			"Non Conformance", first.non_conformance, ["severity", "details"], as_dict=True
+			"Nonconformance Report", first.non_conformance, ["severity", "details"], as_dict=True
 		)
 		self.assertEqual(nc.severity, "Critical")
 		self.assertIn("_TH-2", nc.details)
@@ -1158,7 +1158,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			doc.submit()
 			self.assertEqual(doc.status, "Rejected")
 			self.assertEqual(
-				frappe.db.get_value("Non Conformance", doc.non_conformance, "severity"), "Critical"
+				frappe.db.get_value("Nonconformance Report", doc.non_conformance, "severity"), "Critical"
 			)
 		finally:
 			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)
@@ -1209,7 +1209,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			doc.submit()
 			self.assertEqual(doc.status, "Rejected")
 			self.assertEqual(
-				frappe.db.get_value("Non Conformance", doc.non_conformance, "severity"), "Critical"
+				frappe.db.get_value("Nonconformance Report", doc.non_conformance, "severity"), "Critical"
 			)
 		finally:
 			for flag in ("pmg_test", "proof_test"):
@@ -1481,7 +1481,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			frappe.db.get_value("QC Hose Test", rows["_TH-2"].name, "non_conformance"), doc.non_conformance
 		)
 		self.assertFalse(frappe.db.get_value("QC Hose Test", rows["_TH-1"].name, "non_conformance"))
-		details = frappe.db.get_value("Non Conformance", doc.non_conformance, "details")
+		details = frappe.db.get_value("Nonconformance Report", doc.non_conformance, "details")
 		self.assertIn("Out of Spec", details)
 
 	def test_dash_size_and_crimp_warning(self):

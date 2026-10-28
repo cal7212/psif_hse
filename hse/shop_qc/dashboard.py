@@ -115,11 +115,11 @@ def shipped_before_release(filters: str | dict | list | None = None):
 
 @frappe.whitelist()
 def critical_ncrs_over_7_days(filters: str | dict | list | None = None):
-	frappe.has_permission("Non Conformance", "read", throw=True)
+	frappe.has_permission("Nonconformance Report", "read", throw=True)
 	value, _detail = metrics.nc_open_critical_over_7_days(None, None)
 	return _card(
 		value,
-		route=["List", "Non Conformance"],
+		route=["List", "Nonconformance Report"],
 		route_options={"status": "Open", "severity": "Critical"},
 	)
 

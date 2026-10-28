@@ -28,10 +28,10 @@ def summarize(rows, passing_score=0):
 	rows: iterable of dicts/objects with result, is_critical, corrected_on_spot.
 	Score = passed / applicable (Pass + Fail) x 100; N/A items are excluded.
 	Items corrected on the spot still count as failed in the score (the
-	condition was found), but do not require a Non Conformance.
+	condition was found), but do not require a Nonconformance Report.
 
 	Rejected when any failed item was NOT corrected on the spot, or the score
-	is below the passing score. Severity for the Non Conformance:
+	is below the passing score. Severity for the Nonconformance Report:
 	Critical = open critical failure, Medium = open non-critical failure,
 	Low = only the score was below passing.
 	"""
@@ -218,11 +218,15 @@ class HousekeepingInspection(Document):
 
 	def on_cancel(self):
 		# Set on the instance (not the class): Frappe reads it via doc.get() when
-		# checking back-links, so the Area / Non Conformance links don't block cancel.
-		self.ignore_linked_doctypes = ("Non Conformance", "Housekeeping Area", "Housekeeping Inspection")
+		# checking back-links, so the Area / Nonconformance Report links don't block cancel.
+		self.ignore_linked_doctypes = (
+			"Nonconformance Report",
+			"Housekeeping Area",
+			"Housekeeping Inspection",
+		)
 		self.db_set("status", "Pending")
 		if self.non_conformance:
-			nc = frappe.get_doc("Non Conformance", self.non_conformance)
+			nc = frappe.get_doc("Nonconformance Report", self.non_conformance)
 			if nc.status == "Open":
 				nc.status = "Cancelled"
 				nc.flags.ignore_permissions = True
@@ -235,15 +239,16 @@ class HousekeepingInspection(Document):
 			orig_nc = frappe.db.get_value("Housekeeping Inspection", self.reinspection_of, "non_conformance")
 			if (
 				orig_nc
-				and frappe.db.get_value("Non Conformance", orig_nc, "housekeeping_reinspection") == self.name
+				and frappe.db.get_value("Nonconformance Report", orig_nc, "housekeeping_reinspection")
+				== self.name
 			):
-				if frappe.db.get_value("Non Conformance", orig_nc, "status") == "Resolved":
+				if frappe.db.get_value("Nonconformance Report", orig_nc, "status") == "Resolved":
 					frappe.throw(
 						_(
-							"Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling."
+							"Nonconformance Report {0} was resolved using this re-inspection. Reopen it before cancelling."
 						).format(frappe.bold(orig_nc))
 					)
-				frappe.db.set_value("Non Conformance", orig_nc, "housekeeping_reinspection", None)
+				frappe.db.set_value("Nonconformance Report", orig_nc, "housekeeping_reinspection", None)
 		if not self.is_reinspection:
 			refresh_area_last_inspection(self.housekeeping_area)
 		update_area_housekeeping_status(self.housekeeping_area)
@@ -351,7 +356,7 @@ class HousekeepingInspection(Document):
 
 		nc = frappe.get_doc(
 			{
-				"doctype": "Non Conformance",
+				"doctype": "Nonconformance Report",
 				"subject": "Housekeeping - " + self.housekeeping_area + " (" + self.name + ")",
 				"procedure": self.quality_procedure,
 				"status": "Open",
@@ -370,8 +375,8 @@ class HousekeepingInspection(Document):
 		self.assign_to_area_owner(nc)
 
 		frappe.msgprint(
-			_("Non Conformance {0} created ({1}).").format(
-				frappe.get_desk_link("Non Conformance", nc.name), _(s.severity)
+			_("Nonconformance Report {0} created ({1}).").format(
+				frappe.get_desk_link("Nonconformance Report", nc.name), _(s.severity)
 			),
 			indicator="red",
 			alert=True,
@@ -388,7 +393,7 @@ class HousekeepingInspection(Document):
 		assign(
 			{
 				"assign_to": [user],
-				"doctype": "Non Conformance",
+				"doctype": "Nonconformance Report",
 				"name": nc.name,
 				"description": _("Correct housekeeping findings in {0}").format(self.housekeeping_area),
 				"priority": "High" if nc.severity == "Critical" else "Medium",
@@ -401,11 +406,11 @@ class HousekeepingInspection(Document):
 			return
 		orig_nc = frappe.db.get_value("Housekeeping Inspection", self.reinspection_of, "non_conformance")
 		if orig_nc:
-			frappe.db.set_value("Non Conformance", orig_nc, "housekeeping_reinspection", self.name)
+			frappe.db.set_value("Nonconformance Report", orig_nc, "housekeeping_reinspection", self.name)
 			frappe.msgprint(
 				_(
 					"Re-inspection linked to {0}. Complete verification and resolve it to close the finding."
-				).format(frappe.get_desk_link("Non Conformance", orig_nc)),
+				).format(frappe.get_desk_link("Nonconformance Report", orig_nc)),
 				indicator="green",
 				alert=True,
 			)
@@ -529,7 +534,7 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 
 @frappe.whitelist()
 def make_reinspection_from_nc(non_conformance: str):
-	source = frappe.db.get_value("Non Conformance", non_conformance, "housekeeping_inspection")
+	source = frappe.db.get_value("Nonconformance Report", non_conformance, "housekeeping_inspection")
 	if not source:
-		frappe.throw(_("This Non Conformance is not linked to a Housekeeping Inspection."))
+		frappe.throw(_("This Nonconformance Report is not linked to a Housekeeping Inspection."))
 	return make_reinspection(source)

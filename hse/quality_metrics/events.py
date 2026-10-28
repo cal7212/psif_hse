@@ -109,7 +109,7 @@ def quality_review_on_update(doc, method=None):
 	)
 
 
-# ---------------------------------------------------------------- Non Conformance
+# ---------------------------------------------------------------- Nonconformance Report
 def non_conformance_validate(doc, method=None):
 	"""Stamp the resolution time so 'days to resolve' can be measured."""
 	if doc.status == "Resolved":

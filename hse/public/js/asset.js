@@ -4,13 +4,13 @@ frappe.ui.form.on("Asset", {
 
 		if (frm.doc.safety_status === "Out of Service") {
 			frm.dashboard.set_headline_alert(
-				__("Out of Service: open critical Non Conformance. Do not operate."),
+				__("Out of Service: open critical Nonconformance Report. Do not operate."),
 				"red"
 			);
 			frm.add_custom_button(
-				__("Open Non Conformances"),
+				__("Open Nonconformance Reports"),
 				() => {
-					frappe.set_route("List", "Non Conformance", {
+					frappe.set_route("List", "Nonconformance Report", {
 						asset: frm.doc.name,
 						status: "Open",
 					});

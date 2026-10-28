@@ -1,5 +1,5 @@
-// Shop QC follow-up on Non Conformance (loaded alongside non_conformance.js)
-frappe.ui.form.on("Non Conformance", {
+// Shop QC follow-up on Nonconformance Report (loaded alongside non_conformance.js)
+frappe.ui.form.on("Nonconformance Report", {
 	refresh(frm) {
 		if (frm.is_new() || !frm.doc.qc_inspection) return;
 

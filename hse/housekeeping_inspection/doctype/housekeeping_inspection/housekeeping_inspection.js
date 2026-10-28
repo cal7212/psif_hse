@@ -6,9 +6,9 @@ const HKI_METHOD =
 
 frappe.ui.form.on("Housekeeping Inspection", {
 	setup(frm) {
-		// Cancelling must not offer to cancel the Non Conformance or Area that link back here
+		// Cancelling must not offer to cancel the Nonconformance Report or Area that link back here
 		frm.ignore_doctypes_on_cancel_all = [
-			"Non Conformance",
+			"Nonconformance Report",
 			"Housekeeping Area",
 			"Housekeeping Inspection",
 		];
@@ -42,9 +42,9 @@ frappe.ui.form.on("Housekeeping Inspection", {
 		}
 		if (frm.doc.non_conformance) {
 			frm.add_custom_button(
-				__("Non Conformance"),
+				__("Nonconformance Report"),
 				() => {
-					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+					frappe.set_route("Form", "Nonconformance Report", frm.doc.non_conformance);
 				},
 				__("View")
 			);
@@ -140,7 +140,7 @@ frappe.ui.form.on("Housekeeping Inspection Item", {
 		if (row.is_critical) {
 			frappe.show_alert({
 				message: __(
-					"Critical item failed: {0}. Correct it now and tick Corrected on the Spot, or a Critical Non Conformance will be raised on submit.",
+					"Critical item failed: {0}. Correct it now and tick Corrected on the Spot, or a Critical Nonconformance Report will be raised on submit.",
 					[row.check_item]
 				),
 				indicator: "red",

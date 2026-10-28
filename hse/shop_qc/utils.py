@@ -1,6 +1,6 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
-"""QC status for QC Units, driven by QC Inspections and Non Conformances.
+"""QC status for QC Units, driven by QC Inspections and Nonconformance Reports.
 
 Stages apply to a unit when the stage's shop is the unit's shop (or blank = every shop)
 and the stage's job type is the unit's job type (or "Both").
@@ -75,7 +75,7 @@ def get_accepted_by_stage(qc_unit: str) -> dict:
 
 
 def count_open_ncs(qc_unit: str) -> int:
-	return frappe.db.count("Non Conformance", {"qc_unit": qc_unit, "status": "Open"})
+	return frappe.db.count("Nonconformance Report", {"qc_unit": qc_unit, "status": "Open"})
 
 
 def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None:
@@ -304,7 +304,7 @@ def get_qc_certificate_data(qc_unit: str) -> frappe._dict:
 		pmg_results=pmg_results,
 		circuit=circuit,
 		non_conformances=frappe.get_all(
-			"Non Conformance",
+			"Nonconformance Report",
 			filters={"qc_unit": qc_unit, "status": ("!=", "Cancelled")},
 			fields=[
 				"name",

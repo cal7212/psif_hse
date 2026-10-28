@@ -21,3 +21,4 @@ hse.patches.shop_qc_missing_parts_test_stages
 hse.patches.shop_qc_manifold_general_templates
 hse.patches.training_matrix_respirator_wearer
 hse.patches.training_matrix_safety_manager_authorizer
+hse.patches.move_non_conformance_to_nonconformance_report

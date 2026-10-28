@@ -186,8 +186,8 @@
   {
    "fieldname": "non_conformance",
    "fieldtype": "Link",
-   "label": "Non Conformance",
-   "options": "Non Conformance",
+   "label": "Nonconformance Report",
+   "options": "Nonconformance Report",
    "read_only": 1,
    "allow_on_submit": 1,
    "no_copy": 1
@@ -287,7 +287,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-01 15:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Housekeeping Inspection",
  "name": "Housekeeping Inspection",

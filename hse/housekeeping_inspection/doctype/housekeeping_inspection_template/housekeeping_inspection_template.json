@@ -31,7 +31,7 @@
    "label": "Quality Procedure",
    "options": "Quality Procedure",
    "reqd": 1,
-   "description": "Required: failed inspections raise a Non Conformance against this procedure."
+   "description": "Required: failed inspections raise a Nonconformance Report against this procedure."
   },
   {
    "fieldname": "column_break_1",
@@ -80,7 +80,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-01 15:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Housekeeping Inspection",
  "name": "Housekeeping Inspection Template",

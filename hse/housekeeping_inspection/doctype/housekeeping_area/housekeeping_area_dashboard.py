@@ -5,6 +5,6 @@ def get_data():
 	return {
 		"fieldname": "housekeeping_area",
 		"transactions": [
-			{"label": _("Inspections"), "items": ["Housekeeping Inspection", "Non Conformance"]},
+			{"label": _("Inspections"), "items": ["Housekeeping Inspection", "Nonconformance Report"]},
 		],
 	}

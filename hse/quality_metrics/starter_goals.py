@@ -21,7 +21,7 @@ STARTER_GOALS = [
 		],
 	},
 	{
-		"goal": "Non Conformance Management",
+		"goal": "Nonconformance Report Management",
 		"objectives": [
 			("nc_avg_days_to_resolve", "At most", 14),
 			("nc_open_critical_over_7_days", "At most", 0),

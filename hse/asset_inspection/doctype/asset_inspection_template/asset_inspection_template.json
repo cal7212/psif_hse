@@ -38,7 +38,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Documented method (SOP) for this inspection. Required because Non Conformance requires a procedure.",
+   "description": "Documented method (SOP) for this inspection. Required because Nonconformance Report requires a procedure.",
    "fieldname": "quality_procedure",
    "fieldtype": "Link",
    "label": "Quality Procedure",
@@ -80,7 +80,7 @@
    "label": "Inspector Instructions"
   }
  ],
- "modified": "2026-09-30 12:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Asset Inspection",
  "name": "Asset Inspection Template",

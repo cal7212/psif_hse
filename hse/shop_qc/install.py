@@ -72,48 +72,8 @@ DEFAULT_STAGES = {
 
 
 def get_custom_fields():
-	# severity, interim_control, verified_by, verification_date and corrective_action
-	# on Non Conformance are created by the Asset Inspection module and reused here.
-	return {
-		"Non Conformance": [
-			{
-				"fieldname": "qc_section",
-				"label": "Shop QC",
-				"fieldtype": "Section Break",
-				"insert_after": "housekeeping_reinspection",
-				"depends_on": "eval:doc.qc_unit || doc.qc_inspection",
-			},
-			{
-				"fieldname": "qc_unit",
-				"label": "QC Unit",
-				"fieldtype": "Link",
-				"options": "QC Unit",
-				"insert_after": "qc_section",
-				"in_standard_filter": 1,
-			},
-			{
-				"fieldname": "qc_inspection",
-				"label": "QC Inspection",
-				"fieldtype": "Link",
-				"options": "QC Inspection",
-				"insert_after": "qc_unit",
-				"read_only": 1,
-			},
-			{
-				"fieldname": "qc_column_break",
-				"fieldtype": "Column Break",
-				"insert_after": "qc_inspection",
-			},
-			{
-				"fieldname": "qc_reinspection",
-				"label": "QC Re-inspection",
-				"fieldtype": "Link",
-				"options": "QC Inspection",
-				"insert_after": "qc_column_break",
-				"read_only": 1,
-			},
-		],
-	}
+	# The NCR fields are part of the Nonconformance Report doctype.
+	return {}
 
 
 def make_custom_fields():

@@ -151,7 +151,7 @@ def repair_failure_causes(start, end):
 	return len(rows), _("Top causes: {0}").format(top)
 
 
-# ---------------------------------------------------------------- Non Conformance
+# ---------------------------------------------------------------- Nonconformance Report
 # QM-104 Rev. 3: the NCR metrics count formal NCRs only; Rework is counted separately.
 NOT_REWORK = {"record_type": ["!=", "Rework"]}
 
@@ -159,7 +159,7 @@ NOT_REWORK = {"record_type": ["!=", "Rework"]}
 def rework_opened(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
-		"Non Conformance",
+		"Nonconformance Report",
 		filters={"creation": ["between", [s, e]], "record_type": "Rework"},
 		fields=["name", "status", "escalated_to"],
 	)
@@ -173,12 +173,12 @@ def rework_opened(start, end):
 def nc_avg_days_to_resolve(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
-		"Non Conformance",
+		"Nonconformance Report",
 		filters={"status": "Resolved", "resolved_on": ["between", [s, e]], **NOT_REWORK},
 		fields=["name", "creation", "resolved_on"],
 	)
 	if not rows:
-		return None, _("No Non Conformances resolved in the period.")
+		return None, _("No Nonconformance Reports resolved in the period.")
 	days = [(r.resolved_on - r.creation).total_seconds() / 86400 for r in rows]
 	slowest = max(rows, key=lambda r: r.resolved_on - r.creation)
 	return round(sum(days) / len(days), 1), _("{0} resolved; slowest {1} ({2} days).").format(
@@ -189,7 +189,7 @@ def nc_avg_days_to_resolve(start, end):
 def nc_open_critical_over_7_days(start, end):
 	cutoff = now_datetime() - timedelta(days=7)
 	rows = frappe.get_all(
-		"Non Conformance",
+		"Nonconformance Report",
 		filters={"status": "Open", "severity": "Critical", "creation": ["<", cutoff], **NOT_REWORK},
 		pluck="name",
 	)
@@ -199,7 +199,7 @@ def nc_open_critical_over_7_days(start, end):
 def nc_opened(start, end):
 	s, e = _bounds(start, end)
 	rows = frappe.get_all(
-		"Non Conformance",
+		"Nonconformance Report",
 		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"], **NOT_REWORK},
 		fields=["name", "severity"],
 	)
@@ -394,17 +394,17 @@ METRICS = {
 		nc_avg_days_to_resolve,
 		"Day",
 		False,
-		"Non Conformance",
+		"Nonconformance Report",
 	),
 	"nc_open_critical_over_7_days": (
 		"Critical NCRs open > 7 days (now)",
 		nc_open_critical_over_7_days,
 		"Nos",
 		True,
-		"Non Conformance",
+		"Nonconformance Report",
 	),
-	"nc_opened": ("NCRs opened (excludes Rework)", nc_opened, "Nos", False, "Non Conformance"),
-	"rework_opened": ("Rework records opened", rework_opened, "Nos", False, "Non Conformance"),
+	"nc_opened": ("NCRs opened (excludes Rework)", nc_opened, "Nos", False, "Nonconformance Report"),
+	"rework_opened": ("Rework records opened", rework_opened, "Nos", False, "Nonconformance Report"),
 	"asset_inspection_on_time_pct": (
 		"Asset maintenance/inspections on time (%)",
 		asset_inspection_on_time_pct,

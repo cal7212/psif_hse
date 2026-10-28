@@ -9,7 +9,7 @@ frappe.ui.form.on("Asset Inspection", {
 		// Maintenance Log or other records that link back to it.
 		frm.ignore_doctypes_on_cancel_all = [
 			"Asset Maintenance Log",
-			"Non Conformance",
+			"Nonconformance Report",
 			"Asset Inspection",
 		];
 
@@ -55,9 +55,9 @@ frappe.ui.form.on("Asset Inspection", {
 		}
 		if (frm.doc.non_conformance) {
 			frm.add_custom_button(
-				__("Non Conformance"),
+				__("Nonconformance Report"),
 				() => {
-					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+					frappe.set_route("Form", "Nonconformance Report", frm.doc.non_conformance);
 				},
 				__("View")
 			);

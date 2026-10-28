@@ -1,4 +1,4 @@
-frappe.ui.form.on("Non Conformance", {
+frappe.ui.form.on("Nonconformance Report", {
 	refresh(frm) {
 		if (frm.is_new()) return;
 		if (frm.doc.asset_inspection) frm.trigger("setup_asset_inspection");
@@ -45,7 +45,7 @@ frappe.ui.form.on("Non Conformance", {
 
 		if (frm.doc.severity === "Critical" && frm.doc.status === "Open") {
 			frm.dashboard.set_headline_alert(
-				__("Asset {0} is Out of Service until this Non Conformance is resolved.", [
+				__("Asset {0} is Out of Service until this Nonconformance Report is resolved.", [
 					frm.doc.asset,
 				]),
 				"red"
