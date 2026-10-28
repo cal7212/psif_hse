@@ -212,7 +212,7 @@
    "fieldtype": "Link",
    "label": "NCR / Rework",
    "no_copy": 1,
-   "options": "Non Conformance",
+   "options": "Nonconformance Report",
    "read_only": 1
   },
   {
@@ -264,7 +264,7 @@
    "fieldname": "section_missing_parts",
    "fieldtype": "Section Break",
    "label": "Missing Parts",
-   "description": "The unit's missing-parts list, shared by every check on this unit. Add parts that are not on the BOM, still in fab or missing; tick Found as they turn up. Saving updates the unit and its Non Conformance."
+   "description": "The unit's missing-parts list, shared by every check on this unit. Add parts that are not on the BOM, still in fab or missing; tick Found as they turn up. Saving updates the unit and its Nonconformance Report."
   },
   {
    "fieldname": "missing_parts",
@@ -433,7 +433,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-27 16:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

@@ -7,7 +7,7 @@ const TM_RETRAINING_TRIGGER = {
 		reason_type: "Incident or Near Miss",
 		employee_fields: ["employee_name"],
 	},
-	"Non Conformance": { reason_type: "Nonconformance or CAPA", employee_fields: [] },
+	"Nonconformance Report": { reason_type: "Nonconformance or CAPA", employee_fields: [] },
 };
 
 Object.keys(TM_RETRAINING_TRIGGER).forEach((doctype) => {

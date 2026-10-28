@@ -154,9 +154,9 @@
    "allow_on_submit": 1,
    "fieldname": "non_conformance",
    "fieldtype": "Link",
-   "label": "Non Conformance",
+   "label": "Nonconformance Report",
    "no_copy": 1,
-   "options": "Non Conformance",
+   "options": "Nonconformance Report",
    "read_only": 1
   },
   {
@@ -233,7 +233,7 @@
   }
  ],
  "is_submittable": 1,
- "modified": "2026-10-02 23:45:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Asset Inspection",
  "name": "Asset Inspection",

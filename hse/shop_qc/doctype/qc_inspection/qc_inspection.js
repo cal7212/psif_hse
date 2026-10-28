@@ -14,7 +14,7 @@ function hse_set_photo_items(frm) {
 
 frappe.ui.form.on("QC Inspection", {
 	setup(frm) {
-		frm.ignore_doctypes_on_cancel_all = ["Non Conformance", "QC Inspection", "QC Unit"];
+		frm.ignore_doctypes_on_cancel_all = ["Nonconformance Report", "QC Inspection", "QC Unit"];
 
 		frm.set_query("qc_unit", () => ({
 			filters: { status: ["not in", ["Shipped", "Cancelled"]] },
@@ -92,9 +92,9 @@ frappe.ui.form.on("QC Inspection", {
 		}
 		if (frm.doc.non_conformance) {
 			frm.add_custom_button(
-				__("Non Conformance"),
+				__("Nonconformance Report"),
 				() => {
-					frappe.set_route("Form", "Non Conformance", frm.doc.non_conformance);
+					frappe.set_route("Form", "Nonconformance Report", frm.doc.non_conformance);
 				},
 				__("View")
 			);
@@ -259,7 +259,7 @@ frappe.ui.form.on("QC Inspection Reading", {
 		if (row.result === "Fail" && row.is_critical) {
 			frappe.show_alert({
 				message: __(
-					"Critical item failed: {0}. A Critical Non Conformance will be raised on submit.",
+					"Critical item failed: {0}. A Critical Nonconformance Report will be raised on submit.",
 					[row.check_item]
 				),
 				indicator: "red",
@@ -357,7 +357,7 @@ function evaluate_hose_row(cdt, cdn, changed) {
 			frappe.msgprint({
 				title: __("Cleanliness out of spec"),
 				message: __(
-					"Hose {0}: ISO {1} does not meet the required {2}. The hose fails: enter a finding. A Critical Non Conformance is raised when this inspection is submitted.",
+					"Hose {0}: ISO {1} does not meet the required {2}. The hose fails: enter a finding. A Critical Nonconformance Report is raised when this inspection is submitted.",
 					[r.hose_tag, r.cleanliness_actual, r.cleanliness_spec]
 				),
 				indicator: "red",
@@ -370,7 +370,7 @@ function evaluate_hose_row(cdt, cdn, changed) {
 		frappe.msgprint({
 			title: __("Crimp out of spec"),
 			message: __(
-				"Hose {0} {1}: {2} in is outside {3} - {4} in ({5}). The hose fails: enter a finding. A Critical Non Conformance is raised when this inspection is submitted.",
+				"Hose {0} {1}: {2} in is outside {3} - {4} in ({5}). The hose fails: enter a finding. A Critical Nonconformance Report is raised when this inspection is submitted.",
 				[
 					r.hose_tag,
 					changed === "crimp_a" ? __("End A") : __("End B"),

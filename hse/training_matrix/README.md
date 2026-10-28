@@ -161,7 +161,7 @@ due date and why. Training completed before the effective date no longer counts 
 courses: the course shows Due (earlier training still holds) until the due date, then Overdue.
 
 - **Incidents and NCR / CAPA**: *Create → Retraining Required* on an Injury_Illness Report or a
-  Non Conformance opens an assignment linked to it (the injured employee is filled in).
+  Nonconformance Report opens an assignment linked to it (the injured employee is filled in).
 - **Return from Absence**: *Manager → Return from Absence* on the matrix. At 90 days or more
   away it assigns the employee's high-hazard and practically evaluated courses, plus any added.
 - **Transfers and promotions**: Frappe HR's Employee Transfer and Employee Promotion update the

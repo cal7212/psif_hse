@@ -80,7 +80,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 	def make_nc(self, severity="Critical", days_old=0, status="Open"):
 		nc = frappe.get_doc(
 			{
-				"doctype": "Non Conformance",
+				"doctype": "Nonconformance Report",
 				"subject": f"_Test metrics NC {frappe.generate_hash(length=6)}",
 				"procedure": PROC,
 				"status": "Open",
@@ -89,7 +89,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		).insert()
 		if days_old:
 			frappe.db.set_value(
-				"Non Conformance",
+				"Nonconformance Report",
 				nc.name,
 				"creation",
 				now_datetime() - timedelta(days=days_old),
@@ -164,7 +164,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		self.assertRaises(frappe.ValidationError, other.save)  # CAPA # required
 		other.reload()
 		ncr_no = f"_T-NCR-{frappe.generate_hash(length=6)}"
-		frappe.db.set_value("Non Conformance", nc.name, "ncr_no", ncr_no, update_modified=False)
+		frappe.db.set_value("Nonconformance Report", nc.name, "ncr_no", ncr_no, update_modified=False)
 		other.ncr_no = f" {ncr_no} "
 		self.assertRaises(frappe.ValidationError, other.save)
 		other.reload()
@@ -226,6 +226,104 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		# a CAPA cannot list its own NCR as related
 		nc.append("capa_related_ncrs", {"non_conformance": nc.name})
 		self.assertRaises(frappe.ValidationError, nc.save)
+
+	def test_scar_numbering_defaults_and_approval(self):
+		nc = self.make_nc(severity="Low")
+		nc.update({"lot_qty": 10, "reject_qty": 3, "drawing_no": "D-100 Rev B", "details": "Burr on bore"})
+		nc.scar_required = 1
+		self.assertRaises(frappe.ValidationError, nc.save)  # SCAR Number is typed in from the log
+		nc.reload()
+		scar_no = f"_T-SCAR-{frappe.generate_hash(length=6)}"
+		nc.update({"lot_qty": 10, "reject_qty": 3, "drawing_no": "D-100 Rev B", "details": "Burr on bore"})
+		nc.update({"scar_required": 1, "scar_no": f"  {scar_no} "})
+		self.assertRaises(frappe.ValidationError, nc.save)  # supplier name required
+		nc.reload()
+		nc.update({"lot_qty": 10, "reject_qty": 3, "drawing_no": "D-100 Rev B", "details": "Burr on bore"})
+		nc.update({"scar_required": 1, "scar_no": f"  {scar_no} ", "scar_supplier_name": "_Test Supplier Co"})
+		nc.save()
+		self.assertEqual(nc.scar_no, scar_no)
+		self.assertEqual(nc.scar_status, "Issued")
+		self.assertTrue(nc.scar_issued_date)
+		self.assertEqual(nc.scar_qty_received, 10)
+		self.assertEqual(nc.scar_qty_rejected, 3)
+		self.assertEqual(nc.scar_drawing_rev, "D-100 Rev B")
+		self.assertIn("Burr on bore", nc.scar_discrepancy)
+
+		other = self.make_nc(severity="Low")
+		other.update({"scar_required": 1, "scar_no": scar_no, "scar_supplier_name": "_Test Supplier Co"})
+		self.assertRaises(frappe.ValidationError, other.save)  # SCAR numbers are unique
+
+		nc.reload()
+		nc.scar_status = "Rejected"
+		self.assertRaises(frappe.ValidationError, nc.save)  # reason and rejected by required
+		nc.reload()
+		nc.update(
+			{
+				"scar_status": "Rejected",
+				"scar_rejection_reason": "Root cause not supported",
+				"scar_rejected_by": self.employee,
+			}
+		)
+		nc.save()
+		self.assertTrue(nc.scar_rejected_date)
+
+		nc.scar_status = "Approved"
+		self.assertRaises(frappe.ValidationError, nc.save)  # supplier response incomplete
+		nc.reload()
+		nc.update(
+			{
+				"scar_status": "Approved",
+				"scar_root_cause": "Worn deburr tool",
+				"scar_containment": "Verified Complete",
+				"scar_corrective_action": "Tool life limit added",
+				"scar_approved_by": self.employee,
+			}
+		)
+		nc.save()
+		self.assertTrue(nc.scar_approved_date)
+		self.assertTrue(nc.scar_response_received)
+
+		html = frappe.get_print("Nonconformance Report", nc.name, print_format="QM-134 SCAR Report")
+		self.assertIn(scar_no, html)
+		self.assertIn("_Test Supplier Co", html)
+		self.assertIn("Supplier Corrective Action Report", html)
+
+	def test_legacy_non_conformance_is_moved_and_blocked(self):
+		from hse.patches.move_non_conformance_to_nonconformance_report import execute
+
+		self.assertRaises(
+			frappe.ValidationError,
+			frappe.get_doc(
+				{
+					"doctype": "Non Conformance",
+					"subject": "_Test blocked",
+					"procedure": PROC,
+					"status": "Open",
+				}
+			).insert,
+		)
+		frappe.flags.in_migrate = True
+		try:
+			old = frappe.get_doc(
+				{
+					"doctype": "Non Conformance",
+					"subject": "_Test legacy NC",
+					"procedure": PROC,
+					"status": "Open",
+				}
+			).insert()
+		finally:
+			frappe.flags.in_migrate = False
+		comment = old.add_comment("Comment", "_Test legacy comment")
+		execute()
+		new = frappe.get_doc("Nonconformance Report", old.name)
+		self.assertEqual(new.subject, "_Test legacy NC")
+		self.assertEqual(new.owner, old.owner)
+		self.assertEqual(
+			frappe.db.get_value("Comment", comment.name, "reference_doctype"), "Nonconformance Report"
+		)
+		execute()  # running again does not duplicate
+		self.assertEqual(frappe.db.count("Nonconformance Report", {"name": old.name}), 1)
 
 	def test_resolved_on_stamped_and_cleared(self):
 		nc = self.make_nc(severity="Low", status="Resolved")

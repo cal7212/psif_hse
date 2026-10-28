@@ -170,7 +170,7 @@ frappe.ui.form.on("QC Unit", {
 			frm.dashboard.set_headline_alert(frm.doc.qc_flag, "red");
 		} else if (frm.doc.status === "QC Hold") {
 			frm.dashboard.set_headline_alert(
-				__("QC Hold: {0} open Non Conformance(s). Do not ship.", [
+				__("QC Hold: {0} open Nonconformance Report(s). Do not ship.", [
 					frm.doc.open_non_conformances,
 				]),
 				"red"

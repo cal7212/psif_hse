@@ -8,7 +8,7 @@ from hse.shop_qc.utils import update_unit_status
 
 
 def validate(doc, method=None):
-	"""Closure gate: a QC-inspection Non Conformance cannot be resolved until the
+	"""Closure gate: a QC-inspection Nonconformance Report cannot be resolved until the
 	fix is documented, verified, and an Accepted re-inspection exists."""
 	if not doc.get("qc_inspection") or doc.status != "Resolved":
 		return
@@ -24,7 +24,7 @@ def validate(doc, method=None):
 	if missing:
 		frappe.throw(
 			_("Cannot resolve this {0} until these are completed: {1}").format(
-				_("Rework") if rework else _("Non Conformance"), ", ".join(missing)
+				_("Rework") if rework else _("Nonconformance Report"), ", ".join(missing)
 			),
 			title=_("Resolution Blocked"),
 		)

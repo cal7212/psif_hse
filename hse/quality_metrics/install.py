@@ -111,17 +111,6 @@ def get_custom_fields():
 				"no_copy": 1,
 			},
 		],
-		"Non Conformance": [
-			{
-				"fieldname": "resolved_on",
-				"label": "Resolved On",
-				"fieldtype": "Datetime",
-				"insert_after": "status",
-				"read_only": 1,
-				"no_copy": 1,
-				"depends_on": "eval:doc.status=='Resolved'",
-			},
-		],
 	}
 
 
@@ -131,17 +120,6 @@ def make_custom_fields():
 		for row in rows:
 			row["module"] = MODULE
 	create_custom_fields(fields, update=True)
-
-
-def backfill_resolved_on():
-	"""Existing resolved NCs: use last-modified time as the best available resolution time."""
-	nc = frappe.qb.DocType("Non Conformance")
-	(
-		frappe.qb.update(nc)
-		.set(nc.resolved_on, nc.modified)
-		.where((nc.status == "Resolved") & nc.resolved_on.isnull())
-		.run()
-	)
 
 
 def create_starter_goals(frequency: str = "Monthly", day_of_month: str = "1") -> list[str]:
@@ -180,11 +158,4 @@ def after_install():
 
 
 def after_migrate():
-	from hse.quality_metrics.capa import setup_capa
-	from hse.quality_metrics.ncr import backfill_ncr, setup_ncr
-
 	make_custom_fields()
-	backfill_resolved_on()
-	setup_ncr(MODULE)
-	setup_capa(MODULE)
-	backfill_ncr()

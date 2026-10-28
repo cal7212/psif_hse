@@ -40,13 +40,13 @@ def schedule_status_for(next_due_date, on_date=None, periodicity=None) -> str:
 
 
 def update_area_housekeeping_status(area: str) -> str | None:
-	"""Hazard Open while any Open Critical Non Conformance exists for the area,
+	"""Hazard Open while any Open Critical Nonconformance Report exists for the area,
 	Action Required while any other Open one exists, otherwise Satisfactory."""
 	if not area or not frappe.db.exists("Housekeeping Area", area):
 		return None
 
 	open_ncs = frappe.get_all(
-		"Non Conformance",
+		"Nonconformance Report",
 		filters={"housekeeping_area": area, "status": "Open"},
 		pluck="severity",
 	)

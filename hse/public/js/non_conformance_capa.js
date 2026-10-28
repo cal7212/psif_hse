@@ -1,5 +1,5 @@
-// QM-128 CAPA on Non Conformance (loaded alongside non_conformance.js)
-frappe.ui.form.on("Non Conformance", {
+// QM-128 CAPA on Nonconformance Report (loaded alongside non_conformance.js)
+frappe.ui.form.on("Nonconformance Report", {
 	refresh(frm) {
 		if (frm.is_new() || !frm.doc.capa_required) return;
 

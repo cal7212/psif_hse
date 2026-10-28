@@ -264,18 +264,19 @@ require_type_annotated_api_methods = True
 # If a key already exists in your hooks.py, add these entries to it.
 # ---------------------------------------------------------------------------
 
-# Requires ERPNext (Asset, Asset Maintenance, Non Conformance)
+# Requires ERPNext (Asset, Asset Maintenance)
 required_apps = ["erpnext", "hrms"]  # merge if you already list required apps
 
 # Form scripts for standard ERPNext DocTypes
 doctype_js = {
 	"Asset": "public/js/asset.js",
 	"Asset Maintenance Log": "public/js/asset_maintenance_log.js",
-	"Non Conformance": [
+	"Nonconformance Report": [
 		"public/js/non_conformance.js",
 		"public/js/non_conformance_qc.js",
 		"public/js/non_conformance_capa.js",
 		"public/js/non_conformance_rework.js",  # QM-104 Rev. 3: Rework records, escalation, print format
+		"public/js/non_conformance_scar.js",  # QM-134 SCAR on NCR and Rework records
 		"public/js/training_retraining.js",  # Training Matrix: "Retraining Required" (TRN-700 §4.10)
 	],
 	"Injury_Illness Report": "public/js/training_retraining.js",
@@ -290,11 +291,16 @@ doctype_list_js = {
 }
 
 doc_events = {
+	# ERPNext's Non Conformance is kept read-only as an archive; new records use Nonconformance Report.
 	"Non Conformance": {
+		"before_insert": "hse.quality_metrics.ncr.block_legacy_insert",
+	},
+	"Nonconformance Report": {
 		"before_insert": "hse.quality_metrics.rework.before_insert",  # Rework: QA-RW- name series
 		"validate": [
 			"hse.quality_metrics.ncr.validate",  # QM-104 NCR fields and closure rules; runs first
 			"hse.quality_metrics.capa.validate",  # QM-128 CAPA numbering, due dates and closure
+			"hse.quality_metrics.scar.validate",  # QM-134 SCAR numbering, defaults and approval
 			"hse.asset_inspection.events.validate",
 			"hse.housekeeping_inspection.events.validate",
 			"hse.shop_qc.events.validate",
@@ -386,8 +392,8 @@ override_doctype_dashboards = {
 	"Employee": "hse.training_matrix.dashboards.employee",
 }
 
-# Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log /
-# Non Conformance are created (idempotently) on install and every migrate.
+# Custom fields on Asset / Asset Maintenance Task / Asset Maintenance Log
+# are created (idempotently) on install and every migrate.
 #
 # If hse/hooks.py has NO after_install / after_migrate yet, use:
 after_install = [

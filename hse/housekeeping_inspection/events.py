@@ -5,7 +5,7 @@ from hse.housekeeping_inspection.utils import update_area_housekeeping_status
 
 
 def validate(doc, method=None):
-	"""Closure gate: a housekeeping-driven Non Conformance cannot be resolved
+	"""Closure gate: a housekeeping-driven Nonconformance Report cannot be resolved
 	until the fix is documented, verified, and re-inspected."""
 	if not doc.get("housekeeping_inspection") or doc.status != "Resolved":
 		return
@@ -19,7 +19,7 @@ def validate(doc, method=None):
 	missing = [label for field, label in required.items() if not doc.get(field)]
 	if missing:
 		frappe.throw(
-			_("Cannot resolve this Non Conformance until these are completed: {0}").format(
+			_("Cannot resolve this Nonconformance Report until these are completed: {0}").format(
 				", ".join(missing)
 			),
 			title=_("Resolution Blocked"),

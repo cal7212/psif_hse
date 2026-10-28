@@ -201,8 +201,8 @@ class AssetInspection(Document):
 	def on_cancel(self):
 		# Must be set on the instance (not the class): Frappe reads it via doc.get()
 		# when checking back-links after on_cancel. Lets an inspection be cancelled
-		# even though its Maintenance Log / Non Conformance link back to it.
-		self.ignore_linked_doctypes = ("Non Conformance", "Asset Maintenance Log", "Asset Inspection")
+		# even though its Maintenance Log / Nonconformance Report link back to it.
+		self.ignore_linked_doctypes = ("Nonconformance Report", "Asset Maintenance Log", "Asset Inspection")
 		self.db_set("status", "Pending")
 		if (
 			self.asset_maintenance_log
@@ -211,7 +211,7 @@ class AssetInspection(Document):
 		):
 			frappe.db.set_value("Asset Maintenance Log", self.asset_maintenance_log, "asset_inspection", None)
 		if self.non_conformance:
-			nc = frappe.get_doc("Non Conformance", self.non_conformance)
+			nc = frappe.get_doc("Nonconformance Report", self.non_conformance)
 			if nc.status == "Open":
 				nc.status = "Cancelled"
 				nc.flags.ignore_permissions = True
@@ -221,14 +221,14 @@ class AssetInspection(Document):
 				nc.save()
 		if self.is_reinspection and self.reinspection_of:
 			orig_nc = frappe.db.get_value("Asset Inspection", self.reinspection_of, "non_conformance")
-			if orig_nc and frappe.db.get_value("Non Conformance", orig_nc, "reinspection") == self.name:
-				if frappe.db.get_value("Non Conformance", orig_nc, "status") == "Resolved":
+			if orig_nc and frappe.db.get_value("Nonconformance Report", orig_nc, "reinspection") == self.name:
+				if frappe.db.get_value("Nonconformance Report", orig_nc, "status") == "Resolved":
 					frappe.throw(
 						_(
-							"Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling."
+							"Nonconformance Report {0} was resolved using this re-inspection. Reopen it before cancelling."
 						).format(frappe.bold(orig_nc))
 					)
-				frappe.db.set_value("Non Conformance", orig_nc, "reinspection", None)
+				frappe.db.set_value("Nonconformance Report", orig_nc, "reinspection", None)
 		update_asset_safety_status(self.asset)
 
 	# ------------------------------------------------------------------ helpers
@@ -260,7 +260,7 @@ class AssetInspection(Document):
 
 		nc = frappe.get_doc(
 			{
-				"doctype": "Non Conformance",
+				"doctype": "Nonconformance Report",
 				"subject": f"Inspection failure - {self.asset_name or self.asset} ({self.name})",
 				"procedure": self.quality_procedure,
 				"status": "Open",
@@ -277,11 +277,11 @@ class AssetInspection(Document):
 		nc.insert()
 
 		self.db_set("non_conformance", nc.name)
-		nc_link = frappe.get_desk_link("Non Conformance", nc.name)
+		nc_link = frappe.get_desk_link("Nonconformance Report", nc.name)
 		frappe.msgprint(
-			_("Non Conformance {0} created and asset placed Out of Service.").format(nc_link)
+			_("Nonconformance Report {0} created and asset placed Out of Service.").format(nc_link)
 			if critical
-			else _("Non Conformance {0} created.").format(nc_link),
+			else _("Nonconformance Report {0} created.").format(nc_link),
 			indicator="red",
 			alert=True,
 		)
@@ -327,11 +327,11 @@ class AssetInspection(Document):
 			return
 		orig_nc = frappe.db.get_value("Asset Inspection", self.reinspection_of, "non_conformance")
 		if orig_nc:
-			frappe.db.set_value("Non Conformance", orig_nc, "reinspection", self.name)
+			frappe.db.set_value("Nonconformance Report", orig_nc, "reinspection", self.name)
 			frappe.msgprint(
 				_(
 					"Re-inspection linked to {0}. Complete verification and resolve it to return the asset to service."
-				).format(frappe.get_desk_link("Non Conformance", orig_nc)),
+				).format(frappe.get_desk_link("Nonconformance Report", orig_nc)),
 				indicator="green",
 				alert=True,
 			)
@@ -430,7 +430,7 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 
 @frappe.whitelist()
 def make_reinspection_from_nc(non_conformance: str):
-	source = frappe.db.get_value("Non Conformance", non_conformance, "asset_inspection")
+	source = frappe.db.get_value("Nonconformance Report", non_conformance, "asset_inspection")
 	if not source:
-		frappe.throw(_("This Non Conformance is not linked to an Asset Inspection."))
+		frappe.throw(_("This Nonconformance Report is not linked to an Asset Inspection."))
 	return make_reinspection(source)

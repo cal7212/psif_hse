@@ -66,7 +66,7 @@ frappe.ui.form.on("Housekeeping Area", {
 		if (frm.doc.housekeeping_status === "Hazard Open") {
 			frm.dashboard.set_headline_alert(
 				__(
-					"A critical housekeeping hazard is open in this area. See the Non Conformances on the Connections tab."
+					"A critical housekeeping hazard is open in this area. See the Nonconformance Reports on the Connections tab."
 				),
 				"red"
 			);

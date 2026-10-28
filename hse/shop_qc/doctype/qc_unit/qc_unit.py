@@ -406,7 +406,7 @@ class QCUnit(Document):
 
 	def validate_status_change(self):
 		if self.status in ("Released", "Shipped") and (self.open_non_conformances or 0) > 0:
-			frappe.throw(_("Cannot release a unit with open Non Conformances."))
+			frappe.throw(_("Cannot release a unit with open Nonconformance Reports."))
 
 
 PSIF_SPEC = "PSIF Standard"

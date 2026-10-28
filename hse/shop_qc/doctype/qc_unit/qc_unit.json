@@ -1481,7 +1481,7 @@
    "fieldname": "section_missing_parts",
    "fieldtype": "Section Break",
    "label": "Missing Parts",
-   "description": "One list for the whole build, shared by every QC check. Unfound parts raise a Non Conformance; it can be resolved once every part is marked Found. Stages marked All Parts Present (the test stages) cannot be completed while a part is outstanding."
+   "description": "One list for the whole build, shared by every QC check. Unfound parts raise a Nonconformance Report; it can be resolved once every part is marked Found. Stages marked All Parts Present (the test stages) cannot be completed while a part is outstanding."
   },
   {
    "fieldname": "missing_parts",
@@ -1505,7 +1505,7 @@
   },
   {
    "default": "Pending Build",
-   "description": "Set automatically from QC Inspections and Non Conformances.",
+   "description": "Set automatically from QC Inspections and Nonconformance Reports.",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -1518,7 +1518,7 @@
   {
    "fieldname": "open_non_conformances",
    "fieldtype": "Int",
-   "label": "Open Non Conformances",
+   "label": "Open Nonconformance Reports",
    "no_copy": 1,
    "read_only": 1
   },
@@ -1624,7 +1624,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-27 16:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

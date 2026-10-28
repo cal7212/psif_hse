@@ -1,15 +1,13 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
-"""QM-104 Non-Conformance Report (NCR) layout for the ERPNext Non Conformance doctype.
+"""QM-104 Non-Conformance Report (NCR) rules for the Nonconformance Report doctype.
 
-Adds the form's header block, cause, disposition, authorization and verification fields,
-relabels the standard fields to the form's wording, fills what can be derived from the
-originating QC unit or inspection, and enforces the form's closure rules.
+Fills what can be derived from the originating QC unit or inspection, keeps the log numbers
+unique, and enforces the form's closure rules.
 """
 
 import frappe
 from frappe import _
-from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 from frappe.utils import cstr, getdate, nowdate
 
 NCR_PRINT_FORMAT = "QM-104 Non-Conformance Report"
@@ -34,267 +32,6 @@ SOURCES = (
 	"Housekeeping Inspection",
 	OTHER,
 )
-NOT_REWORK = "eval:doc.record_type!='Rework'"
-DISPOSITION_DEP = "eval:doc.disposition=='Other'"
-CUSTOMER_DEP = "eval:['Use As-Is','Repair'].includes(doc.disposition)"
-
-# Standard and earlier custom fields renamed to the form's wording
-LABELS = {
-	"details": "Deficiency Description",
-	"corrective_action": "Correction",
-	"verified_by": "Inspected By",
-	"verification_date": "Inspected Date",
-}
-
-
-def get_custom_fields() -> list[dict]:
-	return [
-		# ----------------------------------------------------------- NCR header block
-		{
-			"fieldname": "ncr_section",
-			"label": "NCR Information",
-			"fieldtype": "Section Break",
-			"insert_after": "crit_supplier",
-			"depends_on": NOT_REWORK,
-		},
-		{
-			"fieldname": "ncr_date",
-			"label": "Date",
-			"fieldtype": "Date",
-			"default": "Today",
-			"insert_after": "ncr_section",
-			"in_list_view": 1,
-		},
-		{
-			"fieldname": "ncr_no",
-			"label": "NCR No.",
-			"fieldtype": "Data",
-			"insert_after": "ncr_date",
-			"in_list_view": 1,
-			"in_standard_filter": 1,
-			"search_index": 1,
-			"no_copy": 1,
-			"description": "Number from the internal NCR log.",
-		},
-		{
-			"fieldname": "initiator",
-			"label": "Initiator",
-			"fieldtype": "Link",
-			"options": "User",
-			"default": "__user",
-			"insert_after": "ncr_no",
-		},
-		{
-			"fieldname": "initiator_name",
-			"label": "Initiator Name",
-			"fieldtype": "Data",
-			"fetch_from": "initiator.full_name",
-			"read_only": 1,
-			"insert_after": "initiator",
-		},
-		{
-			"fieldname": "contract",
-			"label": "Contract",
-			"fieldtype": "Data",
-			"insert_after": "initiator_name",
-			"description": "Customer PO or contract; filled from the QC unit when blank.",
-		},
-		{
-			"fieldname": "drawing_no",
-			"label": "Drawing No.",
-			"fieldtype": "Data",
-			"insert_after": "contract",
-		},
-		{
-			"fieldname": "source",
-			"label": "Source",
-			"fieldtype": "Select",
-			"options": "\n" + "\n".join(SOURCES),
-			"insert_after": "drawing_no",
-			"in_standard_filter": 1,
-		},
-		{"fieldname": "ncr_column_break", "fieldtype": "Column Break", "insert_after": "source"},
-		{
-			"fieldname": "job_no",
-			"label": "Job No.",
-			"fieldtype": "Data",
-			"insert_after": "ncr_column_break",
-			"in_standard_filter": 1,
-			"description": "TrulinX work order or RGA; filled from the QC unit when blank.",
-		},
-		{
-			"fieldname": "lot_qty",
-			"label": "Lot Quantity",
-			"fieldtype": "Float",
-			"insert_after": "job_no",
-		},
-		{
-			"fieldname": "reject_qty",
-			"label": "Reject Quantity",
-			"fieldtype": "Float",
-			"insert_after": "lot_qty",
-		},
-		# ----------------------------------------------------------- Cause
-		{
-			"fieldname": "cause",
-			"label": "Cause",
-			"fieldtype": "Text Editor",
-			"insert_after": "details",
-		},
-		# ----------------------------------------------------------- Disposition
-		{
-			"fieldname": "ncr_disposition_section",
-			"label": "Disposition",
-			"fieldtype": "Section Break",
-			"insert_after": "preventive_action",
-			"description": "To be completed by management or QA.",
-			"depends_on": NOT_REWORK,
-		},
-		{
-			"fieldname": "disposition",
-			"label": "Disposition",
-			"fieldtype": "Select",
-			"options": "\n" + "\n".join(DISPOSITIONS),
-			"insert_after": "ncr_disposition_section",
-			"in_standard_filter": 1,
-			"description": "Use As-Is and Repair require customer approval.",
-		},
-		{
-			"fieldname": "disposition_other",
-			"label": "Other Disposition",
-			"fieldtype": "Data",
-			"insert_after": "disposition",
-			"depends_on": DISPOSITION_DEP,
-			"mandatory_depends_on": DISPOSITION_DEP,
-		},
-		{
-			"fieldname": "capa_scar_reference",
-			"label": "CAPA / SCAR Document #",
-			"fieldtype": "Data",
-			"insert_after": "disposition_other",
-			"description": "If CAPA or SCAR applies, record the document number.",
-		},
-		{
-			"fieldname": "ncr_authorization_column",
-			"label": "Authorization of Disposition",
-			"fieldtype": "Column Break",
-			"insert_after": "capa_scar_reference",
-		},
-		{
-			"fieldname": "auth_project_manager",
-			"label": "Project Manager",
-			"fieldtype": "Link",
-			"options": "Employee",
-			"insert_after": "ncr_authorization_column",
-		},
-		{
-			"fieldname": "auth_operations_manager",
-			"label": "Operations Manager",
-			"fieldtype": "Link",
-			"options": "Employee",
-			"insert_after": "auth_project_manager",
-		},
-		{
-			"fieldname": "auth_quality_manager",
-			"label": "Quality Manager",
-			"fieldtype": "Link",
-			"options": "Employee",
-			"insert_after": "auth_operations_manager",
-		},
-		{
-			"fieldname": "auth_customer",
-			"label": "Customer",
-			"fieldtype": "Data",
-			"insert_after": "auth_quality_manager",
-			"description": "Customer approver name or approval reference.",
-			"mandatory_depends_on": CUSTOMER_DEP,
-		},
-		# ----------------------------------------------------------- Verification of correction
-		{
-			"fieldname": "ncr_verification_section",
-			"label": "Verification of Correction",
-			"fieldtype": "Section Break",
-			"insert_after": "auth_customer",
-			"depends_on": NOT_REWORK,
-		},
-		{
-			"fieldname": "quality_verification",
-			"label": "Quality Verification",
-			"fieldtype": "Select",
-			"options": "\nAccept\nReject",
-			"insert_after": "ncr_verification_section",
-			"description": "Must be Accept to resolve.",
-		},
-		{
-			"fieldname": "verification_comments",
-			"label": "Comments",
-			"fieldtype": "Small Text",
-			"insert_after": "quality_verification",
-		},
-		{
-			"fieldname": "ncr_verification_column",
-			"fieldtype": "Column Break",
-			"insert_after": "verification_comments",
-		},
-		# verified_by / verification_date (Inspected By / Date) are moved here below.
-		{
-			"fieldname": "approved_by",
-			"label": "Approved By",
-			"fieldtype": "Link",
-			"options": "Employee",
-			"insert_after": "verification_date",
-		},
-		{
-			"fieldname": "approved_date",
-			"label": "Approved Date",
-			"fieldtype": "Date",
-			"insert_after": "approved_by",
-		},
-	]
-
-
-# The Asset Inspection module creates these; the NCR places them in Verification of Correction.
-MOVED_FIELDS = {"verified_by": "ncr_verification_column", "verification_date": "verified_by"}
-
-
-def setup_ncr(module: str) -> None:
-	from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
-
-	from hse.quality_metrics.rework import setup_rework
-
-	# Record Type and the NCR criteria come first: the NCR Information section follows them.
-	setup_rework(module, SOURCES)
-	rows = get_custom_fields()
-	for row in rows:
-		row["module"] = module
-	create_custom_fields({"Non Conformance": rows}, update=True)
-	for fieldname, after in MOVED_FIELDS.items():
-		name = frappe.db.get_value("Custom Field", {"dt": "Non Conformance", "fieldname": fieldname})
-		if name:
-			frappe.db.set_value("Custom Field", name, "insert_after", after, update_modified=False)
-	for fieldname, label in LABELS.items():
-		if is_custom(fieldname):
-			name = frappe.db.get_value("Custom Field", {"dt": "Non Conformance", "fieldname": fieldname})
-			frappe.db.set_value("Custom Field", name, "label", label, update_modified=False)
-		else:
-			make_property_setter(
-				"Non Conformance", fieldname, "label", label, "Data", validate_fields_for_doctype=False
-			)
-	if frappe.db.exists("Print Format", NCR_PRINT_FORMAT):
-		make_property_setter(
-			"Non Conformance",
-			None,
-			"default_print_format",
-			NCR_PRINT_FORMAT,
-			"Data",
-			for_doctype=True,
-			validate_fields_for_doctype=False,
-		)
-	frappe.clear_cache(doctype="Non Conformance")
-
-
-def is_custom(fieldname: str) -> bool:
-	return bool(frappe.db.exists("Custom Field", {"dt": "Non Conformance", "fieldname": fieldname}))
 
 
 # ---------------------------------------------------------------- document events
@@ -384,46 +121,13 @@ def guess_source(doc) -> str | None:
 	return None
 
 
-BACKFILL_FIELDS = (
-	"ncr_date",
-	"initiator",
-	"initiator_name",
-	"source",
-	"job_no",
-	"contract",
-	"drawing_no",
-	"lot_qty",
-)
-
-
-def backfill_ncr() -> None:
-	"""Existing NCRs: date from creation, initiator from owner, and header fields from the QC unit.
-
-	Only rows without an NCR Date or Initiator Name are touched, so this runs once per record."""
-	names = set(frappe.get_all("Non Conformance", filters={"ncr_date": ("is", "not set")}, pluck="name"))
-	names |= set(
-		frappe.get_all(
-			"Non Conformance",
-			filters={"initiator": ("is", "set"), "initiator_name": ("is", "not set")},
-			pluck="name",
-		)
-	)
-	for name in sorted(names):
-		doc = frappe.get_doc("Non Conformance", name)
-		before = {f: doc.get(f) for f in BACKFILL_FIELDS}
-		fill_from_origin(doc)
-		changes = {f: doc.get(f) for f in BACKFILL_FIELDS if doc.get(f) != before[f]}
-		if changes:
-			frappe.db.set_value("Non Conformance", name, changes, update_modified=False)
-
-
 def validate_log_number(doc, fieldname: str, label: str) -> None:
 	"""Log numbers are typed in from the internal log: trim them and keep them unique."""
 	value = cstr(doc.get(fieldname)).strip() or None
 	doc.set(fieldname, value)
 	if not value:
 		return
-	other = frappe.db.get_value("Non Conformance", {fieldname: value, "name": ("!=", doc.name)}, "name")
+	other = frappe.db.get_value("Nonconformance Report", {fieldname: value, "name": ("!=", doc.name)}, "name")
 	if other:
 		frappe.throw(_("{0} {1} is already used on {2}.").format(label, value, other))
 
@@ -460,3 +164,13 @@ def on_trash(doc, method=None):
 		)
 	for doctype, name, field in to_clear:
 		frappe.db.set_value(doctype, name, field, None, update_modified=False)
+
+
+def block_legacy_insert(doc, method=None):
+	"""ERPNext's Non Conformance is an archive now; NCRs and Rework are Nonconformance Reports."""
+	if frappe.flags.in_install or frappe.flags.in_migrate:
+		return
+	frappe.throw(
+		_("New NCRs and Rework records are created as a Nonconformance Report."),
+		title=_("Use Nonconformance Report"),
+	)

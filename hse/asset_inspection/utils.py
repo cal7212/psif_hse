@@ -6,13 +6,13 @@ IN_SERVICE = "In Service"
 
 
 def update_asset_safety_status(asset: str) -> str:
-	"""Asset is Out of Service while any Open Non Conformance with Critical
+	"""Asset is Out of Service while any Open Nonconformance Report with Critical
 	severity exists against it; otherwise In Service."""
 	if not asset or not frappe.db.exists("Asset", asset):
 		return None
 
 	has_open_critical = frappe.db.exists(
-		"Non Conformance",
+		"Nonconformance Report",
 		{"asset": asset, "status": "Open", "severity": "Critical"},
 	)
 	new_status = OUT_OF_SERVICE if has_open_critical else IN_SERVICE

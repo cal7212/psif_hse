@@ -1,0 +1,1340 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:QA-NC-{#####}",
+ "creation": "2026-10-27 18:00:00.000000",
+ "default_print_format": "QM-104 Non-Conformance Report",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "subject",
+  "procedure",
+  "process_owner",
+  "full_name",
+  "column_break_4",
+  "status",
+  "resolved_on",
+  "record_type",
+  "escalated_from",
+  "ncr_criteria_section",
+  "crit_scrap",
+  "crit_cannot_rework",
+  "ncr_criteria_column",
+  "crit_customer_safety",
+  "crit_supplier",
+  "ncr_section",
+  "ncr_date",
+  "ncr_no",
+  "initiator",
+  "initiator_name",
+  "contract",
+  "drawing_no",
+  "source",
+  "ncr_column_break",
+  "job_no",
+  "lot_qty",
+  "reject_qty",
+  "asset_inspection_section",
+  "asset",
+  "asset_inspection",
+  "severity",
+  "si_column_break",
+  "interim_control",
+  "section_break_4",
+  "details",
+  "cause",
+  "corrective_action",
+  "preventive_action",
+  "ncr_disposition_section",
+  "disposition",
+  "disposition_other",
+  "capa_scar_reference",
+  "ncr_authorization_column",
+  "auth_project_manager",
+  "auth_operations_manager",
+  "auth_quality_manager",
+  "auth_customer",
+  "ncr_verification_section",
+  "quality_verification",
+  "verification_comments",
+  "ncr_verification_column",
+  "verified_by",
+  "verification_date",
+  "approved_by",
+  "approved_date",
+  "reinspection",
+  "housekeeping_section",
+  "housekeeping_area",
+  "housekeeping_inspection",
+  "hk_column_break",
+  "housekeeping_reinspection",
+  "qc_section",
+  "qc_unit",
+  "qc_inspection",
+  "qc_column_break",
+  "qc_reinspection",
+  "rework_tab",
+  "rw_info_section",
+  "rework_date",
+  "rework_no",
+  "rw_initiator",
+  "rw_initiator_name",
+  "rw_contract",
+  "rw_drawing_no",
+  "rw_source",
+  "rw_info_column",
+  "rw_job_no",
+  "rw_lot_qty",
+  "rw_reject_qty",
+  "rw_eval_section",
+  "rw_crit_scrap",
+  "rw_crit_cannot_rework",
+  "rw_eval_column",
+  "rw_crit_customer_safety",
+  "rw_crit_supplier",
+  "rw_evaluated_by",
+  "rw_evaluated_on",
+  "rw_details_section",
+  "rw_requirement",
+  "rw_cause",
+  "rw_rework_performed",
+  "rw_verification_section",
+  "rw_quality_verification",
+  "rw_verification_comments",
+  "rw_verification_column",
+  "rw_inspected_by",
+  "rw_inspected_date",
+  "rw_approved_by",
+  "rw_approved_date",
+  "escalated_to",
+  "capa_tab",
+  "capa_required",
+  "capa_header_section",
+  "capa_no",
+  "capa_status",
+  "capa_source",
+  "capa_part_description",
+  "capa_header_column",
+  "capa_initiated_by",
+  "capa_initiated_by_name",
+  "capa_initiated_date",
+  "capa_related_ncrs",
+  "capa_assignment_section",
+  "capa_assigned_to",
+  "capa_assigned_date",
+  "capa_extension_approved_by",
+  "capa_extended_until",
+  "capa_extension_justification",
+  "capa_due_column",
+  "capa_containment_due",
+  "capa_correction_due",
+  "capa_closure_due",
+  "capa_finding_section",
+  "capa_finding",
+  "capa_containment",
+  "capa_whys_section",
+  "why_problem",
+  "why_1",
+  "why_2",
+  "why_3",
+  "why_4",
+  "why_5",
+  "capa_root_cause",
+  "capa_human_factor",
+  "capa_action_section",
+  "capa_corrective_action",
+  "capa_preventive_action",
+  "capa_verification_section",
+  "capa_quality_verification",
+  "capa_verified_by",
+  "capa_verification_date",
+  "capa_follow_up",
+  "capa_closure_column",
+  "capa_closed_by",
+  "capa_closure_date",
+  "scar_tab",
+  "scar_required",
+  "scar_header_section",
+  "scar_no",
+  "scar_status",
+  "scar_supplier",
+  "scar_supplier_name",
+  "scar_po_no",
+  "scar_po_line",
+  "scar_header_column",
+  "scar_issued_date",
+  "scar_response_due",
+  "scar_qty_received",
+  "scar_qty_rejected",
+  "scar_part_section",
+  "scar_part_no",
+  "scar_part_description",
+  "scar_part_column",
+  "scar_drawing_rev",
+  "scar_discrepancy_section",
+  "scar_discrepancy",
+  "scar_supplier_section",
+  "scar_root_cause",
+  "scar_containment",
+  "scar_corrective_action",
+  "scar_assignee",
+  "scar_supplier_column",
+  "scar_assignee_date",
+  "scar_response_received",
+  "scar_supplier_response",
+  "scar_qa_section",
+  "scar_poc",
+  "scar_rejection_reason",
+  "scar_qa_column",
+  "scar_rejected_by",
+  "scar_rejected_date",
+  "scar_approved_by",
+  "scar_approved_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "procedure",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Procedure",
+   "options": "Quality Procedure"
+  },
+  {
+   "fetch_from": "procedure.process_owner",
+   "fieldname": "process_owner",
+   "fieldtype": "Data",
+   "label": "Process Owner",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "procedure.process_owner_full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "label": "Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Open\nResolved\nCancelled",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.status=='Resolved'",
+   "fieldname": "resolved_on",
+   "fieldtype": "Datetime",
+   "label": "Resolved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "bold": 1,
+   "default": "NCR",
+   "description": "NCR or Rework, per the QM-104 in-house NCR criteria.",
+   "fieldname": "record_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Record Type",
+   "options": "NCR\nRework",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval:doc.escalated_from",
+   "fieldname": "escalated_from",
+   "fieldtype": "Link",
+   "label": "Escalated From Rework",
+   "no_copy": 1,
+   "options": "Nonconformance Report",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "description": "Any one applies: formal NCR (Red QC Hold/Quarantine Tag). None applies: Rework (Yellow QC Rework Tag); it is not an NCR. Work stops until either is resolved.",
+   "fieldname": "ncr_criteria_section",
+   "fieldtype": "Section Break",
+   "label": "QM-104 In-House NCR Criteria"
+  },
+  {
+   "fieldname": "crit_scrap",
+   "fieldtype": "Check",
+   "label": "Results in scrap of a finished part",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "crit_cannot_rework",
+   "fieldtype": "Check",
+   "label": "Can't be reworked to the drawing or spec (needs use-as-is, repair or deviation per QM-144, or Engineering or customer approval)",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "ncr_criteria_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crit_customer_safety",
+   "fieldtype": "Check",
+   "label": "Affects a customer requirement, safety or the promised ship date",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "crit_supplier",
+   "fieldtype": "Check",
+   "label": "Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)",
+   "no_copy": 1
+  },
+  {
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "fieldname": "ncr_section",
+   "fieldtype": "Section Break",
+   "label": "NCR Information"
+  },
+  {
+   "default": "Today",
+   "fieldname": "ncr_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date"
+  },
+  {
+   "description": "Number from the internal NCR log.",
+   "fieldname": "ncr_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "NCR No.",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "initiator",
+   "fieldtype": "Link",
+   "label": "Initiator",
+   "options": "User"
+  },
+  {
+   "fetch_from": "initiator.full_name",
+   "fieldname": "initiator_name",
+   "fieldtype": "Data",
+   "label": "Initiator Name",
+   "read_only": 1
+  },
+  {
+   "description": "Customer PO or contract; filled from the QC unit when blank.",
+   "fieldname": "contract",
+   "fieldtype": "Data",
+   "label": "Contract"
+  },
+  {
+   "fieldname": "drawing_no",
+   "fieldtype": "Data",
+   "label": "Drawing No."
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Source",
+   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nOther"
+  },
+  {
+   "fieldname": "ncr_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "TrulinX work order or RGA; filled from the QC unit when blank.",
+   "fieldname": "job_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Job No."
+  },
+  {
+   "fieldname": "lot_qty",
+   "fieldtype": "Float",
+   "label": "Lot Quantity"
+  },
+  {
+   "fieldname": "reject_qty",
+   "fieldtype": "Float",
+   "label": "Reject Quantity"
+  },
+  {
+   "fieldname": "asset_inspection_section",
+   "fieldtype": "Section Break",
+   "label": "Inspection Follow-up"
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Asset",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "asset_inspection",
+   "fieldtype": "Link",
+   "label": "Asset Inspection",
+   "options": "Asset Inspection",
+   "read_only": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Severity",
+   "options": "\nLow\nMedium\nHigh\nCritical"
+  },
+  {
+   "fieldname": "si_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "e.g. tagged out, barricaded, removed from service",
+   "fieldname": "interim_control",
+   "fieldtype": "Small Text",
+   "label": "Interim Control"
+  },
+  {
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Text Editor",
+   "label": "Deficiency Description"
+  },
+  {
+   "fieldname": "cause",
+   "fieldtype": "Text Editor",
+   "label": "Cause"
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Text Editor",
+   "label": "Correction"
+  },
+  {
+   "fieldname": "preventive_action",
+   "fieldtype": "Text Editor",
+   "label": "Preventive Action"
+  },
+  {
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "description": "To be completed by management or QA.",
+   "fieldname": "ncr_disposition_section",
+   "fieldtype": "Section Break",
+   "label": "Disposition"
+  },
+  {
+   "description": "Use As-Is and Repair require customer approval.",
+   "fieldname": "disposition",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Disposition",
+   "options": "\nRework to Specification\nUse As-Is\nScrap and Remake\nRepair\nReturn to Supplier\nOther"
+  },
+  {
+   "depends_on": "eval:doc.disposition=='Other'",
+   "fieldname": "disposition_other",
+   "fieldtype": "Data",
+   "label": "Other Disposition",
+   "mandatory_depends_on": "eval:doc.disposition=='Other'"
+  },
+  {
+   "description": "If CAPA or SCAR applies, record the document number.",
+   "fieldname": "capa_scar_reference",
+   "fieldtype": "Data",
+   "label": "CAPA / SCAR Document #"
+  },
+  {
+   "fieldname": "ncr_authorization_column",
+   "fieldtype": "Column Break",
+   "label": "Authorization of Disposition"
+  },
+  {
+   "fieldname": "auth_project_manager",
+   "fieldtype": "Link",
+   "label": "Project Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "auth_operations_manager",
+   "fieldtype": "Link",
+   "label": "Operations Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "auth_quality_manager",
+   "fieldtype": "Link",
+   "label": "Quality Manager",
+   "options": "Employee"
+  },
+  {
+   "description": "Customer approver name or approval reference.",
+   "fieldname": "auth_customer",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "mandatory_depends_on": "eval:['Use As-Is','Repair'].includes(doc.disposition)"
+  },
+  {
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "fieldname": "ncr_verification_section",
+   "fieldtype": "Section Break",
+   "label": "Verification of Correction"
+  },
+  {
+   "description": "Must be Accept to resolve.",
+   "fieldname": "quality_verification",
+   "fieldtype": "Select",
+   "label": "Quality Verification",
+   "options": "\nAccept\nReject"
+  },
+  {
+   "fieldname": "verification_comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "ncr_verification_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Inspected By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "verification_date",
+   "fieldtype": "Date",
+   "label": "Inspected Date"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "approved_date",
+   "fieldtype": "Date",
+   "label": "Approved Date"
+  },
+  {
+   "fieldname": "reinspection",
+   "fieldtype": "Link",
+   "label": "Re-inspection",
+   "options": "Asset Inspection",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.housekeeping_area || doc.housekeeping_inspection",
+   "fieldname": "housekeeping_section",
+   "fieldtype": "Section Break",
+   "label": "Housekeeping Inspection"
+  },
+  {
+   "fieldname": "housekeeping_area",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Housekeeping Area",
+   "options": "Housekeeping Area"
+  },
+  {
+   "fieldname": "housekeeping_inspection",
+   "fieldtype": "Link",
+   "label": "Housekeeping Inspection",
+   "options": "Housekeeping Inspection",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hk_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "housekeeping_reinspection",
+   "fieldtype": "Link",
+   "label": "Housekeeping Re-inspection",
+   "options": "Housekeeping Inspection",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.qc_unit || doc.qc_inspection",
+   "fieldname": "qc_section",
+   "fieldtype": "Section Break",
+   "label": "Shop QC"
+  },
+  {
+   "fieldname": "qc_unit",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "QC Unit",
+   "options": "QC Unit"
+  },
+  {
+   "fieldname": "qc_inspection",
+   "fieldtype": "Link",
+   "label": "QC Inspection",
+   "options": "QC Inspection",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qc_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "qc_reinspection",
+   "fieldtype": "Link",
+   "label": "QC Re-inspection",
+   "options": "QC Inspection",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.record_type=='Rework'",
+   "fieldname": "rework_tab",
+   "fieldtype": "Tab Break",
+   "label": "Rework"
+  },
+  {
+   "fieldname": "rw_info_section",
+   "fieldtype": "Section Break",
+   "label": "Rework Information"
+  },
+  {
+   "default": "Today",
+   "fieldname": "rework_date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "description": "Number from the internal rework log (Nonconformance & Improvement Tracking).",
+   "fieldname": "rework_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Rework No.",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "rw_initiator",
+   "fieldtype": "Link",
+   "label": "Initiator",
+   "options": "User"
+  },
+  {
+   "fetch_from": "rw_initiator.full_name",
+   "fieldname": "rw_initiator_name",
+   "fieldtype": "Data",
+   "label": "Initiator Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rw_contract",
+   "fieldtype": "Data",
+   "label": "Contract"
+  },
+  {
+   "fieldname": "rw_drawing_no",
+   "fieldtype": "Data",
+   "label": "Drawing No."
+  },
+  {
+   "fieldname": "rw_source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nOther"
+  },
+  {
+   "fieldname": "rw_info_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rw_job_no",
+   "fieldtype": "Data",
+   "label": "Job No."
+  },
+  {
+   "fieldname": "rw_lot_qty",
+   "fieldtype": "Float",
+   "label": "Lot Quantity"
+  },
+  {
+   "fieldname": "rw_reject_qty",
+   "fieldtype": "Float",
+   "label": "Reject Quantity"
+  },
+  {
+   "description": "Answer all four as the rework is evaluated. Any Yes: this must become a formal NCR (Create > Escalate to NCR). The Rework cannot be accepted or resolved until all four are No.",
+   "fieldname": "rw_eval_section",
+   "fieldtype": "Section Break",
+   "label": "NCR Criteria Evaluation (QM-104)"
+  },
+  {
+   "fieldname": "rw_crit_scrap",
+   "fieldtype": "Select",
+   "label": "Results in scrap of a finished part?",
+   "no_copy": 1,
+   "options": "\nNo\nYes"
+  },
+  {
+   "fieldname": "rw_crit_cannot_rework",
+   "fieldtype": "Select",
+   "label": "Can't be reworked to the drawing or spec (needs use-as-is, repair or deviation per QM-144, or Engineering or customer approval)?",
+   "no_copy": 1,
+   "options": "\nNo\nYes"
+  },
+  {
+   "fieldname": "rw_eval_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rw_crit_customer_safety",
+   "fieldtype": "Select",
+   "label": "Affects a customer requirement, safety or the promised ship date?",
+   "no_copy": 1,
+   "options": "\nNo\nYes"
+  },
+  {
+   "fieldname": "rw_crit_supplier",
+   "fieldtype": "Select",
+   "label": "Supplier caused or contributed, or suspected counterfeit (QM-134 / QM-310)?",
+   "no_copy": 1,
+   "options": "\nNo\nYes"
+  },
+  {
+   "fieldname": "rw_evaluated_by",
+   "fieldtype": "Link",
+   "label": "Evaluated By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rw_evaluated_on",
+   "fieldtype": "Datetime",
+   "label": "Evaluated On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "rw_details_section",
+   "fieldtype": "Section Break",
+   "label": "Rework Details"
+  },
+  {
+   "description": "As detailed on the Yellow QC Rework Tag.",
+   "fieldname": "rw_requirement",
+   "fieldtype": "Text Editor",
+   "label": "Quality Requirement Not Met"
+  },
+  {
+   "fieldname": "rw_cause",
+   "fieldtype": "Text Editor",
+   "label": "Cause"
+  },
+  {
+   "fieldname": "rw_rework_performed",
+   "fieldtype": "Text Editor",
+   "label": "Rework Performed"
+  },
+  {
+   "fieldname": "rw_verification_section",
+   "fieldtype": "Section Break",
+   "label": "Verification of Rework"
+  },
+  {
+   "description": "Must be Accept to resolve.",
+   "fieldname": "rw_quality_verification",
+   "fieldtype": "Select",
+   "label": "Quality Verification",
+   "options": "\nAccept\nReject"
+  },
+  {
+   "fieldname": "rw_verification_comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "rw_verification_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rw_inspected_by",
+   "fieldtype": "Link",
+   "label": "Inspected By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "rw_inspected_date",
+   "fieldtype": "Date",
+   "label": "Inspected Date"
+  },
+  {
+   "fieldname": "rw_approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "rw_approved_date",
+   "fieldtype": "Date",
+   "label": "Approved Date"
+  },
+  {
+   "depends_on": "eval:doc.escalated_to",
+   "fieldname": "escalated_to",
+   "fieldtype": "Link",
+   "label": "Escalated to NCR",
+   "no_copy": 1,
+   "options": "Nonconformance Report",
+   "read_only": 1
+  },
+  {
+   "fieldname": "capa_tab",
+   "fieldtype": "Tab Break",
+   "label": "CAPA"
+  },
+  {
+   "description": "QM-128: raise a CAPA for trended NCRs (more than 5 similar failures) or when Quality requires one.",
+   "fieldname": "capa_required",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "CAPA Required"
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "fieldname": "capa_header_section",
+   "fieldtype": "Section Break",
+   "label": "CAPA Report"
+  },
+  {
+   "description": "Number from the internal CAPA log.",
+   "fieldname": "capa_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "CAPA #",
+   "mandatory_depends_on": "eval:doc.capa_required",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "capa_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "CAPA Status",
+   "options": "\nOpen\nContainment\nInvestigation\nCorrective Action\nVerification\nClosed\nCancelled"
+  },
+  {
+   "fieldname": "capa_source",
+   "fieldtype": "Select",
+   "label": "CAPA Source",
+   "options": "\nNCR\nNCR Trend\nCustomer Complaint\nInternal Audit\nExternal Audit\nSupplier\nManagement Review\nOther"
+  },
+  {
+   "fieldname": "capa_part_description",
+   "fieldtype": "Data",
+   "label": "Part Number/Description"
+  },
+  {
+   "fieldname": "capa_header_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "capa_initiated_by",
+   "fieldtype": "Link",
+   "label": "Initiated By",
+   "options": "User"
+  },
+  {
+   "fetch_from": "capa_initiated_by.full_name",
+   "fieldname": "capa_initiated_by_name",
+   "fieldtype": "Data",
+   "label": "Initiated By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "capa_initiated_date",
+   "fieldtype": "Date",
+   "label": "Initiated Date"
+  },
+  {
+   "description": "Other NCRs with the same failure or failure mode.",
+   "fieldname": "capa_related_ncrs",
+   "fieldtype": "Table MultiSelect",
+   "label": "Related NCRs",
+   "options": "CAPA Related NCR"
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "description": "Containment due within 7 days of initiation. Correction due 30 days and closure due 60 days after initiation, unless an extension is approved by the Management Representative.",
+   "fieldname": "capa_assignment_section",
+   "fieldtype": "Section Break",
+   "label": "Assignment and Due Dates"
+  },
+  {
+   "fieldname": "capa_assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "capa_assigned_date",
+   "fieldtype": "Date",
+   "label": "Assigned Date"
+  },
+  {
+   "description": "Management Representative approving the extension.",
+   "fieldname": "capa_extension_approved_by",
+   "fieldtype": "Link",
+   "label": "Extension Approval",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "capa_extended_until",
+   "fieldtype": "Date",
+   "label": "Due Date Extended Until"
+  },
+  {
+   "depends_on": "eval:doc.capa_extended_until",
+   "fieldname": "capa_extension_justification",
+   "fieldtype": "Small Text",
+   "label": "Justification for Extension",
+   "mandatory_depends_on": "eval:doc.capa_extended_until"
+  },
+  {
+   "fieldname": "capa_due_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "capa_containment_due",
+   "fieldtype": "Date",
+   "label": "Containment Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "capa_correction_due",
+   "fieldtype": "Date",
+   "label": "Correction Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "capa_closure_due",
+   "fieldtype": "Date",
+   "label": "Closure Due",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "fieldname": "capa_finding_section",
+   "fieldtype": "Section Break",
+   "label": "Finding and Containment"
+  },
+  {
+   "description": "Filled from the Deficiency Description when blank.",
+   "fieldname": "capa_finding",
+   "fieldtype": "Text Editor",
+   "label": "Finding"
+  },
+  {
+   "description": "Filled from the NCR Correction when blank.",
+   "fieldname": "capa_containment",
+   "fieldtype": "Text Editor",
+   "label": "Containment/Correction"
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "description": "Start from the problem and ask why until the root cause is reached. Stop early if the root cause is found before the fifth why.",
+   "fieldname": "capa_whys_section",
+   "fieldtype": "Section Break",
+   "label": "5 Whys Root Cause Analysis"
+  },
+  {
+   "description": "What happened, where and when. Filled from the NCR subject when blank.",
+   "fieldname": "why_problem",
+   "fieldtype": "Small Text",
+   "label": "Problem Statement"
+  },
+  {
+   "description": "Why did the problem occur?",
+   "fieldname": "why_1",
+   "fieldtype": "Small Text",
+   "label": "Why 1?"
+  },
+  {
+   "description": "Why did the answer above happen?",
+   "fieldname": "why_2",
+   "fieldtype": "Small Text",
+   "label": "Why 2?"
+  },
+  {
+   "description": "Why did the answer above happen?",
+   "fieldname": "why_3",
+   "fieldtype": "Small Text",
+   "label": "Why 3?"
+  },
+  {
+   "description": "Why did the answer above happen?",
+   "fieldname": "why_4",
+   "fieldtype": "Small Text",
+   "label": "Why 4?"
+  },
+  {
+   "description": "Why did the answer above happen?",
+   "fieldname": "why_5",
+   "fieldtype": "Small Text",
+   "label": "Why 5?"
+  },
+  {
+   "description": "Filled from the last answered why when blank.",
+   "fieldname": "capa_root_cause",
+   "fieldtype": "Text Editor",
+   "label": "Root Cause"
+  },
+  {
+   "fieldname": "capa_human_factor",
+   "fieldtype": "Small Text",
+   "label": "Contributing Human Factor if applicable"
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "fieldname": "capa_action_section",
+   "fieldtype": "Section Break",
+   "label": "Corrective and Preventive Action"
+  },
+  {
+   "description": "Action that eliminates the root cause. The NCR Correction is the immediate fix.",
+   "fieldname": "capa_corrective_action",
+   "fieldtype": "Text Editor",
+   "label": "Corrective Action"
+  },
+  {
+   "description": "Filled from the NCR Preventive Action when blank.",
+   "fieldname": "capa_preventive_action",
+   "fieldtype": "Text Editor",
+   "label": "Preventive Action"
+  },
+  {
+   "depends_on": "eval:doc.capa_required",
+   "fieldname": "capa_verification_section",
+   "fieldtype": "Section Break",
+   "label": "Verification and Closure"
+  },
+  {
+   "description": "Effectiveness of the corrective action. Must be Effective to close.",
+   "fieldname": "capa_quality_verification",
+   "fieldtype": "Select",
+   "label": "Quality Verification",
+   "options": "\nEffective\nNot Effective"
+  },
+  {
+   "fieldname": "capa_verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "capa_verification_date",
+   "fieldtype": "Date",
+   "label": "Verification Date"
+  },
+  {
+   "fieldname": "capa_follow_up",
+   "fieldtype": "Small Text",
+   "label": "Follow-Up"
+  },
+  {
+   "fieldname": "capa_closure_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "capa_closed_by",
+   "fieldtype": "Link",
+   "label": "Closed By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "capa_closure_date",
+   "fieldtype": "Date",
+   "label": "Closure Date"
+  },
+  {
+   "fieldname": "scar_tab",
+   "fieldtype": "Tab Break",
+   "label": "SCAR"
+  },
+  {
+   "description": "QM-134: the supplier caused or contributed to the nonconformance. Issue a Supplier Corrective Action Report.",
+   "fieldname": "scar_required",
+   "fieldtype": "Check",
+   "label": "SCAR Required"
+  },
+  {
+   "depends_on": "eval:doc.scar_required",
+   "fieldname": "scar_header_section",
+   "fieldtype": "Section Break",
+   "label": "QM-134 Supplier Corrective Action Report"
+  },
+  {
+   "description": "From the internal SCAR log.",
+   "fieldname": "scar_no",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "SCAR Number",
+   "mandatory_depends_on": "eval:doc.scar_required",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "scar_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "SCAR Status",
+   "no_copy": 1,
+   "options": "\nIssued\nResponse Received\nRejected\nApproved\nCancelled"
+  },
+  {
+   "fieldname": "scar_supplier",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fetch_from": "scar_supplier.supplier_name",
+   "fetch_if_empty": 1,
+   "fieldname": "scar_supplier_name",
+   "fieldtype": "Data",
+   "label": "Supplier Name",
+   "mandatory_depends_on": "eval:doc.scar_required"
+  },
+  {
+   "fieldname": "scar_po_no",
+   "fieldtype": "Data",
+   "label": "PO #"
+  },
+  {
+   "fieldname": "scar_po_line",
+   "fieldtype": "Data",
+   "label": "Line #"
+  },
+  {
+   "fieldname": "scar_header_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scar_issued_date",
+   "fieldtype": "Date",
+   "label": "Date SCAR Issued",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "scar_response_due",
+   "fieldtype": "Date",
+   "label": "Date Supplier Response Required",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "scar_qty_received",
+   "fieldtype": "Float",
+   "label": "Qty Received",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "scar_qty_rejected",
+   "fieldtype": "Float",
+   "label": "Qty Rejected",
+   "non_negative": 1
+  },
+  {
+   "depends_on": "eval:doc.scar_required",
+   "fieldname": "scar_part_section",
+   "fieldtype": "Section Break",
+   "label": "Part"
+  },
+  {
+   "fieldname": "scar_part_no",
+   "fieldtype": "Data",
+   "label": "P/N"
+  },
+  {
+   "fieldname": "scar_part_description",
+   "fieldtype": "Data",
+   "label": "Part Description"
+  },
+  {
+   "fieldname": "scar_part_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scar_drawing_rev",
+   "fieldtype": "Data",
+   "label": "Dwg # and Rev"
+  },
+  {
+   "depends_on": "eval:doc.scar_required",
+   "fieldname": "scar_discrepancy_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Starts from the Deficiency Description (NCR) or Quality Requirement Not Met (Rework).",
+   "fieldname": "scar_discrepancy",
+   "fieldtype": "Text Editor",
+   "label": "Discrepancy Description"
+  },
+  {
+   "depends_on": "eval:doc.scar_required",
+   "fieldname": "scar_supplier_section",
+   "fieldtype": "Section Break",
+   "label": "Completed by Supplier"
+  },
+  {
+   "fieldname": "scar_root_cause",
+   "fieldtype": "Text Editor",
+   "label": "Root Cause"
+  },
+  {
+   "fieldname": "scar_containment",
+   "fieldtype": "Select",
+   "label": "Containment",
+   "options": "\nVerified Complete\nN/A"
+  },
+  {
+   "fieldname": "scar_corrective_action",
+   "fieldtype": "Text Editor",
+   "label": "Corrective Action"
+  },
+  {
+   "description": "Supplier person responsible for the corrective action.",
+   "fieldname": "scar_assignee",
+   "fieldtype": "Data",
+   "label": "C/A Assignee"
+  },
+  {
+   "fieldname": "scar_supplier_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scar_assignee_date",
+   "fieldtype": "Date",
+   "label": "C/A Assignee Date"
+  },
+  {
+   "fieldname": "scar_response_received",
+   "fieldtype": "Date",
+   "label": "Response Received On",
+   "no_copy": 1
+  },
+  {
+   "description": "The signed QM-134 or other response from the supplier.",
+   "fieldname": "scar_supplier_response",
+   "fieldtype": "Attach",
+   "label": "Supplier Response"
+  },
+  {
+   "depends_on": "eval:doc.scar_required",
+   "fieldname": "scar_qa_section",
+   "fieldtype": "Section Break",
+   "label": "Completed by Quality Assurance"
+  },
+  {
+   "fieldname": "scar_poc",
+   "fieldtype": "Link",
+   "label": "PSIF Point of Contact",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "scar_rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason Corrective Action Rejected",
+   "mandatory_depends_on": "eval:doc.scar_status=='Rejected'"
+  },
+  {
+   "fieldname": "scar_qa_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scar_rejected_by",
+   "fieldtype": "Link",
+   "label": "Corrective Action Rejected By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "scar_rejected_date",
+   "fieldtype": "Date",
+   "label": "Rejected Date"
+  },
+  {
+   "fieldname": "scar_approved_by",
+   "fieldtype": "Link",
+   "label": "Corrective Action Approved By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "scar_approved_date",
+   "fieldtype": "Date",
+   "label": "Approved Date"
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Quality Metrics",
+ "name": "Nonconformance Report",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Quality Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "subject,ncr_no,rework_no,capa_no,scar_no",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

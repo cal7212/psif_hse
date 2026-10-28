@@ -71,7 +71,7 @@
    "fieldtype": "Link",
    "label": "Area Owner",
    "options": "Employee",
-   "description": "Supervisor responsible for the area. Non Conformances are assigned to this person."
+   "description": "Supervisor responsible for the area. Nonconformance Reports are assigned to this person."
   },
   {
    "fieldname": "area_owner_name",
@@ -176,7 +176,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "no_copy": 1,
-   "description": "Hazard Open while a Critical Non Conformance is open; Action Required while any other Non Conformance is open."
+   "description": "Hazard Open while a Critical Nonconformance Report is open; Action Required while any other Nonconformance Report is open."
   },
   {
    "fieldname": "last_inspection",
@@ -206,7 +206,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-01 15:00:00.000000",
+ "modified": "2026-10-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Housekeeping Inspection",
  "name": "Housekeeping Area",

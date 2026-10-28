@@ -802,9 +802,9 @@ class QCInspection(Document):
 		open_ncs = count_open_ncs(self.qc_unit)
 		if open_ncs:
 			frappe.throw(
-				_("QC Unit {0} has {1} open Non Conformance(s). Resolve them before final release.").format(
-					frappe.bold(self.qc_unit), open_ncs
-				),
+				_(
+					"QC Unit {0} has {1} open Nonconformance Report(s). Resolve them before final release."
+				).format(frappe.bold(self.qc_unit), open_ncs),
 				title=_("Release Blocked"),
 			)
 
@@ -850,11 +850,11 @@ class QCInspection(Document):
 
 	def on_cancel(self):
 		# Must be set on the instance: lets the inspection be cancelled even though
-		# its Non Conformance / re-inspection link back to it.
-		self.ignore_linked_doctypes = ("Non Conformance", "QC Inspection", "QC Unit")
+		# its Nonconformance Report / re-inspection link back to it.
+		self.ignore_linked_doctypes = ("Nonconformance Report", "QC Inspection", "QC Unit")
 		self.db_set("status", "Pending")
 		if self.non_conformance:
-			nc = frappe.get_doc("Non Conformance", self.non_conformance)
+			nc = frappe.get_doc("Nonconformance Report", self.non_conformance)
 			if nc.status == "Open":
 				nc.status = "Cancelled"
 				nc.flags.ignore_permissions = True
@@ -864,14 +864,17 @@ class QCInspection(Document):
 				nc.save()
 		if self.is_reinspection and self.reinspection_of:
 			orig_nc = frappe.db.get_value("QC Inspection", self.reinspection_of, "non_conformance")
-			if orig_nc and frappe.db.get_value("Non Conformance", orig_nc, "qc_reinspection") == self.name:
-				if frappe.db.get_value("Non Conformance", orig_nc, "status") == "Resolved":
+			if (
+				orig_nc
+				and frappe.db.get_value("Nonconformance Report", orig_nc, "qc_reinspection") == self.name
+			):
+				if frappe.db.get_value("Nonconformance Report", orig_nc, "status") == "Resolved":
 					frappe.throw(
 						_(
-							"Non Conformance {0} was resolved using this re-inspection. Reopen it before cancelling."
+							"Nonconformance Report {0} was resolved using this re-inspection. Reopen it before cancelling."
 						).format(frappe.bold(orig_nc))
 					)
-				frappe.db.set_value("Non Conformance", orig_nc, "qc_reinspection", None)
+				frappe.db.set_value("Nonconformance Report", orig_nc, "qc_reinspection", None)
 		update_unit_status(self.qc_unit)
 
 	# ------------------------------------------------------------------ helpers
@@ -1016,7 +1019,7 @@ class QCInspection(Document):
 
 		nc = frappe.get_doc(
 			{
-				"doctype": "Non Conformance",
+				"doctype": "Nonconformance Report",
 				"record_type": REWORK,
 				"subject": f"{self.shop or 'QC'} QC rework - {self.qc_unit} {self.stage} ({self.name})",
 				"procedure": self.quality_procedure,
@@ -1043,7 +1046,7 @@ class QCInspection(Document):
 		frappe.msgprint(
 			_(
 				"Rework {0} created and {1} placed on QC Hold. Complete its NCR Criteria Evaluation: any Yes needs an NCR."
-			).format(frappe.get_desk_link("Non Conformance", nc.name), self.qc_unit),
+			).format(frappe.get_desk_link("Nonconformance Report", nc.name), self.qc_unit),
 			indicator="red",
 			alert=True,
 		)
@@ -1053,11 +1056,11 @@ class QCInspection(Document):
 			return
 		orig_nc = frappe.db.get_value("QC Inspection", self.reinspection_of, "non_conformance")
 		if orig_nc:
-			frappe.db.set_value("Non Conformance", orig_nc, "qc_reinspection", self.name)
+			frappe.db.set_value("Nonconformance Report", orig_nc, "qc_reinspection", self.name)
 			frappe.msgprint(
 				_(
 					"Re-inspection linked to {0}. Complete verification and resolve it to clear the QC Hold."
-				).format(frappe.get_desk_link("Non Conformance", orig_nc)),
+				).format(frappe.get_desk_link("Nonconformance Report", orig_nc)),
 				indicator="green",
 				alert=True,
 			)
@@ -1304,9 +1307,9 @@ def make_reinspection(source_name: str, target_doc: str | dict | None = None):
 
 @frappe.whitelist()
 def make_reinspection_from_nc(non_conformance: str):
-	source = frappe.db.get_value("Non Conformance", non_conformance, "qc_inspection")
+	source = frappe.db.get_value("Nonconformance Report", non_conformance, "qc_inspection")
 	if not source:
-		frappe.throw(_("This Non Conformance is not linked to a QC Inspection."))
+		frappe.throw(_("This Nonconformance Report is not linked to a QC Inspection."))
 	return make_reinspection(source)
 
 
