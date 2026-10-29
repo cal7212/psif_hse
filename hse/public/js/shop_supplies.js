@@ -1,5 +1,5 @@
 // Shop Supplies: short forms over ERPNext Stock (hse/hse/supplies.py).
-// Used by the Item, Stock Entry and Stock Reconciliation lists and the QC Unit form.
+// Used by the Item, Stock Entry, Stock Reconciliation and Material Request lists and the QC Unit form.
 frappe.provide("hse.supplies");
 
 (function (supplies) {
@@ -58,6 +58,96 @@ frappe.provide("hse.supplies");
 				done(r.message);
 			})
 			.always(() => dialog.enable_primary_action());
+	}
+
+	// ---- barcode scanning (camera via frappe.ui.Scanner, or typed / USB scanner + Enter)
+	function scan_fields(get_dialog, on_item) {
+		const handle = (code) => {
+			const dialog = get_dialog();
+			code = (code || "").trim();
+			if (!code) return;
+			frappe
+				.call(API + "resolve_barcode", {
+					code: code,
+					warehouse: dialog.get_value("warehouse"),
+				})
+				.then((r) => r.message && on_item(r.message));
+		};
+		return [
+			{
+				fieldname: "scan_code",
+				fieldtype: "Data",
+				label: __("Barcode"),
+				placeholder: __("Scan or type, then Enter"),
+				onchange() {
+					const dialog = get_dialog();
+					const code = dialog.get_value("scan_code");
+					if (!code) return;
+					dialog.set_value("scan_code", "");
+					handle(code);
+				},
+			},
+			{ fieldtype: "Column Break" },
+			{
+				fieldname: "scan_camera",
+				fieldtype: "Button",
+				label: __("Scan with Camera"),
+				click() {
+					new frappe.ui.Scanner({
+						dialog: true,
+						multiple: false,
+						on_scan(result) {
+							handle(result && result.decodedText);
+						},
+					});
+				},
+			},
+			{ fieldtype: "Section Break" },
+		];
+	}
+
+	// mode: "sum" adds the qty, "set" replaces it, "keep" leaves an existing row alone.
+	function put_row(dialog, row, mode) {
+		const field = dialog.fields_dict.items;
+		const data = (field.df.data || []).filter((r) => r.item_code);
+		const existing = data.find((r) => r.item_code === row.item_code);
+		if (existing) {
+			if (mode === "sum") existing.qty = flt(existing.qty) + flt(row.qty);
+			else if (mode === "set") existing.qty = row.qty;
+			else
+				frappe.show_alert({
+					message: __("{0} is already on the list.", [row.item_code]),
+					indicator: "orange",
+				});
+			Object.keys(row).forEach((k) => k !== "qty" && (existing[k] = row[k]));
+		} else {
+			data.push(row);
+		}
+		data.forEach((r, i) => (r.idx = i + 1));
+		field.df.data = data;
+		field.grid.df.data = data;
+		field.grid.refresh();
+	}
+
+	function ask_qty(info, label, default_qty, done) {
+		const fields = [
+			{ fieldname: "qty", fieldtype: "Float", label: label, reqd: 1, default: default_qty },
+		];
+		if (info.on_hand !== null && info.on_hand !== undefined) {
+			fields.push({
+				fieldtype: "HTML",
+				options: `<p class="text-muted small">${__("On hand: {0} {1}", [
+					info.on_hand,
+					info.stock_uom || "",
+				])}</p>`,
+			});
+		}
+		frappe.prompt(
+			fields,
+			(v) => done(flt(v.qty)),
+			`${info.item_code}: ${info.item_name}`,
+			__("OK")
+		);
 	}
 
 	function rows(values) {
@@ -184,6 +274,17 @@ frappe.provide("hse.supplies");
 							hidden: 1,
 						},
 					]),
+					...scan_fields(
+						() => dialog,
+						(info) =>
+							ask_qty(info, __("Qty removed from bin"), 1, (qty) =>
+								put_row(
+									dialog,
+									{ item_code: info.item_code, qty: qty, on_hand: info.on_hand },
+									"sum"
+								)
+							)
+					),
 					{
 						fieldname: "items",
 						fieldtype: "Table",
@@ -272,6 +373,17 @@ frappe.provide("hse.supplies");
 						},
 						{ fieldname: "note", fieldtype: "Small Text", label: __("Note") },
 					]),
+					...scan_fields(
+						() => dialog,
+						(info) =>
+							ask_qty(info, __("Counted qty"), info.on_hand, (qty) =>
+								put_row(
+									dialog,
+									{ item_code: info.item_code, qty: qty, on_hand: info.on_hand },
+									"set"
+								)
+							)
+					),
 					{
 						fieldtype: "HTML",
 						options: `<p class="text-muted small">${__(
@@ -337,6 +449,144 @@ frappe.provide("hse.supplies");
 										"Every counted quantity matches the system. Nothing was posted."
 									)
 								);
+						}
+					);
+				},
+			});
+			dialog.show();
+		});
+	};
+
+	supplies.flag_reorder = function () {
+		defaults().then((d0) => {
+			const dialog = new frappe.ui.Dialog({
+				title: __("Flag for Reorder"),
+				size: "large",
+				fields: [
+					{
+						fieldname: "warehouse",
+						fieldtype: "Link",
+						label: __("Warehouse"),
+						options: "Warehouse",
+						reqd: 1,
+						default: d0.warehouse,
+						get_query: () => ({
+							filters: { is_group: 0, disabled: 0, company: d0.company },
+						}),
+					},
+					{
+						fieldname: "schedule_date",
+						fieldtype: "Date",
+						label: __("Required By"),
+						reqd: 1,
+						default: d0.posting_date,
+					},
+					{ fieldtype: "Column Break" },
+					{ fieldname: "note", fieldtype: "Small Text", label: __("Note") },
+					{
+						fieldname: "company",
+						fieldtype: "Link",
+						label: __("Company"),
+						options: "Company",
+						reqd: 1,
+						default: d0.company,
+						hidden: 1,
+					},
+					{ fieldtype: "Section Break" },
+					...scan_fields(
+						() => dialog,
+						(info) =>
+							put_row(
+								dialog,
+								{
+									item_code: info.item_code,
+									qty: info.reorder_qty,
+									on_hand: info.on_hand,
+								},
+								"keep"
+							)
+					),
+					{
+						fieldtype: "HTML",
+						options: `<p class="text-muted small">${__(
+							"Items are added to the open draft Purchase Material Request for this warehouse, or a new draft is started. Qty defaults to the item's reorder qty, else 1."
+						)}</p>`,
+					},
+					{
+						fieldname: "items",
+						fieldtype: "Table",
+						label: __("Items"),
+						in_place_edit: true,
+						reqd: 1,
+						data: [],
+						fields: [
+							{
+								fieldname: "item_code",
+								fieldtype: "Link",
+								label: __("Item"),
+								options: "Item",
+								in_list_view: 1,
+								reqd: 1,
+								get_query: item_query,
+								onchange() {
+									fill_row(dialog, this.doc, (row, info) => {
+										row.on_hand = info.on_hand;
+										if (!flt(row.qty)) row.qty = info.reorder_qty;
+									});
+								},
+							},
+							{
+								fieldname: "qty",
+								fieldtype: "Float",
+								label: __("Order Qty"),
+								in_list_view: 1,
+							},
+							{
+								fieldname: "on_hand",
+								fieldtype: "Float",
+								label: __("On Hand"),
+								in_list_view: 1,
+								read_only: 1,
+							},
+						],
+					},
+				],
+				primary_action_label: __("Add to Reorder Request"),
+				primary_action(v) {
+					run(
+						dialog,
+						"flag_reorder",
+						{
+							warehouse: v.warehouse,
+							items: rows(v),
+							schedule_date: v.schedule_date,
+							company: v.company,
+							note: v.note,
+						},
+						(res) => {
+							const parts = [];
+							if (res.added.length) {
+								parts.push(
+									__("Added to {0}: {1}", [
+										frappe.utils.get_form_link(
+											"Material Request",
+											res.material_request,
+											true
+										),
+										res.added.join(", "),
+									])
+								);
+							}
+							if (res.skipped.length) {
+								parts.push(
+									__("Already on the request: {0}", [res.skipped.join(", ")])
+								);
+							}
+							frappe.msgprint({
+								title: __("Flag for Reorder"),
+								message: parts.join("<br>"),
+								indicator: res.added.length ? "green" : "orange",
+							});
 						}
 					);
 				},
@@ -439,6 +689,9 @@ frappe.provide("hse.supplies");
 		}
 		if (frappe.model.can_create("Stock Reconciliation")) {
 			listview.page.add_inner_button(__("Count"), supplies.count, group);
+		}
+		if (frappe.model.can_create("Material Request")) {
+			listview.page.add_inner_button(__("Flag for Reorder"), supplies.flag_reorder, group);
 		}
 	};
 

@@ -82,6 +82,7 @@ jinja = {
 		"hse.shop_qc.utils.get_qc_certificate_data",
 		"hse.shop_qc.utils.qc_photo_appendix",
 		"hse.hse.sds_label.get_ghs_label_data",
+		"hse.hse.supplies.get_supply_label_data",
 	],
 }
 # jinja = {
@@ -297,9 +298,14 @@ doctype_list_js = {
 	"Item": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 	"Stock Entry": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 	"Stock Reconciliation": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
+	"Material Request": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 }
 
 doc_events = {
+	# Shop Supplies: every stock item gets a scannable barcode (its item code) if it has none.
+	"Item": {
+		"validate": "hse.hse.supplies.ensure_item_barcode",
+	},
 	# ERPNext's Non Conformance is kept read-only as an archive; new records use Nonconformance Report.
 	"Non Conformance": {
 		"before_insert": "hse.quality_metrics.ncr.block_legacy_insert",
