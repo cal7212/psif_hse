@@ -7,15 +7,19 @@ Each form creates and submits a normal ERPNext document:
   Receive         -> Stock Entry (Material Receipt)
   Issue           -> Stock Entry (Material Issue), with Issued To, QC Unit and note
   Count           -> Stock Reconciliation for counted quantities that differ
+  Flag for Reorder -> draft Purchase Material Request (one open draft per warehouse)
+Issue, Count and Flag for Reorder accept a camera or typed barcode scan. New stock items get a
+barcode equal to their item code, and the Supply Label 2x4 print format prints it as a QR code.
 Normal Item / Stock Entry / Stock Reconciliation permissions apply.
 """
 
+import base64
 import json
 
 import frappe
 from frappe import _
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
-from frappe.utils import cstr, flt, getdate, nowdate
+from frappe.utils import cstr, escape_html, flt, getdate, nowdate
 
 SETTINGS = "Shop Supplies Settings"
 MODULE = "HSE"
@@ -52,6 +56,17 @@ def get_custom_fields() -> dict:
 				"fetch_from": "qc_unit.trulinx_work_order",
 				"read_only": 1,
 				"depends_on": "eval:doc.qc_unit",
+			},
+		],
+		"Material Request": [
+			{
+				"fieldname": "shop_supplies_reorder",
+				"label": "Shop Supplies Reorder",
+				"fieldtype": "Check",
+				"insert_after": "material_request_type",
+				"read_only": 1,
+				"no_copy": 1,
+				"description": "Draft built by Shop Supplies > Flag for Reorder. Later flags for the same warehouse are added to it.",
 			},
 		],
 	}
@@ -187,6 +202,7 @@ def get_item_info(item_code: str, warehouse: str | None = None) -> dict:
 		"rate": current_rate(item_code, warehouse),
 		"on_hand": on_hand(item_code, warehouse) if warehouse else None,
 		"stock_uom": frappe.db.get_value("Item", item_code, "stock_uom"),
+		"reorder_qty": reorder_qty(item_code, warehouse),
 	}
 
 
@@ -366,3 +382,160 @@ def add_item(
 			note=_("Shop Supplies: opening quantity"),
 		)
 	return {"item": item.name, "receipt": receipt}
+
+
+# ------------------------------------------------------------------ barcodes
+def ensure_item_barcode(doc, method=None):
+	"""Item validate: give a stock item without barcodes one barcode equal to its item code.
+
+	Skipped when another item already uses that value as a barcode."""
+	if not doc.get("is_stock_item") or doc.get("is_fixed_asset") or doc.get("barcodes"):
+		return
+	code = cstr(doc.item_code or doc.name).strip()
+	if not code:
+		return
+	if frappe.db.exists("Item Barcode", {"barcode": code, "parent": ["!=", doc.name]}):
+		return
+	doc.append("barcodes", {"barcode": code})
+
+
+@frappe.whitelist()
+def resolve_barcode(code: str, warehouse: str | None = None) -> dict:
+	"""Find the stock item for a scanned or typed barcode (Item Barcode first, then Item Code)."""
+	frappe.has_permission("Item", "read", throw=True)
+	code = cstr(code).strip()
+	if not code:
+		frappe.throw(_("Scan or type a barcode."))
+	item_code = frappe.db.get_value("Item Barcode", {"barcode": code, "parenttype": "Item"}, "parent")
+	if not item_code and frappe.db.exists("Item", code):
+		item_code = code
+	if not item_code:
+		frappe.throw(_("No item has barcode {0}.").format(escape_html(code)))
+	item = _check_item(item_code)
+	return {
+		"item_code": item.name,
+		"item_name": item.item_name,
+		"stock_uom": item.stock_uom,
+		"on_hand": on_hand(item.name, warehouse) if warehouse else None,
+		"reorder_qty": reorder_qty(item.name, warehouse),
+	}
+
+
+def reorder_qty(item_code: str, warehouse: str | None) -> float:
+	"""The item's reorder qty for the warehouse (Item Reorder), else 1."""
+	if warehouse:
+		qty = frappe.db.get_value(
+			"Item Reorder",
+			{"parent": item_code, "parenttype": "Item", "warehouse": warehouse},
+			"warehouse_reorder_qty",
+		)
+		if flt(qty) > 0:
+			return flt(qty)
+	return 1.0
+
+
+def _open_reorder_request(company: str, warehouse: str) -> str | None:
+	return frappe.db.get_value(
+		"Material Request",
+		{
+			"docstatus": 0,
+			"material_request_type": "Purchase",
+			"shop_supplies_reorder": 1,
+			"company": company,
+			"set_warehouse": warehouse,
+		},
+		"name",
+		order_by="creation desc",
+	)
+
+
+@frappe.whitelist(methods=["POST"])
+def flag_reorder(
+	warehouse: str,
+	items: str | list,
+	schedule_date: str | None = None,
+	company: str | None = None,
+	note: str | None = None,
+) -> dict:
+	"""Add flagged items to the open draft Purchase Material Request for the warehouse, or start one.
+
+	Items already on the draft are left as they are and reported back."""
+	company = _company(company)
+	_check_warehouse(warehouse, company)
+	rows = _rows(items)
+	schedule_date = schedule_date or nowdate()
+	if getdate(schedule_date) < getdate(nowdate()):
+		frappe.throw(_("Required By cannot be in the past."))
+	name = _open_reorder_request(company, warehouse)
+	if name:
+		mr = frappe.get_doc("Material Request", name)
+	else:
+		mr = frappe.get_doc(
+			{
+				"doctype": "Material Request",
+				"material_request_type": "Purchase",
+				"company": company,
+				"transaction_date": nowdate(),
+				"schedule_date": schedule_date,
+				"set_warehouse": warehouse,
+				"shop_supplies_reorder": 1,
+			}
+		)
+	existing = {r.item_code for r in mr.get("items", [])}
+	added, skipped = [], []
+	for row in rows:
+		_check_item(row.item_code)
+		if row.item_code in existing:
+			skipped.append(row.item_code)
+			continue
+		qty = flt(row.get("qty")) or reorder_qty(row.item_code, warehouse)
+		mr.append(
+			"items",
+			{"item_code": row.item_code, "qty": qty, "warehouse": warehouse, "schedule_date": schedule_date},
+		)
+		existing.add(row.item_code)
+		added.append(row.item_code)
+	if added:
+		mr.save()
+		if cstr(note).strip():
+			mr.add_comment("Comment", escape_html(cstr(note).strip()))
+	return {"material_request": mr.name if added or name else None, "added": added, "skipped": skipped}
+
+
+# ------------------------------------------------------------------ labels
+def qr_svg_data_uri(value: str) -> str:
+	"""QR code as a crisp, scalable SVG data URI (works in wkhtmltopdf)."""
+	import pyqrcode
+
+	matrix = pyqrcode.create(cstr(value), error="M").code
+	size = len(matrix)
+	quiet = 2
+	rects = "".join(
+		f'<rect x="{x + quiet}" y="{y + quiet}" width="1" height="1"/>'
+		for y, line in enumerate(matrix)
+		for x, cell in enumerate(line)
+		if cell
+	)
+	full = size + 2 * quiet
+	svg = (
+		f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {full} {full}" '
+		f'shape-rendering="crispEdges"><rect width="{full}" height="{full}" fill="#fff"/>'
+		f'<g fill="#000">{rects}</g></svg>'
+	)
+	return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+
+
+def label_barcode(item_code: str) -> str:
+	"""The value printed on the label: the item's first barcode, else its item code."""
+	return (
+		frappe.db.get_value(
+			"Item Barcode", {"parent": item_code, "parenttype": "Item"}, "barcode", order_by="idx asc"
+		)
+		or item_code
+	)
+
+
+def get_supply_label_data(item_code: str) -> dict:
+	"""Jinja helper for the Supply Label 2x4 print format."""
+	value = label_barcode(item_code)
+	return {"barcode": value, "qr": qr_svg_data_uri(value)}

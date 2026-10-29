@@ -51,6 +51,28 @@ class UnitTestShopSupplies(UnitTestCase):
 			with self.assertRaisesRegex(frappe.ValidationError, "serial"):
 				supplies._check_item("X")
 
+	def test_new_stock_item_gets_barcode(self):
+		doc = frappe.new_doc("Item")
+		doc.update({"item_code": "_T-NO-SUCH-SUPPLY", "is_stock_item": 1})
+		supplies.ensure_item_barcode(doc)
+		self.assertEqual([b.barcode for b in doc.barcodes], ["_T-NO-SUCH-SUPPLY"])
+		supplies.ensure_item_barcode(doc)  # never adds a second one
+		self.assertEqual(len(doc.barcodes), 1)
+
+	def test_non_stock_and_asset_items_skip_barcode(self):
+		for flags in ({"is_stock_item": 0}, {"is_stock_item": 1, "is_fixed_asset": 1}):
+			doc = frappe.new_doc("Item")
+			doc.update({"item_code": "_T-NO-SUCH-SUPPLY", **flags})
+			supplies.ensure_item_barcode(doc)
+			self.assertFalse(doc.barcodes)
+
+	def test_qr_is_svg_data_uri(self):
+		import base64
+
+		uri = supplies.qr_svg_data_uri("SAF-0005")
+		self.assertTrue(uri.startswith("data:image/svg+xml;base64,"))
+		self.assertIn(b"<svg", base64.b64decode(uri.split(",", 1)[1]))
+
 
 class IntegrationTestShopSupplies(IntegrationTestCase):
 	def test_stock_entry_custom_fields(self):
@@ -85,3 +107,30 @@ class IntegrationTestShopSupplies(IntegrationTestCase):
 		counted = supplies.count(warehouse, [{"item_code": item, "qty": start + 5}], company=company)
 		self.assertEqual(frappe.db.get_value("Stock Reconciliation", counted, "docstatus"), 1)
 		self.assertEqual(supplies.on_hand(item, warehouse), start + 5)
+
+	def test_scan_and_flag_for_reorder(self):
+		from frappe.tests.utils import make_test_records
+
+		make_test_records("Item")
+		item = "_Test Item"
+		warehouse = "_Test Warehouse - _TC"
+		company = frappe.db.get_value("Warehouse", warehouse, "company")
+		if not (frappe.db.exists("Item", item) and company):
+			self.skipTest("ERPNext test records are not available")
+		frappe.db.set_value("Item", item, {"has_serial_no": 0, "has_batch_no": 0, "is_stock_item": 1})
+
+		info = supplies.resolve_barcode(item, warehouse)  # item code works as a barcode
+		self.assertEqual(info["item_code"], item)
+		with self.assertRaises(frappe.ValidationError):
+			supplies.resolve_barcode("_T-NO-SUCH-BARCODE")
+
+		first = supplies.flag_reorder(warehouse, [{"item_code": item}], company=company)
+		mr = frappe.get_doc("Material Request", first["material_request"])
+		self.assertEqual(
+			(mr.docstatus, mr.material_request_type, mr.shop_supplies_reorder), (0, "Purchase", 1)
+		)
+		self.assertEqual([r.item_code for r in mr.items], [item])
+		again = supplies.flag_reorder(warehouse, [{"item_code": item}], company=company)
+		self.assertEqual(again["material_request"], mr.name)
+		self.assertEqual((again["added"], again["skipped"]), ([], [item]))
+		self.assertEqual(supplies.get_supply_label_data(item)["barcode"], supplies.label_barcode(item))
