@@ -66,12 +66,12 @@ class UnitTestShopSupplies(UnitTestCase):
 			supplies.ensure_item_barcode(doc)
 			self.assertFalse(doc.barcodes)
 
-	def test_qr_is_svg_data_uri(self):
+	def test_qr_is_png_data_uri(self):
 		import base64
 
-		uri = supplies.qr_svg_data_uri("SAF-0005")
-		self.assertTrue(uri.startswith("data:image/svg+xml;base64,"))
-		self.assertIn(b"<svg", base64.b64decode(uri.split(",", 1)[1]))
+		uri = supplies.qr_png_data_uri("SAF-0005")
+		self.assertTrue(uri.startswith("data:image/png;base64,"))
+		self.assertTrue(base64.b64decode(uri.split(",", 1)[1]).startswith(b"\x89PNG"))
 
 
 class IntegrationTestShopSupplies(IntegrationTestCase):

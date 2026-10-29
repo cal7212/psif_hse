@@ -503,26 +503,27 @@ def flag_reorder(
 
 
 # ------------------------------------------------------------------ labels
-def qr_svg_data_uri(value: str) -> str:
-	"""QR code as a crisp, scalable SVG data URI (works in wkhtmltopdf)."""
+def qr_png_data_uri(value: str, module_px: int = 12) -> str:
+	"""QR code as a PNG data URI. A raster image keeps its square shape in wkhtmltopdf,
+	which can stretch SVG images that have no intrinsic size."""
+	from io import BytesIO
+
 	import pyqrcode
+	from PIL import Image
 
 	matrix = pyqrcode.create(cstr(value), error="M").code
-	size = len(matrix)
 	quiet = 2
-	rects = "".join(
-		f'<rect x="{x + quiet}" y="{y + quiet}" width="1" height="1"/>'
-		for y, line in enumerate(matrix)
-		for x, cell in enumerate(line)
-		if cell
-	)
-	full = size + 2 * quiet
-	svg = (
-		f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {full} {full}" '
-		f'shape-rendering="crispEdges"><rect width="{full}" height="{full}" fill="#fff"/>'
-		f'<g fill="#000">{rects}</g></svg>'
-	)
-	return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
+	full = len(matrix) + 2 * quiet
+	img = Image.new("1", (full, full), 1)
+	px = img.load()
+	for y, line in enumerate(matrix):
+		for x, cell in enumerate(line):
+			if cell:
+				px[x + quiet, y + quiet] = 0
+	img = img.resize((full * module_px, full * module_px), Image.NEAREST)
+	buf = BytesIO()
+	img.save(buf, format="PNG")
+	return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
 def label_barcode(item_code: str) -> str:
@@ -538,4 +539,4 @@ def label_barcode(item_code: str) -> str:
 def get_supply_label_data(item_code: str) -> dict:
 	"""Jinja helper for the Supply Label 2x4 print format."""
 	value = label_barcode(item_code)
-	return {"barcode": value, "qr": qr_svg_data_uri(value)}
+	return {"barcode": value, "qr": qr_png_data_uri(value)}
