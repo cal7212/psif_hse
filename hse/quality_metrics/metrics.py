@@ -273,6 +273,258 @@ def nc_opened(start, end):
 	return len(rows), _("By severity: {0}").format(by_sev)
 
 
+IS_REWORK = {"record_type": "Rework"}
+CAPA_DONE = ("Closed", "Cancelled")
+
+
+def _pct(part: int, whole: int) -> float:
+	return round(part / whole * 100, 1)
+
+
+def _avg_days(rows, start_field: str, end_field: str) -> tuple[float, dict]:
+	def days(r):
+		a, b = r.get(start_field), r.get(end_field)
+		if isinstance(a, datetime) and isinstance(b, datetime):
+			return (b - a).total_seconds() / 86400
+		return (getdate(b) - getdate(a)).days
+
+	values = [(days(r), r) for r in rows]
+	slowest = max(values, key=lambda v: v[0])
+	return round(sum(v for v, _r in values) / len(values), 1), {
+		"name": slowest[1].name,
+		"days": round(slowest[0], 1),
+	}
+
+
+# Rework
+def rework_escalation_pct(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"], **IS_REWORK},
+		fields=["name", "escalated_to"],
+	)
+	if not rows:
+		return None, _("No Rework records opened in the period.")
+	escalated = [r.name for r in rows if r.escalated_to]
+	detail = _("{0} of {1} Rework records opened in the period were escalated to an NCR.").format(
+		len(escalated), len(rows)
+	)
+	if escalated:
+		detail += " " + _("Escalated: {0}").format(_names(escalated))
+	return _pct(len(escalated), len(rows)), detail
+
+
+def rework_avg_days_to_close(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"status": "Resolved", "resolved_on": ["between", [s, e]], **IS_REWORK},
+		fields=["name", "creation", "resolved_on"],
+	)
+	if not rows:
+		return None, _("No Rework records closed in the period.")
+	avg, slowest = _avg_days(rows, "creation", "resolved_on")
+	return avg, _("{0} closed; slowest {1} ({2} days).").format(len(rows), slowest["name"], slowest["days"])
+
+
+def rework_accept_pct(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={
+			"rw_inspected_date": ["between", [getdate(start), getdate(end)]],
+			"rw_quality_verification": ["in", ["Accept", "Reject"]],
+			**IS_REWORK,
+		},
+		fields=["name", "rw_quality_verification"],
+	)
+	if not rows:
+		return None, _("No Rework verifications in the period.")
+	rejected = [r.name for r in rows if r.rw_quality_verification == "Reject"]
+	detail = _("{0} of {1} Rework verifications accepted.").format(len(rows) - len(rejected), len(rows))
+	if rejected:
+		detail += " " + _("Rejected: {0}").format(_names(rejected))
+	return _pct(len(rows) - len(rejected), len(rows)), detail
+
+
+def rework_open_over_7_days(start, end):
+	cutoff = now_datetime() - timedelta(days=7)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"status": "Open", "creation": ["<", cutoff], **IS_REWORK},
+		pluck="name",
+	)
+	return len(rows), (_("Open now: {0}").format(_names(rows)) if rows else _("None open."))
+
+
+# NCR
+def nc_open_over_30_days(start, end):
+	cutoff = now_datetime() - timedelta(days=30)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"status": "Open", "creation": ["<", cutoff], **NOT_REWORK},
+		pluck="name",
+	)
+	return len(rows), (_("Open now: {0}").format(_names(rows)) if rows else _("None open."))
+
+
+def nc_by_source(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"], **NOT_REWORK},
+		fields=["name", "source", "disposition"],
+	)
+	if not rows:
+		return 0, _("None opened.")
+	src = ", ".join(f"{k or _('Not set')}: {n}" for k, n in Counter(r.source for r in rows).most_common())
+	disp = ", ".join(
+		f"{k or _('Not set')}: {n}" for k, n in Counter(r.disposition for r in rows).most_common()
+	)
+	return len(rows), _("By source: {0}. By disposition: {1}").format(src, disp)
+
+
+def nc_capa_pct(start, end):
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"creation": ["between", [s, e]], "status": ["!=", "Cancelled"], **NOT_REWORK},
+		fields=["name", "capa_required"],
+	)
+	if not rows:
+		return None, _("No NCRs opened in the period.")
+	capa = [r.name for r in rows if r.capa_required]
+	return _pct(len(capa), len(rows)), _("{0} of {1} NCRs opened in the period required a CAPA.").format(
+		len(capa), len(rows)
+	)
+
+
+# CAPA (QM-128), recorded on the Nonconformance Report
+IS_CAPA = {"capa_required": 1}
+
+
+def capa_opened(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"capa_initiated_date": ["between", [getdate(start), getdate(end)]], **IS_CAPA},
+		fields=["name", "capa_no", "capa_source"],
+	)
+	if not rows:
+		return 0, _("None opened.")
+	by_src = ", ".join(
+		f"{k or _('Not set')}: {n}" for k, n in Counter(r.capa_source for r in rows).most_common()
+	)
+	return len(rows), _("By source: {0}").format(by_src)
+
+
+def capa_open(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"capa_status": ["not in", CAPA_DONE], **IS_CAPA},
+		fields=["name", "capa_no", "capa_status"],
+	)
+	if not rows:
+		return 0, _("None open.")
+	by_status = ", ".join(
+		f"{k or _('Not set')}: {n}" for k, n in Counter(r.capa_status for r in rows).most_common()
+	)
+	return len(rows), _("By status: {0}").format(by_status)
+
+
+def _capa_label(r) -> str:
+	return f"{r.capa_no} ({r.name})" if r.get("capa_no") else r.name
+
+
+def capa_overdue(start, end):
+	today = getdate()
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"capa_status": ["not in", CAPA_DONE], **IS_CAPA},
+		fields=[
+			"name",
+			"capa_no",
+			"capa_status",
+			"capa_containment_due",
+			"capa_correction_due",
+			"capa_closure_due",
+		],
+	)
+	late = []
+	for r in rows:
+		if r.capa_closure_due and getdate(r.capa_closure_due) < today:
+			late.append(_("{0}: closure due {1}").format(_capa_label(r), r.capa_closure_due))
+		elif (
+			r.capa_status in ("Open", "Containment", "Investigation", "Corrective Action")
+			and r.capa_correction_due
+			and getdate(r.capa_correction_due) < today
+		):
+			late.append(_("{0}: correction due {1}").format(_capa_label(r), r.capa_correction_due))
+		elif (
+			r.capa_status in ("Open", "Containment")
+			and r.capa_containment_due
+			and getdate(r.capa_containment_due) < today
+		):
+			late.append(_("{0}: containment due {1}").format(_capa_label(r), r.capa_containment_due))
+	return len(late), ("; ".join(late[:10]) if late else _("None overdue."))
+
+
+def capa_closed_on_time_pct(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={
+			"capa_status": "Closed",
+			"capa_closure_date": ["between", [getdate(start), getdate(end)]],
+			**IS_CAPA,
+		},
+		fields=["name", "capa_no", "capa_closure_date", "capa_closure_due"],
+	)
+	if not rows:
+		return None, _("No CAPAs closed in the period.")
+	late = [
+		r for r in rows if r.capa_closure_due and getdate(r.capa_closure_date) > getdate(r.capa_closure_due)
+	]
+	detail = _("{0} of {1} CAPAs closed by the closure due date.").format(len(rows) - len(late), len(rows))
+	if late:
+		detail += " " + _("Late: {0}").format(", ".join(_capa_label(r) for r in late[:10]))
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def capa_avg_days_to_close(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={
+			"capa_status": "Closed",
+			"capa_closure_date": ["between", [getdate(start), getdate(end)]],
+			"capa_initiated_date": ["is", "set"],
+			**IS_CAPA,
+		},
+		fields=["name", "capa_initiated_date", "capa_closure_date"],
+	)
+	if not rows:
+		return None, _("No CAPAs closed in the period.")
+	avg, slowest = _avg_days(rows, "capa_initiated_date", "capa_closure_date")
+	return avg, _("{0} closed; slowest {1} ({2} days).").format(len(rows), slowest["name"], slowest["days"])
+
+
+def capa_effective_pct(start, end):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={
+			"capa_verification_date": ["between", [getdate(start), getdate(end)]],
+			"capa_quality_verification": ["in", ["Effective", "Not Effective"]],
+			**IS_CAPA,
+		},
+		fields=["name", "capa_no", "capa_quality_verification"],
+	)
+	if not rows:
+		return None, _("No CAPA effectiveness checks in the period.")
+	not_eff = [r for r in rows if r.capa_quality_verification == "Not Effective"]
+	detail = _("{0} of {1} CAPAs verified Effective.").format(len(rows) - len(not_eff), len(rows))
+	if not_eff:
+		detail += " " + _("Not Effective: {0}").format(", ".join(_capa_label(r) for r in not_eff[:10]))
+	return _pct(len(rows) - len(not_eff), len(rows)), detail
+
+
 # ---------------------------------------------------------------- Asset inspections
 def asset_inspection_on_time_pct(start, end):
 	rows = frappe.get_all(
@@ -481,6 +733,79 @@ METRICS = {
 	),
 	"nc_opened": ("NCRs opened (excludes Rework)", nc_opened, "Nos", False, "Nonconformance Report"),
 	"rework_opened": ("Rework records opened", rework_opened, "Nos", False, "Nonconformance Report"),
+	"rework_escalation_pct": (
+		"Rework escalated to NCR (%)",
+		rework_escalation_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"rework_avg_days_to_close": (
+		"Average days to close a Rework",
+		rework_avg_days_to_close,
+		"Day",
+		False,
+		"Nonconformance Report",
+	),
+	"rework_accept_pct": (
+		"Rework accepted at verification (%)",
+		rework_accept_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"rework_open_over_7_days": (
+		"Rework open > 7 days (now)",
+		rework_open_over_7_days,
+		"Nos",
+		True,
+		"Nonconformance Report",
+	),
+	"nc_open_over_30_days": (
+		"NCRs open > 30 days (now)",
+		nc_open_over_30_days,
+		"Nos",
+		True,
+		"Nonconformance Report",
+	),
+	"nc_by_source": (
+		"NCRs opened, by source and disposition",
+		nc_by_source,
+		"Nos",
+		False,
+		"Nonconformance Report",
+	),
+	"nc_capa_pct": ("NCRs requiring a CAPA (%)", nc_capa_pct, "Percent", False, "Nonconformance Report"),
+	"capa_opened": ("CAPAs opened", capa_opened, "Nos", False, "Nonconformance Report"),
+	"capa_open": ("CAPAs open (now)", capa_open, "Nos", True, "Nonconformance Report"),
+	"capa_overdue": (
+		"CAPAs past a QM-128 due date (now)",
+		capa_overdue,
+		"Nos",
+		True,
+		"Nonconformance Report",
+	),
+	"capa_closed_on_time_pct": (
+		"CAPAs closed by the closure due date (%)",
+		capa_closed_on_time_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"capa_avg_days_to_close": (
+		"Average days to close a CAPA",
+		capa_avg_days_to_close,
+		"Day",
+		False,
+		"Nonconformance Report",
+	),
+	"capa_effective_pct": (
+		"CAPAs verified Effective (%)",
+		capa_effective_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
 	"asset_inspection_on_time_pct": (
 		"Asset maintenance/inspections on time (%)",
 		asset_inspection_on_time_pct,

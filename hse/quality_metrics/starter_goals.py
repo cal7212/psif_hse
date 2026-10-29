@@ -20,12 +20,37 @@ STARTER_GOALS = [
 			("repair_failure_causes", "Record only", 0),
 		],
 	},
+	# Rework / NCR / CAPA goals record values only; set targets on each goal before relying on Pass/Fail.
 	{
-		"goal": "Nonconformance Report Management",
+		"goal": "Rework Management",
 		"objectives": [
-			("nc_avg_days_to_resolve", "At most", 14),
-			("nc_open_critical_over_7_days", "At most", 0),
+			("rework_opened", "Record only", 0),
+			("rework_escalation_pct", "Record only", 0),
+			("rework_accept_pct", "Record only", 0),
+			("rework_avg_days_to_close", "Record only", 0),
+			("rework_open_over_7_days", "Record only", 0),
+		],
+	},
+	{
+		"goal": "NCR Management",
+		"objectives": [
 			("nc_opened", "Record only", 0),
+			("nc_by_source", "Record only", 0),
+			("nc_capa_pct", "Record only", 0),
+			("nc_avg_days_to_resolve", "Record only", 0),
+			("nc_open_critical_over_7_days", "Record only", 0),
+			("nc_open_over_30_days", "Record only", 0),
+		],
+	},
+	{
+		"goal": "CAPA Management",
+		"objectives": [
+			("capa_opened", "Record only", 0),
+			("capa_open", "Record only", 0),
+			("capa_overdue", "Record only", 0),
+			("capa_closed_on_time_pct", "Record only", 0),
+			("capa_avg_days_to_close", "Record only", 0),
+			("capa_effective_pct", "Record only", 0),
 		],
 	},
 	{
