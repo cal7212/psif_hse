@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, now_datetime, nowdate
+from frappe.utils import cstr, flt, now_datetime, nowdate
 
 from hse.quality_metrics.metrics import (
 	FAILED,
@@ -171,14 +171,14 @@ def get_missing_starter_goals() -> list[str]:
 
 
 @frappe.whitelist(methods=["POST"])
-def create_stage_fpy_goals(target: float | None = None, frequency: str = "Monthly") -> dict:
+def create_stage_fpy_goals(target: str | float | None = None, frequency: str = "Monthly") -> dict:
 	"""Desk button on the Quality Goal list: first-pass yield goals by QC Stage, one per shop."""
 	frappe.only_for(("Quality Manager", "System Manager"))
 	from hse.quality_metrics.install import create_stage_fpy_goals as _create
 
 	if frequency not in ("Daily", "Weekly", "Monthly", "Quarterly"):
 		frappe.throw(_("Choose Daily, Weekly, Monthly or Quarterly."))
-	target = None if target in (None, "") else float(target)
+	target = flt(target) or None
 	if target is not None and not 0 <= target <= 100:
 		frappe.throw(_("Target must be between 0 and 100 percent."))
 	return _create(target=target, frequency=frequency)
