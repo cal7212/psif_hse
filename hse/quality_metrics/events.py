@@ -9,13 +9,15 @@ from hse.quality_metrics.metrics import (
 	FAILED,
 	METRICS,
 	RECORD_ONLY,
+	STAGE_METRICS,
 	calculate,
 	evaluate,
 	get_review_period,
+	stage_objective,
 	target_text,
 )
 
-METRIC_FIELDS = ("hse_metric", "target_operator", "target_value")
+METRIC_FIELDS = ("hse_metric", "target_operator", "target_value", "qc_stage")
 
 
 # ---------------------------------------------------------------- Quality Goal
@@ -26,6 +28,13 @@ def quality_goal_validate(doc, method=None):
 		label, _fn, default_uom, _snap, _dt = METRICS.get(row.hse_metric, (None,) * 5)
 		if not label:
 			frappe.throw(_("Row {0}: unknown metric {1}.").format(row.idx, row.hse_metric))
+		if row.hse_metric in STAGE_METRICS:
+			if not row.get("qc_stage"):
+				frappe.throw(_("Row {0}: set the QC Stage for {1}.").format(row.idx, label))
+			if not row.objective or cstr(row.objective).strip() == label:
+				row.objective = stage_objective(row.qc_stage)
+		elif row.get("qc_stage"):
+			row.qc_stage = None
 		if not row.target_operator:
 			row.target_operator = RECORD_ONLY
 		if not row.objective:
@@ -60,7 +69,7 @@ def calculate_review(doc):
 	for row in doc.reviews:
 		if not row.get("hse_metric"):
 			continue
-		value, detail = calculate(row.hse_metric, doc.period_start, doc.period_end)
+		value, detail = calculate(row.hse_metric, doc.period_start, doc.period_end, row.get("qc_stage"))
 		row.actual_value = value
 		row.metric_detail = detail
 		row.status = evaluate(value, row.target_operator, row.target_value)
@@ -154,3 +163,17 @@ def get_missing_starter_goals() -> list[str]:
 	from hse.quality_metrics.starter_goals import STARTER_GOALS
 
 	return [g["goal"] for g in STARTER_GOALS if not frappe.db.exists("Quality Goal", g["goal"])]
+
+
+@frappe.whitelist(methods=["POST"])
+def create_stage_fpy_goals(target: float | None = None, frequency: str = "Monthly") -> dict:
+	"""Desk button on the Quality Goal list: first-pass yield goals by QC Stage, one per shop."""
+	frappe.only_for(("Quality Manager", "System Manager"))
+	from hse.quality_metrics.install import create_stage_fpy_goals as _create
+
+	if frequency not in ("Daily", "Weekly", "Monthly", "Quarterly"):
+		frappe.throw(_("Choose Daily, Weekly, Monthly or Quarterly."))
+	target = None if target in (None, "") else float(target)
+	if target is not None and not 0 <= target <= 100:
+		frappe.throw(_("Target must be between 0 and 100 percent."))
+	return _create(target=target, frequency=frequency)

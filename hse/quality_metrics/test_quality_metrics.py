@@ -16,6 +16,7 @@ from hse.quality_metrics.metrics import (
 	RECORD_ONLY,
 	calculate,
 	evaluate,
+	fpy_summary,
 	get_review_period,
 	target_text,
 )
@@ -50,6 +51,76 @@ class UnitTestQualityMetrics(UnitTestCase):
 		self.assertEqual(target_text(AT_LEAST, 90, "Percent"), "≥ 90%")
 		self.assertEqual(target_text(AT_MOST, 14, "Day"), "≤ 14 Day")
 		self.assertEqual(target_text(AT_MOST, 0, "Nos"), "≤ 0")
+
+
+class UnitTestStageFirstPassYield(UnitTestCase):
+	def test_fpy_summary(self):
+		rows = [
+			frappe._dict(name="A", status="Accepted"),
+			frappe._dict(name="B", status="Rejected"),
+			frappe._dict(name="C", status="Accepted"),
+			frappe._dict(name="D", status="Accepted"),
+		]
+		self.assertEqual(fpy_summary(rows), (3, 4, ["B"]))
+
+	def test_stage_metric_needs_a_stage(self):
+		value, detail = calculate("qc_stage_first_pass_yield", "2026-10-01", "2026-10-31")
+		self.assertIsNone(value)
+		self.assertIn("QC Stage", detail)
+
+
+class IntegrationTestStageFpyGoals(IntegrationTestCase):
+	STAGE = "_Test FPY Stage"
+
+	def setUp(self):
+		if not frappe.db.exists("QC Stage", self.STAGE):
+			frappe.get_doc(
+				{"doctype": "QC Stage", "stage_name": self.STAGE, "sequence": 999, "job_type": "Both"}
+			).insert()
+
+	def test_goal_per_shop_and_review_copies_stage(self):
+		from hse.quality_metrics.events import create_stage_fpy_goals
+
+		goal_name = "First Pass Yield by Stage - General"
+		if frappe.db.exists("Quality Goal", goal_name):
+			frappe.delete_doc("Quality Goal", goal_name, force=1)
+		result = create_stage_fpy_goals(target=95, frequency="Monthly")
+		self.assertIn(goal_name, result["created"])
+		goal = frappe.get_doc("Quality Goal", goal_name)
+		row = next(o for o in goal.objectives if o.qc_stage == self.STAGE)
+		self.assertEqual(row.hse_metric, "qc_stage_first_pass_yield")
+		self.assertEqual(row.target_operator, AT_LEAST)
+		self.assertIn(self.STAGE, row.objective)
+		self.assertEqual(row.target, "≥ 95%")
+
+		# Running again adds nothing
+		again = create_stage_fpy_goals(target=95, frequency="Monthly")
+		self.assertNotIn(goal_name, again["created"] + again["updated"])
+
+		review = frappe.get_doc(
+			{
+				"doctype": "Quality Review",
+				"goal": goal_name,
+				"date": "2026-10-01",
+				"period_start": "2001-01-01",
+				"period_end": "2001-01-31",
+			}
+		).insert()
+		rrow = next(r for r in review.reviews if r.qc_stage == self.STAGE)
+		self.assertEqual(rrow.hse_metric, "qc_stage_first_pass_yield")
+		self.assertIn("No first inspections", rrow.metric_detail)
+		self.assertEqual(rrow.status, OPEN)
+
+	def test_stage_row_requires_stage(self):
+		goal = frappe.get_doc(
+			{
+				"doctype": "Quality Goal",
+				"goal": "_Test FPY Missing Stage",
+				"frequency": "None",
+				"objectives": [{"hse_metric": "qc_stage_first_pass_yield", "target_operator": AT_LEAST}],
+			}
+		)
+		self.assertRaises(frappe.ValidationError, goal.insert)
 
 
 class IntegrationTestQualityMetrics(IntegrationTestCase):

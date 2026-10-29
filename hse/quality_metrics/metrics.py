@@ -77,6 +77,68 @@ def hpu_first_pass_yield(start, end):
 	return round(first_pass / len(units) * 100, 1), detail
 
 
+# First-pass yield per QC Stage. A unit passes a stage first time when its first submitted,
+# original (not re-) inspection at that stage in the period is Accepted.
+def first_inspections(start, end, stage: str | None = None) -> list[dict]:
+	s, e = _bounds(start, end)
+	filters = {
+		"inspection_date": ["between", [s, e]],
+		"docstatus": 1,
+		"is_reinspection": 0,
+		"reinspection_of": ["is", "not set"],
+	}
+	if stage:
+		filters["stage"] = stage
+	rows = frappe.get_all(
+		"QC Inspection",
+		filters=filters,
+		fields=["name", "qc_unit", "stage", "status", "inspection_date"],
+		order_by="inspection_date asc, creation asc",
+	)
+	first, seen = [], set()
+	for r in rows:
+		key = (r.qc_unit, r.stage)
+		if key not in seen:
+			seen.add(key)
+			first.append(r)
+	return first
+
+
+def fpy_summary(rows) -> tuple[int, int, list[str]]:
+	"""(passed, total, rejected inspection names) for first-inspection rows."""
+	rejected = [r.name for r in rows if r.status == "Rejected"]
+	return len(rows) - len(rejected), len(rows), rejected
+
+
+def qc_stage_first_pass_yield(start, end, stage):
+	rows = first_inspections(start, end, stage)
+	if not rows:
+		return None, _("No first inspections at {0} in the period.").format(stage)
+	passed, total, rejected = fpy_summary(rows)
+	detail = _("{0} of {1} units passed {2} on the first inspection.").format(passed, total, stage)
+	if rejected:
+		detail += " " + _("Rejected: {0}").format(_names(rejected))
+	return round(passed / total * 100, 1), detail
+
+
+def qc_first_pass_yield_by_stage(start, end):
+	rows = first_inspections(start, end)
+	if not rows:
+		return None, _("No first inspections in the period.")
+	passed, total, _rejected = fpy_summary(rows)
+	by_stage = {}
+	for r in rows:
+		by_stage.setdefault(r.stage, []).append(r)
+	parts = []
+	for stage_name, stage_rows in sorted(by_stage.items(), key=lambda kv: fpy_summary(kv[1])[0] / len(kv[1])):
+		p, t, _r = fpy_summary(stage_rows)
+		parts.append(f"{stage_name}: {p}/{t} ({round(p / t * 100, 1):g}%)")
+	detail = _("{0} of {1} first inspections passed. By stage, lowest first: {2}").format(
+		passed, total, "; ".join(parts)
+	)
+	return round(passed / total * 100, 1), detail
+
+
 def hpu_units_released(start, end):
 	s, e = _bounds(start, end)
 	units = frappe.get_all(
@@ -365,6 +427,20 @@ METRICS = {
 		False,
 		"QC Unit",
 	),
+	"qc_stage_first_pass_yield": (
+		"First-pass yield at a QC Stage (%)",
+		qc_stage_first_pass_yield,
+		"Percent",
+		False,
+		"QC Inspection",
+	),
+	"qc_first_pass_yield_by_stage": (
+		"First-pass yield, all stages, with stage breakdown (%)",
+		qc_first_pass_yield_by_stage,
+		"Percent",
+		False,
+		"QC Inspection",
+	),
 	"hpu_units_released": ("QC units released", hpu_units_released, "Nos", False, "QC Unit"),
 	"hpu_shipped_before_release": (
 		"Units shipped before QC release",
@@ -458,17 +534,30 @@ METRICS = {
 }
 
 
+# Metrics that need the objective's QC Stage.
+STAGE_METRICS = {"qc_stage_first_pass_yield"}
+
+
+def stage_objective(stage: str) -> str:
+	return _("First-pass yield: {0} (%)").format(stage)
+
+
 def metric_options() -> str:
 	return "\n" + "\n".join(METRICS)
 
 
-def calculate(metric: str, start, end):
+def calculate(metric: str, start, end, stage: str | None = None):
 	if metric not in METRICS:
 		return None, _("Unknown metric {0}.").format(metric)
 	_label, fn, _uom, snapshot, doctype = METRICS[metric]
+	if metric in STAGE_METRICS and not stage:
+		return None, _("Set the QC Stage on this objective.")
 	if not _exists(doctype):
 		return None, _("{0} is not installed on this site.").format(doctype)
-	value, detail = fn(start, end)
+	if metric in STAGE_METRICS:
+		value, detail = fn(start, end, stage)
+	else:
+		value, detail = fn(start, end)
 	if snapshot:
 		detail = _("As of {0}: {1}").format(frappe.format(now_datetime(), "Datetime"), detail)
 	return value, detail
@@ -497,12 +586,17 @@ def target_text(operator: str | None, target, uom: str | None = None) -> str:
 
 
 @frappe.whitelist()
-def get_metric_value(metric: str, period_start: str | None = None, period_end: str | None = None) -> dict:
+def get_metric_value(
+	metric: str,
+	period_start: str | None = None,
+	period_end: str | None = None,
+	stage: str | None = None,
+) -> dict:
 	"""For dashboards / Number Cards. Defaults to the previous calendar month."""
 	frappe.only_for(("Quality Manager", "System Manager"))
 	if not (period_start and period_end):
 		period_start, period_end = get_review_period("Monthly", getdate())
-	value, detail = calculate(metric, period_start, period_end)
+	value, detail = calculate(metric, period_start, period_end, stage)
 	return {
 		"metric": metric,
 		"value": value,

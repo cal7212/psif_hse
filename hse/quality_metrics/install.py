@@ -43,6 +43,15 @@ def get_custom_fields():
 				"in_list_view": 1,
 				"columns": 1,
 			},
+			{
+				"fieldname": "qc_stage",
+				"label": "QC Stage",
+				"fieldtype": "Link",
+				"options": "QC Stage",
+				"insert_after": "target_value",
+				"depends_on": "eval:doc.hse_metric == 'qc_stage_first_pass_yield'",
+				"mandatory_depends_on": "eval:doc.hse_metric == 'qc_stage_first_pass_yield'",
+			},
 		],
 		"Quality Review Objective": [
 			{
@@ -70,10 +79,19 @@ def get_custom_fields():
 				"hidden": 1,
 			},
 			{
+				"fieldname": "qc_stage",
+				"label": "QC Stage",
+				"fieldtype": "Link",
+				"options": "QC Stage",
+				"insert_after": "target_value",
+				"read_only": 1,
+				"depends_on": "qc_stage",
+			},
+			{
 				"fieldname": "actual_value",
 				"label": "Actual",
 				"fieldtype": "Float",
-				"insert_after": "target_value",
+				"insert_after": "qc_stage",
 				"read_only": 1,
 				"in_list_view": 1,
 				"columns": 1,
@@ -151,6 +169,70 @@ def create_starter_goals(frequency: str = "Monthly", day_of_month: str = "1") ->
 		goal.insert(ignore_permissions=True)
 		created.append(goal.name)
 	return created
+
+
+STAGE_FPY_GOAL_PREFIX = "First Pass Yield by Stage"
+
+
+def stage_group(stage) -> str:
+	if stage.shop:
+		return stage.shop
+	return "Repair" if stage.job_type == "Repair" else "General"
+
+
+def create_stage_fpy_goals(
+	target: float | None = None, frequency: str = "Monthly", day_of_month: str = "1"
+) -> dict:
+	"""One Quality Goal per shop with a first-pass-yield objective for each enabled QC Stage.
+	No target -> Record only. Existing goals get rows for stages they do not have yet."""
+	from hse.quality_metrics.metrics import AT_LEAST, RECORD_ONLY, stage_objective
+
+	stages = frappe.get_all(
+		"QC Stage",
+		filters={"disabled": 0},
+		fields=["name", "shop", "job_type", "sequence"],
+		order_by="sequence asc, name asc",
+	)
+	groups: dict[str, list] = {}
+	for st in stages:
+		groups.setdefault(stage_group(st), []).append(st)
+
+	operator = RECORD_ONLY if target in (None, "") else AT_LEAST
+	created, updated = [], []
+	for group, rows in sorted(groups.items()):
+		name = f"{STAGE_FPY_GOAL_PREFIX} - {group}"
+
+		def objective(st):
+			return {
+				"objective": stage_objective(st.name),
+				"hse_metric": "qc_stage_first_pass_yield",
+				"qc_stage": st.name,
+				"target_operator": operator,
+				"target_value": target or 0,
+			}
+
+		if frappe.db.exists("Quality Goal", name):
+			goal = frappe.get_doc("Quality Goal", name)
+			have = {o.get("qc_stage") for o in goal.objectives}
+			missing = [st for st in rows if st.name not in have]
+			if missing:
+				for st in missing:
+					goal.append("objectives", objective(st))
+				goal.save(ignore_permissions=True)
+				updated.append(name)
+			continue
+		goal = frappe.get_doc(
+			{
+				"doctype": "Quality Goal",
+				"goal": name,
+				"frequency": frequency,
+				"date": day_of_month if frequency == "Monthly" else None,
+				"objectives": [objective(st) for st in rows],
+			}
+		)
+		goal.insert(ignore_permissions=True)
+		created.append(name)
+	return {"created": created, "updated": updated}
 
 
 def after_install():
