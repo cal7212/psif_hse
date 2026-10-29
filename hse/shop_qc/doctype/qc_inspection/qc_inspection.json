@@ -273,16 +273,17 @@
    "options": "QC Missing Part"
   },
   {
-   "depends_on": "eval:(doc.pmg_tests || []).length",
+   "depends_on": "eval:(doc.pmg_tests || []).length || (doc.device_tests || []).length || (doc.accumulator_tests || []).length",
    "fieldname": "section_pmg_tests",
    "fieldtype": "Section Break",
-   "label": "Pump / Motor Group Tests"
+   "label": "Pump / Motor Group, Device and Accumulator Tests"
   },
   {
    "fieldname": "pmg_tests",
    "fieldtype": "Table",
    "label": "Pump / Motor Group Tests",
-   "options": "QC PMG Test"
+   "options": "QC PMG Test",
+   "depends_on": "eval:(doc.pmg_tests || []).length"
   },
   {
    "depends_on": "eval:(doc.device_tests || []).length",
@@ -433,7 +434,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-10-29 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",
