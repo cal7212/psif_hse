@@ -140,13 +140,17 @@ def make_custom_fields():
 	create_custom_fields(fields, update=True)
 
 
-def create_starter_goals(frequency: str = "Monthly", day_of_month: str = "1") -> list[str]:
+def create_starter_goals(
+	frequency: str = "Monthly", day_of_month: str = "1", goals: list[str] | None = None
+) -> list[str]:
 	"""Run from the "Create Starter Goals" button on the Quality Goal list, or by hand:
 	bench --site <site> execute hse.quality_metrics.install.create_starter_goals
 	Goals whose module isn't in use are still created; delete any you don't need.
 	Existing goals with the same name are left alone."""
 	created = []
 	for spec in STARTER_GOALS:
+		if goals and spec["goal"] not in goals:
+			continue
 		if frappe.db.exists("Quality Goal", spec["goal"]):
 			continue
 		goal = frappe.get_doc(

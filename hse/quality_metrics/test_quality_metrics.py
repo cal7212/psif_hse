@@ -409,6 +409,55 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		self.assertGreaterEqual(value, 1)
 		self.assertIn(nc.name, detail)
 
+	def test_rework_ncr_capa_metrics(self):
+		"""Values are set directly (no validation) in a 2001 period no other test uses."""
+		from datetime import datetime
+
+		def nc(**values):
+			doc = self.make_nc(severity="Low")
+			frappe.db.set_value("Nonconformance Report", doc.name, values, update_modified=False)
+			return doc.name
+
+		jan = datetime(2001, 1, 10, 9, 0)
+		target = nc(creation=jan)
+		nc(record_type="Rework", creation=jan, escalated_to=target)
+		nc(record_type="Rework", creation=jan)
+		self.assertEqual(calculate("rework_escalation_pct", "2001-01-01", "2001-01-31")[0], 50.0)
+
+		nc(record_type="Rework", rw_quality_verification="Accept", rw_inspected_date="2001-01-12")
+		nc(record_type="Rework", rw_quality_verification="Reject", rw_inspected_date="2001-01-13")
+		value, detail = calculate("rework_accept_pct", "2001-01-01", "2001-01-31")
+		self.assertEqual(value, 50.0)
+		self.assertIn("Rejected", detail)
+
+		capa = {"capa_required": 1, "capa_status": "Closed", "capa_initiated_date": "2001-02-01"}
+		nc(
+			**capa,
+			capa_no="_T-M-1",
+			capa_closure_date="2001-02-11",
+			capa_closure_due="2001-04-01",
+			capa_quality_verification="Effective",
+			capa_verification_date="2001-02-11",
+		)
+		nc(
+			**capa,
+			capa_no="_T-M-2",
+			capa_closure_date="2001-02-21",
+			capa_closure_due="2001-02-15",
+			capa_quality_verification="Not Effective",
+			capa_verification_date="2001-02-21",
+		)
+		value, detail = calculate("capa_closed_on_time_pct", "2001-02-01", "2001-02-28")
+		self.assertEqual(value, 50.0)
+		self.assertIn("_T-M-2", detail)
+		self.assertEqual(calculate("capa_effective_pct", "2001-02-01", "2001-02-28")[0], 50.0)
+		self.assertEqual(calculate("capa_avg_days_to_close", "2001-02-01", "2001-02-28")[0], 15.0)
+
+		nc(capa_required=1, capa_status="Investigation", capa_no="_T-M-3", capa_closure_due="2001-01-01")
+		count, detail = calculate("capa_overdue", None, None)
+		self.assertGreaterEqual(count, 1)
+		self.assertIn("_T-M-3", detail)
+
 	def test_review_calculates_and_failed_review_creates_action(self):
 		self.make_nc(days_old=10)
 		if frappe.db.exists("Quality Goal", GOAL):

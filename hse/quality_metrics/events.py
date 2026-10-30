@@ -3,7 +3,7 @@
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, now_datetime, nowdate
+from frappe.utils import cstr, flt, now_datetime, nowdate
 
 from hse.quality_metrics.metrics import (
 	FAILED,
@@ -147,14 +147,19 @@ def get_metric_choices() -> list[dict]:
 
 
 @frappe.whitelist(methods=["POST"])
-def create_starter_goals() -> dict:
-	"""Desk button on the Quality Goal list. Same as the bench command."""
+def create_starter_goals(goals: list[str] | str | None = None) -> dict:
+	"""Desk button on the Quality Goal list. Same as the bench command. goals limits it to
+	the named starter goals."""
 	frappe.only_for(("Quality Manager", "System Manager"))
 	from hse.quality_metrics.install import create_starter_goals as _create
 	from hse.quality_metrics.starter_goals import STARTER_GOALS
 
-	created = _create()
-	existing = [g["goal"] for g in STARTER_GOALS if g["goal"] not in created]
+	if isinstance(goals, str):
+		goals = frappe.parse_json(goals)
+	created = _create(goals=goals or None)
+	existing = [
+		g["goal"] for g in STARTER_GOALS if g["goal"] not in created and (not goals or g["goal"] in goals)
+	]
 	return {"created": created, "existing": existing}
 
 
@@ -166,14 +171,14 @@ def get_missing_starter_goals() -> list[str]:
 
 
 @frappe.whitelist(methods=["POST"])
-def create_stage_fpy_goals(target: float | None = None, frequency: str = "Monthly") -> dict:
+def create_stage_fpy_goals(target: str | float | None = None, frequency: str = "Monthly") -> dict:
 	"""Desk button on the Quality Goal list: first-pass yield goals by QC Stage, one per shop."""
 	frappe.only_for(("Quality Manager", "System Manager"))
 	from hse.quality_metrics.install import create_stage_fpy_goals as _create
 
 	if frequency not in ("Daily", "Weekly", "Monthly", "Quarterly"):
 		frappe.throw(_("Choose Daily, Weekly, Monthly or Quarterly."))
-	target = None if target in (None, "") else float(target)
+	target = flt(target) or None
 	if target is not None and not 0 <= target <= 100:
 		frappe.throw(_("Target must be between 0 and 100 percent."))
 	return _create(target=target, frequency=frequency)
