@@ -11,15 +11,14 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "hse",
-# 		"logo": "/assets/hse/logo.png",
-# 		"title": "HSE",
-# 		"route": "/hse",
-# 		"has_permission": "hse.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "hse",
+		"logo": "/assets/hse/images/psif_logo.jpg",
+		"title": "HSE",
+		"route": "/app/hse-home",
+	}
+]
 
 # Includes in <head>
 # ------------------
