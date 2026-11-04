@@ -447,23 +447,19 @@ def capa_overdue(start, end):
 			"capa_containment_due",
 			"capa_correction_due",
 			"capa_closure_due",
+			"capa_containment_done",
+			"capa_correction_done",
 		],
 	)
+	from hse.quality_metrics.capa import containment_late, correction_late
+
 	late = []
 	for r in rows:
 		if r.capa_closure_due and getdate(r.capa_closure_due) < today:
 			late.append(_("{0}: closure due {1}").format(_capa_label(r), r.capa_closure_due))
-		elif (
-			r.capa_status in ("Open", "Containment", "Investigation", "Corrective Action")
-			and r.capa_correction_due
-			and getdate(r.capa_correction_due) < today
-		):
+		elif correction_late(r, today):
 			late.append(_("{0}: correction due {1}").format(_capa_label(r), r.capa_correction_due))
-		elif (
-			r.capa_status in ("Open", "Containment")
-			and r.capa_containment_due
-			and getdate(r.capa_containment_due) < today
-		):
+		elif containment_late(r, today):
 			late.append(_("{0}: containment due {1}").format(_capa_label(r), r.capa_containment_due))
 	return len(late), ("; ".join(late[:10]) if late else _("None overdue."))
 
@@ -487,6 +483,31 @@ def capa_closed_on_time_pct(start, end):
 	if late:
 		detail += " " + _("Late: {0}").format(", ".join(_capa_label(r) for r in late[:10]))
 	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def _stage_on_time_pct(start, end, done_field, due_field, stage):
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={done_field: ["between", [getdate(start), getdate(end)]], **IS_CAPA},
+		fields=["name", "capa_no", done_field, due_field],
+	)
+	if not rows:
+		return None, _("No CAPA {0} completed in the period.").format(stage)
+	late = [r for r in rows if r.get(due_field) and getdate(r.get(done_field)) > getdate(r.get(due_field))]
+	detail = _("{0} of {1} CAPA {2} completed by the due date.").format(
+		len(rows) - len(late), len(rows), stage
+	)
+	if late:
+		detail += " " + _("Late: {0}").format(", ".join(_capa_label(r) for r in late[:10]))
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def capa_containment_on_time_pct(start, end):
+	return _stage_on_time_pct(start, end, "capa_containment_done", "capa_containment_due", _("containment"))
+
+
+def capa_correction_on_time_pct(start, end):
+	return _stage_on_time_pct(start, end, "capa_correction_done", "capa_correction_due", _("correction"))
 
 
 def capa_avg_days_to_close(start, end):
@@ -783,6 +804,20 @@ METRICS = {
 		capa_overdue,
 		"Nos",
 		True,
+		"Nonconformance Report",
+	),
+	"capa_containment_on_time_pct": (
+		"CAPA containment completed by the due date (%)",
+		capa_containment_on_time_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"capa_correction_on_time_pct": (
+		"CAPA correction completed by the due date (%)",
+		capa_correction_on_time_pct,
+		"Percent",
+		False,
 		"Nonconformance Report",
 	),
 	"capa_closed_on_time_pct": (

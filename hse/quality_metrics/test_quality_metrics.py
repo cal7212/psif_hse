@@ -290,6 +290,23 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 				"capa_closed_by": self.employee,
 			}
 		)
+		self.assertRaises(frappe.ValidationError, nc.save)  # completion dates required
+		closing = {
+			k: nc.get(k)
+			for k in (
+				"capa_status",
+				"why_1",
+				"why_2",
+				"capa_corrective_action",
+				"capa_quality_verification",
+				"capa_verified_by",
+				"capa_verification_date",
+				"capa_closed_by",
+			)
+		}
+		nc.reload()
+		nc.update(closing)
+		nc.update({"capa_containment_done": "2026-10-05", "capa_correction_done": "2026-10-18"})
 		nc.save()
 		self.assertEqual(nc.capa_status, "Closed")
 		self.assertEqual(nc.capa_root_cause, "Torque step missing from traveler")
@@ -409,6 +426,49 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		self.assertGreaterEqual(value, 1)
 		self.assertIn(nc.name, detail)
 
+	def test_capa_completion_dates_move_status_and_clear_overdue(self):
+		from frappe.utils import add_days, nowdate
+
+		from hse.quality_metrics.capa import containment_late, correction_late
+
+		nc = self.make_nc(severity="Low")
+		start = add_days(nowdate(), -40)
+		nc.update(
+			{
+				"capa_required": 1,
+				"capa_no": f"_T-CAPA-{frappe.generate_hash(length=6)}",
+				"capa_initiated_date": start,
+				"capa_status": "Containment",
+			}
+		)
+		nc.save()
+		today = frappe.utils.getdate()
+		self.assertTrue(containment_late(nc, today))
+		self.assertTrue(correction_late(nc, today))
+		# correction cannot be recorded before containment, or in the future
+		nc.capa_correction_done = add_days(start, 20)
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.capa_containment_done = add_days(nowdate(), 1)
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.update({"capa_containment_done": add_days(start, 5), "capa_containment_done_by": self.employee})
+		nc.save()
+		self.assertEqual(nc.capa_status, "Investigation")
+		self.assertFalse(containment_late(nc, today))
+		self.assertTrue(correction_late(nc, today))
+		nc.capa_correction_done = add_days(start, 3)
+		self.assertRaises(frappe.ValidationError, nc.save)  # before containment
+		nc.reload()
+		nc.capa_correction_done = add_days(start, 35)
+		nc.save()
+		self.assertEqual(nc.capa_status, "Verification")
+		self.assertFalse(correction_late(nc, today))
+		# a date never moves the status backwards
+		nc.capa_containment_done = add_days(start, 6)
+		nc.save()
+		self.assertEqual(nc.capa_status, "Verification")
+
 	def test_rework_ncr_capa_metrics(self):
 		"""Values are set directly (no validation) in a 2001 period no other test uses."""
 		from datetime import datetime
@@ -450,6 +510,27 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		value, detail = calculate("capa_closed_on_time_pct", "2001-02-01", "2001-02-28")
 		self.assertEqual(value, 50.0)
 		self.assertIn("_T-M-2", detail)
+		nc(
+			capa_required=1,
+			capa_status="Verification",
+			capa_no="_T-M-4",
+			capa_containment_due="2001-03-08",
+			capa_containment_done="2001-03-05",
+			capa_correction_due="2001-03-31",
+			capa_correction_done="2001-03-20",
+		)
+		nc(
+			capa_required=1,
+			capa_status="Investigation",
+			capa_no="_T-M-5",
+			capa_containment_due="2001-03-08",
+			capa_containment_done="2001-03-12",
+		)
+		value, detail = calculate("capa_containment_on_time_pct", "2001-03-01", "2001-03-31")
+		self.assertEqual(value, 50.0)
+		self.assertIn("_T-M-5", detail)
+		self.assertEqual(calculate("capa_correction_on_time_pct", "2001-03-01", "2001-03-31")[0], 100.0)
+		self.assertIsNone(calculate("capa_correction_on_time_pct", "2001-04-01", "2001-04-30")[0])
 		self.assertEqual(calculate("capa_effective_pct", "2001-02-01", "2001-02-28")[0], 50.0)
 		self.assertEqual(calculate("capa_avg_days_to_close", "2001-02-01", "2001-02-28")[0], 15.0)
 

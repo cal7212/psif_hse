@@ -130,6 +130,11 @@
   "capa_containment_due",
   "capa_correction_due",
   "capa_closure_due",
+  "capa_completion_column",
+  "capa_containment_done",
+  "capa_containment_done_by",
+  "capa_correction_done",
+  "capa_correction_done_by",
   "capa_finding_section",
   "capa_finding",
   "capa_containment",
@@ -943,6 +948,36 @@
    "read_only": 1
   },
   {
+   "fieldname": "capa_completion_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Date the containment action was in place. Moves the CAPA to Investigation.",
+   "fieldname": "capa_containment_done",
+   "fieldtype": "Date",
+   "label": "Containment Completed"
+  },
+  {
+   "depends_on": "eval:doc.capa_containment_done",
+   "fieldname": "capa_containment_done_by",
+   "fieldtype": "Link",
+   "label": "Containment Completed By",
+   "options": "Employee"
+  },
+  {
+   "description": "Date the corrective action was implemented. Moves the CAPA to Verification.",
+   "fieldname": "capa_correction_done",
+   "fieldtype": "Date",
+   "label": "Correction Completed"
+  },
+  {
+   "depends_on": "eval:doc.capa_correction_done",
+   "fieldname": "capa_correction_done_by",
+   "fieldtype": "Link",
+   "label": "Correction Completed By",
+   "options": "Employee"
+  },
+  {
    "depends_on": "eval:doc.capa_required",
    "fieldname": "capa_finding_section",
    "fieldtype": "Section Break",
@@ -1294,7 +1329,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-27 19:00:00.000000",
+ "modified": "2026-11-04 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Quality Metrics",
  "name": "Nonconformance Report",
