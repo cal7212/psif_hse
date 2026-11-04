@@ -291,6 +291,21 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 			}
 		)
 		self.assertRaises(frappe.ValidationError, nc.save)  # completion dates required
+		closing = {
+			k: nc.get(k)
+			for k in (
+				"capa_status",
+				"why_1",
+				"why_2",
+				"capa_corrective_action",
+				"capa_quality_verification",
+				"capa_verified_by",
+				"capa_verification_date",
+				"capa_closed_by",
+			)
+		}
+		nc.reload()
+		nc.update(closing)
 		nc.update({"capa_containment_done": "2026-10-05", "capa_correction_done": "2026-10-18"})
 		nc.save()
 		self.assertEqual(nc.capa_status, "Closed")
