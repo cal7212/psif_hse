@@ -47,3 +47,14 @@ class IntegrationTestHSEHome(IntegrationTestCase):
 		):
 			self.assertIn(key, data)
 		self.assertIsInstance(data["attention"], list)
+
+
+class UnitTestOverdueRange(UnitTestCase):
+	def test_range_ends_yesterday(self):
+		from frappe.utils import add_days, getdate
+
+		from hse.hse.page.hse_home.hse_home import overdue_range
+
+		start, end = overdue_range()
+		self.assertEqual(end, str(add_days(getdate(), -1)))
+		self.assertLess(start, end)
