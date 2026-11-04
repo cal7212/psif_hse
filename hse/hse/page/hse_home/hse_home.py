@@ -65,6 +65,11 @@ def period_bounds(period: str, today: date | None = None) -> tuple[date, date]:
 	return getdate(get_first_day(today)), today
 
 
+def overdue_range() -> list[str]:
+	"""Due before today. "between" skips blank dates; "<" would count them as overdue."""
+	return ["2000-01-01", str(add_days(getdate(), -1))]
+
+
 def _can(doctype: str) -> bool:
 	return bool(frappe.db.exists("DocType", doctype)) and frappe.has_permission(doctype, "read")
 
@@ -89,6 +94,7 @@ def get_home(period: str = "this_month") -> dict:
 	return {
 		"user": frappe.utils.get_fullname(frappe.session.user),
 		"today": str(getdate()),
+		"overdue_range": overdue_range(),
 		"period": {"key": period, "label": _(PERIODS[period]), "start": str(start), "end": str(end)},
 		"periods": [{"key": k, "label": _(v)} for k, v in PERIODS.items()],
 		"safety": _safe(safety_summary),
@@ -117,7 +123,7 @@ def safety_summary() -> dict | None:
 	)
 	actions_late = _count(
 		dt,
-		{"docstatus": ["!=", 2], "date_due": ["<", getdate()], "date_done": ["is", "not set"]},
+		{"docstatus": ["!=", 2], "date_due": ["between", overdue_range()], "date_done": ["is", "not set"]},
 	)
 	return {
 		"days_since_recordable": date_diff(getdate(), last_date) if last_date else None,
@@ -194,7 +200,7 @@ def att_capa_overdue():
 def att_scar_overdue():
 	if not _can("Nonconformance Report"):
 		return None
-	f = {"scar_status": "Issued", "scar_response_due": ["<", str(getdate())]}
+	f = {"scar_status": "Issued", "scar_response_due": ["between", overdue_range()]}
 	return _item(
 		"scar", _("SCAR responses overdue"), _count("Nonconformance Report", f), "Nonconformance Report", f
 	)
@@ -237,7 +243,7 @@ def att_assets_out():
 def att_maintenance_late():
 	if not _can("Asset Maintenance Log"):
 		return None
-	f = {"maintenance_status": ["in", ["Planned", "Overdue"]], "due_date": ["<", str(getdate())]}
+	f = {"maintenance_status": ["in", ["Planned", "Overdue"]], "due_date": ["between", overdue_range()]}
 	return _item(
 		"maint",
 		_("Asset inspections / maintenance overdue"),
@@ -252,7 +258,7 @@ def att_calibration():
 		return None
 	today = getdate()
 	base = {"status": "Active", "calibration_required": 1}
-	late = {**base, "calibration_due": ["<", str(today)]}
+	late = {**base, "calibration_due": ["between", overdue_range()]}
 	soon = _count(
 		"Measuring Instrument",
 		{**base, "calibration_due": ["between", [str(today), str(add_days(today, 30))]]},
@@ -386,11 +392,12 @@ def _goal_targets(keys: list[str]) -> dict:
 	return out
 
 
-def metric_groups(start, end) -> list[dict]:
-	keys = [k for _g, ks in METRIC_GROUPS for k in ks if k in METRICS]
+def metric_groups(start, end, metric_groups=None) -> list[dict]:
+	metric_groups = metric_groups or METRIC_GROUPS
+	keys = [k for _g, ks in metric_groups for k in ks if k in METRICS]
 	targets = _goal_targets(keys) if frappe.db.has_column("Quality Goal Objective", "hse_metric") else {}
 	groups = []
-	for group, ks in METRIC_GROUPS:
+	for group, ks in metric_groups:
 		items = []
 		for key in ks:
 			if key not in METRICS:
@@ -419,10 +426,13 @@ def metric_groups(start, end) -> list[dict]:
 	return groups
 
 
-def latest_reviews() -> list[dict]:
+def latest_reviews(goals: list[str] | None = None) -> list[dict]:
 	if not (_can("Quality Review") and _can("Quality Goal")):
 		return []
-	goals = frappe.get_list("Quality Goal", pluck="name", order_by="name asc", limit_page_length=0)
+	filters = {"name": ["in", goals]} if goals is not None else {}
+	goals = frappe.get_list(
+		"Quality Goal", filters=filters, pluck="name", order_by="name asc", limit_page_length=0
+	)
 	out = []
 	for g in goals:
 		r = frappe.get_list(
