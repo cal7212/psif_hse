@@ -1,7 +1,7 @@
 """Housekeeping failures raised as NCRs before the Rework rule (Oct 5-6, 2026) become Rework.
 
 Record Type is set-only-once, so it is changed directly. Only Open, draft records from a
-Housekeeping Inspection with no NCR number, CAPA or SCAR are touched; names stay as they are.
+Housekeeping Inspection with no CAPA or SCAR are touched; names stay as they are.
 Runs once."""
 
 import frappe
@@ -25,10 +25,10 @@ def execute():
 				"capa_required": 0,
 				"scar_required": 0,
 			},
-			["name", "ncr_number", "details", "rw_requirement"],
+			["name", "details", "rw_requirement"],
 			as_dict=True,
 		)
-		if not row or row.ncr_number:
+		if not row:
 			continue
 		values = {"record_type": "Rework"}
 		if not row.rw_requirement and row.details:
