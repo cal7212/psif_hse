@@ -26,3 +26,4 @@ hse.patches.hse_asset_settings_defaults
 hse.patches.quality_metrics_stage_and_capa_fields
 hse.patches.add_hse_home_desktop_icon
 hse.patches.add_shop_qc_home_desktop_icon
+hse.patches.add_executive_dashboard_desktop_icon

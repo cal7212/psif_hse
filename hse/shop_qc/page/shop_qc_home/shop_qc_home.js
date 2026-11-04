@@ -60,6 +60,9 @@
 			this.loaded_at = 0;
 			this.$body = $('<div class="hse-home"></div>').appendTo(page.body);
 			this.page.set_secondary_action(__("Refresh"), () => this.load(), "refresh");
+			this.page.add_inner_button(__("Executive Dashboard"), () =>
+				frappe.set_route("executive-dashboard")
+			);
 			this.bind();
 			this.render_skeleton();
 			this.load();
