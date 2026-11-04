@@ -59,7 +59,18 @@ METRIC_GROUPS = [
 			"nc_capa_pct",
 		],
 	),
-	("CAPA", ["capa_opened", "capa_open", "capa_overdue", "capa_closed_on_time_pct", "capa_effective_pct"]),
+	(
+		"CAPA",
+		[
+			"capa_opened",
+			"capa_open",
+			"capa_overdue",
+			"capa_containment_on_time_pct",
+			"capa_correction_on_time_pct",
+			"capa_closed_on_time_pct",
+			"capa_effective_pct",
+		],
+	),
 	("Repairs", ["rga_received", "repair_turnaround_days", "repair_failure_causes"]),
 ]
 

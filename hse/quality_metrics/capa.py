@@ -45,6 +45,7 @@ def validate(doc, method=None):
 	fill_from_ncr(doc)
 	set_due_dates(doc)
 	validate_dates(doc)
+	apply_completion(doc)
 	related = [r.non_conformance for r in doc.get("capa_related_ncrs") or []]
 	if doc.name in related:
 		frappe.throw(_("Related NCRs cannot include this NCR."))
@@ -133,15 +134,73 @@ def validate_dates(doc) -> None:
 		("capa_assigned_date", _("Assigned Date")),
 		("capa_verification_date", _("Verification Date")),
 		("capa_closure_date", _("Closure Date")),
+		("capa_containment_done", _("Containment Completed")),
+		("capa_correction_done", _("Correction Completed")),
 	):
 		if start and doc.get(field) and getdate(doc.get(field)) < start:
 			frappe.throw(_("{0} cannot be before the Initiated Date.").format(label))
+
+
+# CAPA Status that each completion date moves the CAPA to, and the statuses it moves it from
+CONTAINMENT_DONE_STATUS, CORRECTION_DONE_STATUS = "Investigation", "Verification"
+BEFORE_CONTAINMENT_DONE = ("Open", "Containment")
+BEFORE_CORRECTION_DONE = ("Open", "Containment", "Investigation", "Corrective Action")
+
+
+def apply_completion(doc) -> None:
+	"""Containment and correction completion dates: checked, then they move the CAPA status forward.
+
+	A date never moves the status backwards, and clearing a date leaves the status alone."""
+	today = getdate(nowdate())
+	containment = getdate(doc.capa_containment_done) if doc.get("capa_containment_done") else None
+	correction = getdate(doc.capa_correction_done) if doc.get("capa_correction_done") else None
+	for value, label in ((containment, _("Containment Completed")), (correction, _("Correction Completed"))):
+		if value and value > today:
+			frappe.throw(_("{0} cannot be in the future.").format(label))
+	if correction and not containment:
+		frappe.throw(
+			_("Enter Containment Completed before Correction Completed."), title=_("Containment First")
+		)
+	if containment and correction and correction < containment:
+		frappe.throw(_("Correction Completed cannot be before Containment Completed."))
+	if not doc.get("capa_containment_done"):
+		doc.capa_containment_done_by = None
+	if not doc.get("capa_correction_done"):
+		doc.capa_correction_done_by = None
+	if correction and doc.capa_status in BEFORE_CORRECTION_DONE:
+		doc.capa_status = CORRECTION_DONE_STATUS
+	elif containment and doc.capa_status in BEFORE_CONTAINMENT_DONE:
+		doc.capa_status = CONTAINMENT_DONE_STATUS
+
+
+def containment_late(row, today) -> bool:
+	"""Past the containment due date with no completion date (status still Open or Containment)."""
+	return bool(
+		not row.get("capa_containment_done")
+		and row.get("capa_status") in BEFORE_CONTAINMENT_DONE
+		and row.get("capa_containment_due")
+		and getdate(row.capa_containment_due) < today
+	)
+
+
+def correction_late(row, today) -> bool:
+	"""Past the correction due date with no completion date (status before Verification)."""
+	return bool(
+		not row.get("capa_correction_done")
+		and row.get("capa_status") in BEFORE_CORRECTION_DONE
+		and row.get("capa_correction_due")
+		and getdate(row.capa_correction_due) < today
+	)
 
 
 def validate_capa_closure(doc) -> None:
 	if not doc.get("capa_closure_date"):
 		doc.capa_closure_date = nowdate()
 	missing = []
+	if not doc.get("capa_containment_done"):
+		missing.append(_("Containment Completed"))
+	if not doc.get("capa_correction_done"):
+		missing.append(_("Correction Completed"))
 	if not last_why(doc):
 		missing.append(_("at least one Why"))
 	if is_blank(doc.get("capa_root_cause")):
