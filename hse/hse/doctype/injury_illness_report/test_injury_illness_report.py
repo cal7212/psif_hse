@@ -23,3 +23,8 @@ class UnitTestInjury_IllnessReport(UnitTestCase):
 
 	def test_cap_180(self):
 		self.assertEqual(apply_cap([150, 50, 10]), [150, 30, 0])
+
+	def test_status_editable_after_submit(self):
+		import frappe
+
+		self.assertTrue(frappe.get_meta("Injury_Illness Report").get_field("status").allow_on_submit)
