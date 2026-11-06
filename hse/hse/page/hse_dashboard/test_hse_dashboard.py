@@ -38,6 +38,10 @@ class IntegrationTestHSEDashboard(IntegrationTestCase):
 		):
 			self.assertIn(key, data)
 		self.assertEqual(data["period"]["key"], "last_90_days")
+		# Sections wrapped in _safe return None on an error; these must not.
+		for key in ("incidents", "headline", "metrics"):
+			self.assertIsNotNone(data[key], key)
+		self.assertIn("causes", data["incidents"])
 		self.assertIsInstance(data["headline"], list)
 		self.assertIsInstance(data["recent"], list)
 		levels = [a["level"] for a in data["attention"]]

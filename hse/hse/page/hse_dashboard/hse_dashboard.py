@@ -196,11 +196,11 @@ def incident_breakdown(start, end) -> dict | None:
 	causes = frappe.get_list(
 		INJURY,
 		filters={**base, "injury_cause": ["is", "set"]},
-		fields=["injury_cause", "count(name) as n"],
+		fields=["injury_cause", {"COUNT": "name", "as": "n"}],
 		group_by="injury_cause",
-		order_by="n desc",
-		limit_page_length=5,
+		limit_page_length=0,
 	)
+	causes = sorted(causes, key=lambda c: (-c.n, c.injury_cause))[:5]
 	return {
 		"total": total,
 		"filters": base,
