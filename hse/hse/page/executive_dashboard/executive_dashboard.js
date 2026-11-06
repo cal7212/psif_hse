@@ -57,6 +57,11 @@
 			this.loaded_at = 0;
 			this.$body = $('<div class="hse-home hse-exec"></div>').appendTo(page.body);
 			this.page.set_secondary_action(__("Refresh"), () => this.load(), "refresh");
+			if (frappe.user.has_role("System Manager")) {
+				this.page.add_menu_item(__("Snapshot Emails"), () =>
+					frappe.set_route("Form", "HSE Snapshot Settings")
+				);
+			}
 			this.bind();
 			this.render_skeleton();
 			this.load();

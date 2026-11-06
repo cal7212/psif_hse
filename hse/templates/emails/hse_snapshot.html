@@ -1,0 +1,131 @@
+<div style="padding:16px 0;background:#f3f4f6;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;">
+<table role="presentation" width="680" align="center" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;border-collapse:separate;">
+<tr><td style="padding:24px 28px 12px;">
+	<div style="font-size:12px;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;">HSE Snapshot · {{ version }}</div>
+	<div style="font-size:22px;font-weight:700;margin-top:4px;">{{ title }}</div>
+	<div style="font-size:14px;color:#374151;margin-top:4px;">{{ period }}</div>
+	<div style="font-size:12px;color:#6b7280;margin-top:2px;">{{ sent }} · current-status figures as of send time</div>
+</td></tr>
+
+<tr><td style="padding:8px 28px 4px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+{% for p in pillars %}
+	<td width="33%" valign="top" style="padding:{{ '0 6px 0 0' if loop.first else ('0 0 0 6px' if loop.last else '0 3px') }};">
+		<div style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
+			<div style="font-size:15px;font-weight:700;">{{ p.title }}
+				<span style="float:right;font-size:11px;font-weight:600;color:{{ p.status[1] }};background:{{ p.status[2] }};border-radius:10px;padding:2px 8px;">{{ p.status[0] }}</span></div>
+			{% for v, l in p.kpis %}
+			<div style="margin-top:8px;"><span style="font-size:20px;font-weight:700;">{{ v }}</span>
+				<span style="font-size:12px;color:#6b7280;"> {{ l }}</span></div>
+			{% endfor %}
+			<div style="margin-top:10px;font-size:12px;"><a href="{{ p.url }}" style="color:#1f64c0;text-decoration:none;">Open dashboard (login) &rsaquo;</a></div>
+		</div>
+	</td>
+{% endfor %}
+</tr></table>
+</td></tr>
+
+<tr><td style="padding:16px 28px 0;">
+	<div style="font-size:16px;font-weight:700;">Scorecard</div>
+	<div style="font-size:12px;color:#6b7280;">Period figures compare with {{ prev_ref }}. "(now)" figures are current status; their change starts with the second snapshot.</div>
+</td></tr>
+{% for g in scorecard %}
+<tr><td style="padding:10px 28px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+	<tr style="background:#f9fafb;">
+		<th align="left" style="padding:7px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;">{{ g.group }}</th>
+		<th align="right" style="padding:7px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">This period</th>
+		<th align="right" style="padding:7px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">{{ prev_label }}</th>
+		<th align="right" style="padding:7px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">Change</th>
+		<th align="right" style="padding:7px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">Target</th>
+	</tr>
+	{% for r in g.rows %}
+	<tr>
+		<td style="padding:6px 8px;border-bottom:1px solid #f1f2f4;">{{ r.label }}</td>
+		<td align="right" style="padding:6px 8px;border-bottom:1px solid #f1f2f4;font-weight:700;">{{ r.value }}</td>
+		<td align="right" style="padding:6px 8px;border-bottom:1px solid #f1f2f4;color:#6b7280;{{ 'font-size:11px;' if r.first else '' }}">{{ r.prev }}</td>
+		<td align="right" style="padding:6px 8px;border-bottom:1px solid #f1f2f4;color:#6b7280;">{{ r.change or '' }}</td>
+		<td align="right" style="padding:6px 8px;border-bottom:1px solid #f1f2f4;">
+			{% if r.target %}<span style="font-size:11px;font-weight:600;border-radius:10px;padding:2px 7px;{{ 'color:#1e7a46;background:#e7f5ec;' if r.status == 'Passed' else ('color:#b42318;background:#fdecea;' if r.status == 'Failed' else 'color:#6b7280;background:#f3f4f6;') }}">{{ r.target }}</span>{% else %}<span style="font-size:11px;color:#9ca3af;">Record only</span>{% endif %}
+		</td>
+	</tr>
+	{% endfor %}
+</table>
+</td></tr>
+{% endfor %}
+
+<tr><td style="padding:18px 28px 0;"><div style="font-size:16px;font-weight:700;">Needs attention</div></td></tr>
+<tr><td style="padding:6px 28px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+{% for area, items in attention.items() %}
+	<tr><td colspan="2" style="padding:10px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280;font-weight:600;">{{ area }}</td></tr>
+	{% for a in items %}
+	<tr>
+		<td width="52" valign="top" style="padding:5px 0;">
+			<span style="display:inline-block;min-width:34px;text-align:center;font-weight:700;border-radius:6px;padding:2px 6px;{{ 'color:#b42318;background:#fdecea;' if a.level == 'danger' else ('color:#a15c00;background:#fff3e0;' if a.level == 'warning' else 'color:#1f64c0;background:#eaf2fd;') }}">{{ a.count }}</span></td>
+		<td style="padding:5px 0;border-bottom:1px solid #f1f2f4;">{{ a.label }}{% if a.detail %}<div style="font-size:12px;color:#6b7280;">{{ a.detail }}</div>{% endif %}</td>
+	</tr>
+	{% endfor %}
+{% endfor %}
+</table>
+</td></tr>
+
+{% if lists %}
+<tr><td style="padding:20px 28px 0;">
+	<div style="font-size:16px;font-weight:700;">Records <span style="font-size:11px;font-weight:600;color:#a15c00;background:#fff3e0;border-radius:10px;padding:2px 8px;">Internal</span></div>
+</td></tr>
+<tr><td style="padding:6px 28px 0;font-size:13px;">
+	<div style="font-weight:600;margin-top:8px;">Safety: incident reports in the period</div>
+	{% if lists.incidents %}{% for i in lists.incidents %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ i.name }} · {{ frappe.format(i.incident_date, 'Date') }} · {{ i.type_of_incident }} · {{ i.status }}{% if i.is_recordable %} · Recordable{% endif %}</div>
+	{% endfor %}{% else %}<div style="color:#6b7280;">None reported.</div>{% endif %}
+
+	<div style="font-weight:600;margin-top:12px;">Training: employees most behind</div>
+	{% for e in lists.behind %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ e.employee_name }} · {{ e.overdue }} overdue of {{ e.required }} required · {{ '%.1f' % (e.percent_complete or 0) }}% complete</div>
+	{% endfor %}
+	<div style="font-weight:600;margin-top:12px;">Training: skill maps at risk</div>
+	{% for r in lists.skills %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ r.employee_name }} · {{ r.skill }} · {{ r.item }} {{ r.title }} · {{ r.status }} since {{ frappe.format(r.due_date, 'Date') }}</div>
+	{% else %}<div style="color:#6b7280;">None.</div>{% endfor %}
+	<div style="font-weight:600;margin-top:12px;">Training: coming due in 30 days</div>
+	{% for r in lists.due %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ r.employee_name }} · {{ r.item }} · due {{ frappe.format(r.due_date, 'Date') }}</div>
+	{% else %}<div style="color:#6b7280;">None.</div>{% endfor %}
+
+	<div style="font-weight:600;margin-top:12px;">Quality: open NCR, Rework and CAPA</div>
+	{% for n in lists.open_nc %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ n.name }} · {{ n.record_type }}{% if n.ncr_no %} · NCR {{ n.ncr_no }}{% endif %}{% if n.capa_no %} · {{ n.capa_no }} ({{ n.capa_status }}){% endif %} · {{ n.subject }}</div>
+	{% endfor %}
+	<div style="font-weight:600;margin-top:12px;">Quality: units on QC Hold</div>
+	{% for u in lists.hold %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ u.name }} · WO {{ u.trulinx_work_order }} · {{ u.shop }} {{ u.product_type }}</div>
+	{% else %}<div style="color:#6b7280;">None.</div>{% endfor %}
+	<div style="font-weight:600;margin-top:12px;">Quality: units released in the period</div>
+	{% for u in lists.released %}
+	<div style="padding:3px 0;border-bottom:1px solid #f1f2f4;">{{ u.name }} · WO {{ u.trulinx_work_order }} · {{ u.shop }} · {{ frappe.format(u.released_on, 'Date') if u.released_on else '' }}</div>
+	{% else %}<div style="color:#6b7280;">None.</div>{% endfor %}
+	{% if lists.late %}<div style="font-weight:600;margin-top:12px;">Quality: past promised date, not released (first shown)</div>
+	<div style="padding:3px 0;">WO {{ lists.late }}</div>{% endif %}
+</td></tr>
+{% endif %}
+
+{% if reviews %}
+<tr><td style="padding:20px 28px 0;"><div style="font-size:16px;font-weight:700;">Latest goal reviews</div></td></tr>
+<tr><td style="padding:6px 28px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+{% for r in reviews %}
+	<tr><td style="padding:5px 0;border-bottom:1px solid #f1f2f4;">{{ r.goal }}{% if lists and r.review %} <span style="color:#6b7280;font-size:12px;">· {{ r.review }}</span>{% endif %}</td>
+	<td align="right" style="padding:5px 0;border-bottom:1px solid #f1f2f4;"><span style="font-size:11px;font-weight:600;border-radius:10px;padding:2px 8px;{{ 'color:#1e7a46;background:#e7f5ec;' if r.status == 'Passed' else ('color:#b42318;background:#fdecea;' if r.status == 'Failed' else 'color:#6b7280;background:#f3f4f6;') }}">{{ r.status or 'Not reviewed' }}</span></td></tr>
+{% endfor %}
+</table>
+</td></tr>
+{% endif %}
+
+<tr><td style="padding:20px 28px 24px;font-size:11px;color:#6b7280;line-height:1.5;">
+	{% if internal %}Internal distribution. Contains employee names and record numbers.{% else %}Totals only. No names, work orders or record numbers.{% endif %}
+	Figures come from the same calculations as the Executive, HSE, Training and Shop QC dashboards. Targets show only where a Quality Goal sets one; everything else is Record only.
+	Manage recipients in HSE Snapshot Settings.
+</td></tr>
+</table>
+</div>

@@ -374,6 +374,10 @@ scheduler_events = {
 		"0 7 * * 1": [
 			"hse.training_matrix.notifications.monthly_status_email",
 		],
+		# HSE Snapshot emails: checks the settings time zone itself (Monday 8:00 AM Eastern by default)
+		"*/10 * * * *": [
+			"hse.hse.snapshot.scheduled",
+		],
 	},
 }
 

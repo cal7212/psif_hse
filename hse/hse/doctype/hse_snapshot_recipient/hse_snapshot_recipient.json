@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "creation": "2026-11-06 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "email",
+  "version",
+  "weekly",
+  "monthly"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "Required for the Internal version."
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "in_list_view": 1,
+   "reqd": 1,
+   "columns": 3,
+   "fetch_from": "user.email",
+   "fetch_if_empty": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Select",
+   "label": "Version",
+   "options": "Totals\nInternal",
+   "default": "Totals",
+   "in_list_view": 1,
+   "reqd": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "weekly",
+   "fieldtype": "Check",
+   "label": "Weekly",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "monthly",
+   "fieldtype": "Check",
+   "label": "Monthly",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "HSE Snapshot Recipient",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "creation": "2026-11-06 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_schedule",
+  "weekly_enabled",
+  "monthly_enabled",
+  "attach_pdf",
+  "column_break_s",
+  "time_zone",
+  "send_hour",
+  "section_recipients",
+  "recipients"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_schedule",
+   "fieldtype": "Section Break",
+   "label": "Schedule",
+   "description": "Weekly covers the prior Monday to Sunday and sends every Monday. Monthly covers the prior calendar month and sends on the first Monday of the month. Both send at the send hour in the time zone below, whatever the site time zone."
+  },
+  {
+   "fieldname": "weekly_enabled",
+   "fieldtype": "Check",
+   "label": "Send Weekly Snapshot",
+   "default": "0"
+  },
+  {
+   "fieldname": "monthly_enabled",
+   "fieldtype": "Check",
+   "label": "Send Monthly Snapshot",
+   "default": "0"
+  },
+  {
+   "fieldname": "attach_pdf",
+   "fieldtype": "Check",
+   "label": "Attach PDF Copy",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_s",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "time_zone",
+   "fieldtype": "Select",
+   "label": "Time Zone",
+   "options": "America/New_York\nAmerica/Chicago\nAmerica/Denver\nAmerica/Phoenix\nAmerica/Los_Angeles",
+   "default": "America/New_York",
+   "reqd": 1
+  },
+  {
+   "fieldname": "send_hour",
+   "fieldtype": "Int",
+   "label": "Send Hour (Monday, 24-hour)",
+   "default": "8",
+   "reqd": 1,
+   "description": "8 = 8:00 AM. The job checks every 10 minutes, so the email goes out between :00 and :10."
+  },
+  {
+   "fieldname": "section_recipients",
+   "fieldtype": "Section Break",
+   "label": "Recipients",
+   "description": "Totals: no names, work orders or record numbers; any email address. Internal: adds employee names and record numbers; enabled system users only."
+  },
+  {
+   "fieldname": "recipients",
+   "fieldtype": "Table",
+   "label": "Recipients",
+   "options": "HSE Snapshot Recipient"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "HSE Snapshot Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "issingle": 1,
+ "track_changes": 1,
+ "description": "Weekly and monthly Safety, Training and Quality snapshot emails."
+}

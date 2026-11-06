@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "creation": "2026-11-06 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "frequency",
+  "period_start",
+  "period_end",
+  "column_break_a",
+  "status",
+  "sent_on",
+  "section_detail",
+  "recipients",
+  "values_json"
+ ],
+ "fields": [
+  {
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "label": "Frequency",
+   "options": "Weekly\nMonthly",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_start",
+   "fieldtype": "Date",
+   "label": "Period Start",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "period_end",
+   "fieldtype": "Date",
+   "label": "Period End",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Sent\nNo recipients",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_detail",
+   "fieldtype": "Section Break",
+   "label": "Detail"
+  },
+  {
+   "fieldname": "recipients",
+   "fieldtype": "Small Text",
+   "label": "Recipients",
+   "read_only": 1
+  },
+  {
+   "fieldname": "values_json",
+   "fieldtype": "Code",
+   "label": "Metric Values",
+   "options": "JSON",
+   "read_only": 1,
+   "description": "Values at send time. The next snapshot compares current-status figures with these."
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "HSE Snapshot",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "format:HSNAP-{frequency}-{period_start}-{##}",
+ "naming_rule": "Expression",
+ "in_create": 1,
+ "title_field": "frequency",
+ "description": "One row per snapshot email sent (weekly or monthly)."
+}
