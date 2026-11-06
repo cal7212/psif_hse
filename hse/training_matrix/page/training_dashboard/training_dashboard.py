@@ -80,6 +80,10 @@ def get_dashboard(period: str = "this_month", horizon: int = 30) -> dict:
 	}
 
 
+def _employees(n: int) -> str:
+	return _("1 employee") if n == 1 else _("{0} employees").format(n)
+
+
 # --------------------------------------------------------------------------- data
 def context(horizon: int = 30) -> dict | None:
 	"""Everything computed from the matrices the user can read, gathered once."""
@@ -116,7 +120,7 @@ def context(horizon: int = 30) -> dict | None:
 				_("Required items overdue"),
 				len(overdue),
 				"bad",
-				_("{0} employees").format(len({r.parent for r in overdue})),
+				_employees(len({r.parent for r in overdue})),
 			),
 			_step(
 				"training_high_hazard_overdue",
@@ -235,7 +239,7 @@ def attention(ctx) -> list[dict]:
 				ETM,
 				None,
 				"danger",
-				_("{0} employees").format(len({r.parent for r in ctx["high_hazard"]})),
+				_employees(len({r.parent for r in ctx["high_hazard"]})),
 			)
 		)
 		items.append(
@@ -246,7 +250,7 @@ def attention(ctx) -> list[dict]:
 				ETM,
 				{"overdue_count": [">", 0]},
 				"warning",
-				_("{0} employees").format(len({r.parent for r in ctx["overdue"]})),
+				_employees(len({r.parent for r in ctx["overdue"]})),
 			)
 		)
 		rows = ctx["skills"]["rows"]
