@@ -1,8 +1,9 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
-"""Executive Dashboard: the opening page. One summary card per pillar (Safety, Quality) with
-headline numbers and the top items needing attention, a metric scorecard and goal status.
-Each pillar links to its own home page (HSE Home, Shop QC Home) for the detail.
+"""Executive Dashboard: the opening page. One summary card per pillar (Safety, Training,
+Quality) with headline numbers and the top items needing attention, a metric scorecard and
+goal status. Each pillar links to its own dashboard (HSE Dashboard, Training Dashboard,
+Shop QC Home) for the detail.
 
 Everything is filtered by the signed-in user's read permissions."""
 
@@ -12,18 +13,30 @@ from frappe.utils import getdate
 
 from hse.hse.page.hse_home import hse_home as hh
 from hse.shop_qc.page.shop_qc_home import shop_qc_home as qc
+from hse.training_matrix.page.training_dashboard import training_dashboard as td
 
 # Scorecard (keys from hse.quality_metrics.metrics.METRICS)
 SCORECARD = [
 	(
 		"Safety",
 		[
-			"training_compliance_pct",
-			"training_high_hazard_overdue",
+			"recordable_cases",
+			"incident_actions_overdue",
 			"asset_inspection_on_time_pct",
 			"assets_out_of_service",
 			"hk_avg_score",
 			"hk_areas_overdue",
+		],
+	),
+	(
+		"Training",
+		[
+			"training_compliance_pct",
+			"training_overdue",
+			"training_high_hazard_overdue",
+			"training_due_30",
+			"skill_maps_at_risk",
+			"skill_authorizations_expiring",
 		],
 	),
 	(
@@ -44,8 +57,6 @@ SAFETY_ATTENTION = [
 	hh.att_assets_out,
 	hh.att_hk_overdue,
 	hh.att_maintenance_late,
-	hh.att_training_overdue,
-	hh.att_training_requests,
 	hh.att_sds_review,
 ]
 
@@ -87,6 +98,7 @@ def get_dashboard(period: str = "this_month") -> dict:
 	start, end = hh.period_bounds(period)
 	safety_att = _attention(SAFETY_ATTENTION)
 	quality_att = _attention(QUALITY_ATTENTION, None)
+	training = hh._safe(td.pillar)
 	return {
 		"user": frappe.utils.get_fullname(frappe.session.user),
 		"today": str(getdate()),
@@ -97,6 +109,12 @@ def get_dashboard(period: str = "this_month") -> dict:
 			"summary": hh._safe(hh.safety_summary),
 			"attention": safety_att,
 			"status": pillar_status(safety_att),
+		},
+		"training": training
+		and {
+			"summary": training["summary"],
+			"attention": training["attention"],
+			"status": pillar_status(training["attention"]),
 		},
 		"quality": {
 			"pipeline": hh._safe(qc.pipeline, None, start, end),
