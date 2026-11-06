@@ -279,7 +279,7 @@
 		safety_html(d) {
 			const p = d.safety || {};
 			const s = p.summary;
-			const route = "/app/hse-home";
+			const route = "/app/hse-dashboard";
 			const kpis = [];
 			if (s) {
 				const days = s.days_since_recordable;
@@ -325,7 +325,7 @@
 				text: __("Incidents, equipment, housekeeping, training and SDS"),
 				icon: "shield",
 				route: route,
-				open_label: __("Open HSE Home"),
+				open_label: __("Open HSE Dashboard"),
 				status: p.status,
 				attention: p.attention,
 				kpis: kpis,
@@ -370,7 +370,7 @@
 
 		scorecard_html(groups) {
 			const routes = {
-				[__("Safety")]: ["/app/hse-home", __("HSE Home")],
+				[__("Safety")]: ["/app/hse-dashboard", __("HSE Dashboard")],
 				[__("Quality")]: ["/app/shop-qc-home", __("Shop QC Home")],
 			};
 			return groups

@@ -546,6 +546,121 @@ def capa_effective_pct(start, end):
 	return _pct(len(rows) - len(not_eff), len(rows)), detail
 
 
+# ---------------------------------------------------------------- Incidents (Injury_Illness Report)
+INJURY = "Injury_Illness Report"
+INJURY_OPEN = ("To-Do", "In Progress", "Reopened")
+NOT_CANCELLED = {"docstatus": ["!=", 2]}
+
+
+def _incidents(start, end, **extra):
+	return frappe.get_all(
+		INJURY,
+		filters={"incident_date": ["between", [getdate(start), getdate(end)]], **NOT_CANCELLED, **extra},
+		fields=["name", "type_of_incident", "is_recordable", "near_miss", "observation", "first_aid_only"],
+		order_by="incident_date asc",
+	)
+
+
+def incidents_reported(start, end):
+	rows = _incidents(start, end)
+	if not rows:
+		return 0, _("None reported.")
+	by_type = ", ".join(
+		f"{k or _('Not set')}: {n}" for k, n in Counter(r.type_of_incident for r in rows).most_common()
+	)
+	return len(rows), _("By type: {0}").format(by_type)
+
+
+def recordable_cases(start, end):
+	rows = _incidents(start, end, is_recordable=1)
+	return len(rows), (_("Recordable: {0}").format(_names(rows)) if rows else _("No recordable cases."))
+
+
+def days_away_cases(start, end):
+	"""Recordable cases in the period with at least one Days Away row, and the total days away."""
+	rows = _incidents(start, end, is_recordable=1)
+	if not rows:
+		return 0, _("No recordable cases.")
+	away = frappe.get_all(
+		"Days Away from Work",
+		filters={"parenttype": INJURY, "parentfield": "days_away", "parent": ["in", [r.name for r in rows]]},
+		fields=["parent", "number_of_days_away"],
+	)
+	cases = sorted({a.parent for a in away})
+	if not cases:
+		return 0, _("No days-away cases.")
+	total = sum(int(a.number_of_days_away or 0) for a in away)
+	return len(cases), _("{0} days away in total: {1}").format(total, _names(cases))
+
+
+def near_miss_reports(start, end):
+	"""Leading indicator: near misses and safety observations reported."""
+	rows = [
+		r
+		for r in _incidents(start, end)
+		if r.near_miss or r.observation or (r.type_of_incident or "").startswith("Safety Observation")
+	]
+	if not rows:
+		return 0, _("None reported.")
+	near = sum(1 for r in rows if r.near_miss)
+	return len(rows), _("Near misses: {0}; observations: {1}").format(near, len(rows) - near)
+
+
+def incidents_open(start, end):
+	rows = frappe.get_all(
+		INJURY, filters={"status": ["in", INJURY_OPEN], **NOT_CANCELLED}, fields=["name", "status"]
+	)
+	if not rows:
+		return 0, _("None open.")
+	by_status = ", ".join(f"{k}: {n}" for k, n in Counter(r.status for r in rows).most_common())
+	return len(rows), _("By status: {0}").format(by_status)
+
+
+def incident_actions_overdue(start, end):
+	rows = frappe.get_all(
+		INJURY,
+		filters={
+			"date_due": ["between", ["2000-01-01", add_days(getdate(), -1)]],
+			"date_done": ["is", "not set"],
+			**NOT_CANCELLED,
+		},
+		pluck="name",
+	)
+	return len(rows), (_("Overdue: {0}").format(_names(rows)) if rows else _("None overdue."))
+
+
+def incident_actions_on_time_pct(start, end):
+	rows = frappe.get_all(
+		INJURY,
+		filters={"date_done": ["between", [getdate(start), getdate(end)]], **NOT_CANCELLED},
+		fields=["name", "date_due", "date_done"],
+	)
+	if not rows:
+		return None, _("No corrective actions completed in the period.")
+	late = [r.name for r in rows if r.date_due and getdate(r.date_done) > getdate(r.date_due)]
+	detail = _("{0} of {1} corrective actions completed by the due date.").format(
+		len(rows) - len(late), len(rows)
+	)
+	if late:
+		detail += " " + _("Late: {0}").format(_names(late))
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def days_since_recordable(start, end):
+	last = frappe.get_all(
+		INJURY,
+		filters={"is_recordable": 1, "incident_date": ["is", "set"], **NOT_CANCELLED},
+		fields=["name", "incident_date"],
+		order_by="incident_date desc",
+		limit_page_length=1,
+	)
+	if not last:
+		return None, _("No recordable cases on record.")
+	return (getdate() - getdate(last[0].incident_date)).days, _("Last recordable: {0} on {1}").format(
+		last[0].name, last[0].incident_date
+	)
+
+
 # ---------------------------------------------------------------- Asset inspections
 def asset_inspection_on_time_pct(start, end):
 	rows = frappe.get_all(
@@ -841,6 +956,32 @@ METRICS = {
 		False,
 		"Nonconformance Report",
 	),
+	"incidents_reported": ("Incident reports (all types)", incidents_reported, "Nos", False, INJURY),
+	"recordable_cases": ("OSHA recordable cases", recordable_cases, "Nos", False, INJURY),
+	"days_away_cases": ("Days-away cases (recordable)", days_away_cases, "Nos", False, INJURY),
+	"near_miss_reports": (
+		"Near misses and safety observations reported",
+		near_miss_reports,
+		"Nos",
+		False,
+		INJURY,
+	),
+	"incidents_open": ("Incident reports open (now)", incidents_open, "Nos", True, INJURY),
+	"incident_actions_overdue": (
+		"Incident corrective actions overdue (now)",
+		incident_actions_overdue,
+		"Nos",
+		True,
+		INJURY,
+	),
+	"incident_actions_on_time_pct": (
+		"Incident corrective actions completed by the due date (%)",
+		incident_actions_on_time_pct,
+		"Percent",
+		False,
+		INJURY,
+	),
+	"days_since_recordable": ("Days since last recordable (now)", days_since_recordable, "Day", True, INJURY),
 	"asset_inspection_on_time_pct": (
 		"Asset maintenance/inspections on time (%)",
 		asset_inspection_on_time_pct,
