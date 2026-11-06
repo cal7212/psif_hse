@@ -179,7 +179,7 @@ def scorecard(frequency: str, start: date, end: date) -> tuple[list[dict], dict]
 				prev_text = fmt(prev, i["uom"])
 			rows.append(
 				{
-					"label": i["label"] + (" " + _("(now)") if i["snapshot"] else ""),
+					"label": now_label(i["label"], i["snapshot"]),
 					"value": fmt(i["value"], i["uom"]),
 					"prev": prev_text,
 					"first": i["snapshot"] and not last,
@@ -190,6 +190,12 @@ def scorecard(frequency: str, start: date, end: date) -> tuple[list[dict], dict]
 			)
 		groups.append({"group": g["group"], "rows": rows})
 	return groups, values
+
+
+def now_label(label: str, snapshot) -> str:
+	"""Current-status metrics carry "(now)" once (some METRICS labels already include it)."""
+	now = _("(now)")
+	return f"{label} {now}" if snapshot and now not in label else label
 
 
 def _dedupe(detail: str | None) -> str | None:
