@@ -192,7 +192,21 @@ def incident_breakdown(start, end) -> dict | None:
 	kinds = []
 	for key, label, extra in INCIDENT_KINDS:
 		f = {**base, **extra}
-		kinds.append({"key": key, "label": _(label), "count": _count(INJURY, f), "filters": f})
+		if key == "observation":
+			# Same rule as the near_miss_reports metric: the box or a Safety Observation type.
+			count = len(
+				frappe.get_list(
+					INJURY,
+					filters=base,
+					or_filters={"observation": 1, "type_of_incident": ["like", "Safety Observation%"]},
+					pluck="name",
+					limit_page_length=0,
+				)
+			)
+			f = {**base, "type_of_incident": ["like", "Safety Observation%"]}
+		else:
+			count = _count(INJURY, f)
+		kinds.append({"key": key, "label": _(label), "count": count, "filters": f})
 	causes = frappe.get_list(
 		INJURY,
 		filters={**base, "injury_cause": ["is", "set"]},

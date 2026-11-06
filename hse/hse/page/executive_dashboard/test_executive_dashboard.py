@@ -20,8 +20,10 @@ class IntegrationTestExecutiveDashboard(IntegrationTestCase):
 		frappe.set_user("Administrator")
 		data = get_dashboard("bogus")
 		self.assertEqual(data["period"]["key"], "this_month")
-		for key in ("safety", "quality", "metrics", "reviews"):
+		for key in ("safety", "training", "quality", "metrics", "reviews"):
 			self.assertIn(key, data)
 		self.assertIn(data["safety"]["status"], ("ok", "watch", "action"))
 		groups = [g["group"] for g in data["metrics"]]
-		self.assertTrue(set(groups) <= {"Safety", "Quality"})
+		self.assertTrue(set(groups) <= {"Safety", "Training", "Quality"})
+		self.assertIsNotNone(data["training"])
+		self.assertIn(data["training"]["status"], ("ok", "watch", "action"))

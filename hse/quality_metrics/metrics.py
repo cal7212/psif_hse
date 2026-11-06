@@ -805,6 +805,50 @@ def training_onboarding_on_time_pct(start, end):
 	).format(on_time, due_in_period)
 
 
+def training_due_30(start, end):
+	"""Required items not yet overdue whose due date is within 30 days (TRN-700 §4.9)."""
+	from hse.training_matrix import dashboard_data as dd
+
+	rows = dd.coming_due_rows(None, 30)
+	if not rows:
+		return 0, _("Nothing coming due in the next 30 days.")
+	by_course = Counter(r.training_requirement for r in rows)
+	top = ", ".join(f"{c} ({n})" for c, n in by_course.most_common(5))
+	return len(rows), _("{0} employees. Soonest: {1}").format(len({r.parent for r in rows}), top)
+
+
+def training_employees_overdue(start, end):
+	rows = _required_training_rows({"status": "Overdue"})
+	people = {r.employee_name for r in rows}
+	if not people:
+		return 0, _("No employee has overdue required training.")
+	active = frappe.db.count("Employee Training Matrix", {"active": 1})
+	return len(people), _("{0} of {1} active employees have at least one overdue item.").format(
+		len(people), active
+	)
+
+
+def skill_maps_at_risk(start, end):
+	"""Employee skill maps whose required courses are overdue or due within 30 days, or whose
+	authorization expires within 30 days."""
+	from hse.training_matrix import dashboard_data as dd
+
+	pairs = dd.skill_maps_at_risk(None, 30)
+	if not pairs:
+		return 0, _("No skill map has required training overdue or coming due.")
+	by_skill = Counter(skill for _m, skill in pairs)
+	return len(pairs), ", ".join(f"{s} ({n})" for s, n in by_skill.most_common(5))
+
+
+def skill_authorizations_expiring(start, end):
+	from hse.training_matrix import dashboard_data as dd
+
+	rows = dd.skill_authorizations_expiring(None, 60)
+	if not rows:
+		return 0, _("No skill authorization expires in the next 60 days.")
+	return len(rows), ", ".join(f"{r.skill}: {r.employee_name}" for r in rows[:5])
+
+
 # ---------------------------------------------------------------- registry
 # key: (label, function, default uom, snapshot?, required doctype)
 METRICS = {
@@ -1030,6 +1074,34 @@ METRICS = {
 		training_onboarding_on_time_pct,
 		"Percent",
 		False,
+		"Employee Training Matrix",
+	),
+	"training_due_30": (
+		"Required training items coming due in 30 days (now)",
+		training_due_30,
+		"Nos",
+		True,
+		"Employee Training Matrix",
+	),
+	"training_employees_overdue": (
+		"Employees with overdue required training (now)",
+		training_employees_overdue,
+		"Nos",
+		True,
+		"Employee Training Matrix",
+	),
+	"skill_maps_at_risk": (
+		"Skill maps with required training overdue or coming due (now)",
+		skill_maps_at_risk,
+		"Nos",
+		True,
+		"Employee Training Matrix",
+	),
+	"skill_authorizations_expiring": (
+		"Skill authorizations expiring in 60 days (now)",
+		skill_authorizations_expiring,
+		"Nos",
+		True,
 		"Employee Training Matrix",
 	),
 }

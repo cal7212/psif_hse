@@ -67,7 +67,8 @@
 			this.$body.on("click", "[data-attention]", function () {
 				const [pillar, key] = $(this).attr("data-attention").split(":");
 				const item = ((me.data[pillar] || {}).attention || []).find((a) => a.key === key);
-				if (item) me.open_list(item.doctype, item.route_options);
+				if (item && item.route) frappe.set_route(item.route);
+				else if (item) me.open_list(item.doctype, item.route_options);
 			});
 			this.$body.on("click", "[data-open-list]", function (e) {
 				e.preventDefault();
@@ -150,6 +151,7 @@
 			${this.hero_html(d)}
 			<div class="hse-pillars">
 				${this.safety_html(d)}
+				${this.training_html(d)}
 				${this.quality_html(d)}
 			</div>
 			${
@@ -185,7 +187,7 @@
 				<div>
 					<h2>${esc(greet)}${first ? ", " + esc(first) : ""}</h2>
 					<p class="hse-muted">${esc(frappe.datetime.str_to_user(d.today))} · ${__(
-				"Safety and quality at a glance"
+				"Safety, training and quality at a glance"
 			)}</p>
 				</div>
 				<div class="hse-segs" role="group" aria-label="${__("Metric period")}">${periods}</div>
@@ -317,15 +319,60 @@
 				);
 			}
 			kpis.push(
-				this.metric_kpi("training_compliance_pct", __("Training compliance"), route)
+				this.metric_kpi("assets_out_of_service", __("Assets out of service"), route)
 			);
 			return this.pillar_html({
 				key: "safety",
 				title: __("Safety"),
-				text: __("Incidents, equipment, housekeeping, training and SDS"),
+				text: __("Incidents, equipment, housekeeping and SDS"),
 				icon: "shield",
 				route: route,
 				open_label: __("Open HSE Dashboard"),
+				status: p.status,
+				attention: p.attention,
+				kpis: kpis,
+			});
+		}
+
+		training_html(d) {
+			const p = d.training;
+			if (!p) return "";
+			const s = p.summary || {};
+			const route = "/app/training-dashboard";
+			const pct = s.training_compliance_pct;
+			const kpis = [
+				{
+					value: pct === null || pct === undefined ? "–" : this.fmt(pct, "Percent"),
+					label: __("Required items Qualified"),
+					tone: pct === 100 ? "good" : pct === null || pct === undefined ? "" : "bad",
+					route: route,
+				},
+				{
+					value: s.training_overdue || 0,
+					label: __("Required items overdue"),
+					tone: s.training_overdue ? "bad" : "",
+					list: ["Employee Training Matrix", { overdue_count: [">", 0] }],
+				},
+				{
+					value: s.training_due || 0,
+					label: __("Coming due in 30 days"),
+					tone: s.training_due ? "warn" : "",
+					route: route,
+				},
+				{
+					value: s.skill_maps_at_risk || 0,
+					label: __("Skill maps at risk"),
+					tone: s.skill_maps_at_risk ? "warn" : "",
+					route: route,
+				},
+			];
+			return this.pillar_html({
+				key: "training",
+				title: __("Training"),
+				text: __("Required training, skill maps and authorizations"),
+				icon: "cap",
+				route: route,
+				open_label: __("Open Training Dashboard"),
 				status: p.status,
 				attention: p.attention,
 				kpis: kpis,
@@ -371,6 +418,7 @@
 		scorecard_html(groups) {
 			const routes = {
 				[__("Safety")]: ["/app/hse-dashboard", __("HSE Dashboard")],
+				[__("Training")]: ["/app/training-dashboard", __("Training Dashboard")],
 				[__("Quality")]: ["/app/shop-qc-home", __("Shop QC Home")],
 			};
 			return groups

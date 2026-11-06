@@ -487,11 +487,11 @@
 /* Pillar cards */
 .hse-pillars {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: var(--hse-gap);
 	margin-top: var(--hse-gap);
 }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
 	.hse-pillars {
 		grid-template-columns: 1fr;
 	}
@@ -531,7 +531,8 @@
 	gap: 10px;
 	margin-top: 16px;
 }
-@media (max-width: 1100px) and (min-width: 901px), (max-width: 560px) {
+/* Three pillars side by side above 1100px: two tiles per row. */
+@media (min-width: 1101px) and (max-width: 1600px), (max-width: 560px) {
 	.hse-kpis {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}

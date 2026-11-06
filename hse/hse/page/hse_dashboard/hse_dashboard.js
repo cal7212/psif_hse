@@ -141,6 +141,14 @@
 					run: () => frappe.set_route("query-report", "SDS Inventory"),
 				},
 				{
+					key: "training_dashboard",
+					label: __("Training Dashboard"),
+					hint: __("Required training and skill maps"),
+					icon: "cap",
+					show: read("Employee Training Matrix"),
+					run: () => frappe.set_route("training-dashboard"),
+				},
+				{
 					key: "hse_home",
 					label: __("HSE Home"),
 					hint: __("Everyday actions and my work"),
@@ -203,6 +211,11 @@
 						L(__("Employee Training Matrix"), "Employee Training Matrix"),
 						L(__("Training Requests"), "Training Request"),
 						L(__("Competency Evaluations"), "Competency Evaluation"),
+						R(
+							__("Training Dashboard"),
+							"/app/training-dashboard",
+							"Employee Training Matrix"
+						),
 					],
 				},
 				{
