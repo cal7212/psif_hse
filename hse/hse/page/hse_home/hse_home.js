@@ -57,6 +57,9 @@
 			this.page.add_inner_button(__("Executive Dashboard"), () =>
 				frappe.set_route("executive-dashboard")
 			);
+			this.page.add_inner_button(__("HSE Dashboard"), () =>
+				frappe.set_route("hse-dashboard")
+			);
 			this.bind();
 			this.render_skeleton();
 			this.load();

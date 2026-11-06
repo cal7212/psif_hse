@@ -182,12 +182,12 @@
 					run: () => frappe.set_route("List", "Measuring Instrument"),
 				},
 				{
-					key: "hse_home",
-					label: __("HSE Home"),
+					key: "hse_dashboard",
+					label: __("HSE Dashboard"),
 					hint: __("Safety, equipment and training"),
 					icon: "home",
 					show: true,
-					run: () => frappe.set_route("hse-home"),
+					run: () => frappe.set_route("hse-dashboard"),
 				},
 			].filter((a) => a.show);
 		}
