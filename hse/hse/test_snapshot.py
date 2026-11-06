@@ -44,6 +44,11 @@ class UnitTestSnapshotPeriods(UnitTestCase):
 		self.assertIsNone(sn.change_text(None, 1, "Nos"))
 		self.assertEqual(sn.fmt(None, "Nos"), sn.DASH)
 
+	def test_now_label_once(self):
+		self.assertEqual(sn.now_label("Assets Out of Service (now)", True), "Assets Out of Service (now)")
+		self.assertEqual(sn.now_label("Assets Out of Service", True), "Assets Out of Service (now)")
+		self.assertEqual(sn.now_label("Rework records opened", False), "Rework records opened")
+
 
 class TestSnapshot(IntegrationTestCase):
 	def setUp(self):
@@ -101,6 +106,7 @@ class TestSnapshot(IntegrationTestCase):
 		self.assertNotIn("Records <span", totals)
 		self.assertIn("Records <span", internal)
 		self.assertIn("first snapshot", totals)
+		self.assertNotIn("(now) (now)", totals)
 
 		name = sn.send(sn.WEEKLY, date(2026, 11, 2))
 		snap = frappe.get_doc(sn.SNAPSHOT, name)
