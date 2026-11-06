@@ -30,7 +30,16 @@ PERIODS = {
 METRIC_GROUPS = [
 	("Shop QC", ["hpu_first_pass_yield", "hpu_units_released", "hpu_shipped_before_release"]),
 	("Rework, NCR and CAPA", ["rework_opened", "nc_opened", "capa_overdue", "capa_closed_on_time_pct"]),
-	("Equipment and Housekeeping", ["asset_inspection_on_time_pct", "assets_out_of_service", "hk_avg_score"]),
+	(
+		"Equipment and Housekeeping",
+		[
+			"asset_inspection_on_time_pct",
+			"safety_inspection_on_time_pct",
+			"maintenance_on_time_pct",
+			"assets_out_of_service",
+			"hk_avg_score",
+		],
+	),
 	("Training", ["training_compliance_pct", "training_overdue"]),
 	("Repairs", ["rga_received", "repair_turnaround_days"]),
 ]
@@ -233,23 +242,106 @@ def att_hk_due():
 	)
 
 
+def _names_filter(rows) -> dict:
+	return {"name": ["in", [r.name for r in rows]]}
+
+
+def _assets_out(purpose):
+	from hse.asset_inspection import purpose as ap
+
+	return ap.assets({"safety_status": "Out of Service", "docstatus": 1}, purpose)
+
+
+def _logs_overdue(purpose):
+	from hse.asset_inspection import purpose as ap
+
+	return ap.logs(
+		{
+			"maintenance_status": ["in", ["Planned", "Overdue"]],
+			"due_date": ["between", overdue_range()],
+			"docstatus": ["<", 2],
+		},
+		purpose,
+	)
+
+
 def att_assets_out():
+	"""Safety equipment out of service (asset category or a Safety-purpose template)."""
 	if not _can("Asset"):
 		return None
-	f = {"safety_status": "Out of Service", "docstatus": 1}
-	return _item("assets_out", _("Assets out of service"), _count("Asset", f), "Asset", f, "danger")
+	from hse.asset_inspection.purpose import SAFETY
+
+	rows = _assets_out(SAFETY)
+	return _item(
+		"assets_out", _("Safety equipment out of service"), len(rows), "Asset", _names_filter(rows), "danger"
+	)
 
 
 def att_maintenance_late():
+	"""Safety inspections overdue."""
 	if not _can("Asset Maintenance Log"):
 		return None
-	f = {"maintenance_status": ["in", ["Planned", "Overdue"]], "due_date": ["between", overdue_range()]}
+	from hse.asset_inspection.purpose import SAFETY
+
+	rows = _logs_overdue(SAFETY)
 	return _item(
-		"maint",
-		_("Asset inspections / maintenance overdue"),
-		_count("Asset Maintenance Log", f),
+		"maint", _("Safety inspections overdue"), len(rows), "Asset Maintenance Log", _names_filter(rows)
+	)
+
+
+def att_maint_assets_out():
+	if not _can("Asset"):
+		return None
+	from hse.asset_inspection.purpose import MAINTENANCE
+
+	rows = _assets_out(MAINTENANCE)
+	return _item(
+		"maint_assets_out",
+		_("Equipment out of service"),
+		len(rows),
+		"Asset",
+		_names_filter(rows),
+		"danger",
+	)
+
+
+def att_maint_overdue():
+	if not _can("Asset Maintenance Log"):
+		return None
+	from hse.asset_inspection.purpose import MAINTENANCE
+
+	rows = _logs_overdue(MAINTENANCE)
+	return _item(
+		"maint_overdue",
+		_("Maintenance tasks overdue"),
+		len(rows),
 		"Asset Maintenance Log",
+		_names_filter(rows),
+	)
+
+
+def att_repairs_open():
+	if not _can("Asset Repair"):
+		return None
+	f = {"repair_status": "Pending", "docstatus": ["<", 2]}
+	return _item(
+		"repairs_open", _("Asset repairs open"), _count("Asset Repair", f), "Asset Repair", f, "info"
+	)
+
+
+def att_requests_open():
+	if not (_can("HD Ticket") and frappe.db.has_column("HD Ticket", "ticket_type")):
+		return None
+	from hse.quality_metrics.metrics import CLOSED_TICKET, MAINTENANCE_TICKET_FILTER
+
+	f = {**MAINTENANCE_TICKET_FILTER, "status": ["not in", CLOSED_TICKET]}
+	return _item(
+		"requests_open",
+		_("Maintenance requests open"),
+		_count("HD Ticket", f),
+		"HD Ticket",
 		f,
+		"info",
 	)
 
 
@@ -330,6 +422,9 @@ ATTENTION = [
 	att_hk_overdue,
 	att_hk_due,
 	att_maintenance_late,
+	att_maint_overdue,
+	att_maint_assets_out,
+	att_repairs_open,
 	att_training_overdue,
 	att_training_requests,
 	att_sds_review,

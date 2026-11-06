@@ -662,18 +662,21 @@ def days_since_recordable(start, end):
 
 
 # ---------------------------------------------------------------- Asset inspections
-def asset_inspection_on_time_pct(start, end):
-	rows = frappe.get_all(
-		"Asset Maintenance Log",
-		filters={
+def _on_time(start, end, purpose=None, what=None):
+	from hse.asset_inspection import purpose as ap
+
+	rows = ap.logs(
+		{
 			"due_date": ["between", [getdate(start), getdate(end)]],
 			"maintenance_status": ["!=", "Cancelled"],
 			"docstatus": ["<", 2],
 		},
-		fields=["name", "due_date", "completion_date", "maintenance_status"],
+		purpose,
+		["due_date", "completion_date", "maintenance_status"],
 	)
+	what = what or _("maintenance/inspection tasks")
 	if not rows:
-		return None, _("No maintenance/inspection tasks were due in the period.")
+		return None, _("No {0} were due in the period.").format(what)
 	late = [
 		r
 		for r in rows
@@ -684,10 +687,83 @@ def asset_inspection_on_time_pct(start, end):
 		)
 	]
 	on_time = len(rows) - len(late)
-	detail = _("{0} of {1} due tasks completed on or before the due date.").format(on_time, len(rows))
+	detail = _("{0} of {1} due {2} completed on or before the due date.").format(on_time, len(rows), what)
 	if late:
 		detail += " " + _("Late or open: {0}").format(_names(late))
 	return round(on_time / len(rows) * 100, 1), detail
+
+
+def asset_inspection_on_time_pct(start, end):
+	"""Safety and maintenance together (the Equipment Inspections goal)."""
+	return _on_time(start, end)
+
+
+def safety_inspection_on_time_pct(start, end):
+	from hse.asset_inspection.purpose import SAFETY
+
+	return _on_time(start, end, SAFETY, _("safety inspections"))
+
+
+def maintenance_on_time_pct(start, end):
+	from hse.asset_inspection.purpose import MAINTENANCE
+
+	return _on_time(start, end, MAINTENANCE, _("maintenance tasks"))
+
+
+def _overdue_logs(purpose):
+	from hse.asset_inspection import purpose as ap
+
+	return ap.logs(
+		{
+			"maintenance_status": ["in", ["Planned", "Overdue"]],
+			"due_date": ["between", ["2000-01-01", str(add_days(getdate(), -1))]],
+			"docstatus": ["<", 2],
+		},
+		purpose,
+	)
+
+
+def safety_inspections_overdue(start, end):
+	from hse.asset_inspection.purpose import SAFETY
+
+	rows = _overdue_logs(SAFETY)
+	return len(rows), (_names(rows) if rows else _("None."))
+
+
+def maintenance_overdue(start, end):
+	from hse.asset_inspection.purpose import MAINTENANCE
+
+	rows = _overdue_logs(MAINTENANCE)
+	return len(rows), (_names(rows) if rows else _("None."))
+
+
+def safety_assets_out_of_service(start, end):
+	from hse.asset_inspection import purpose as ap
+
+	rows = ap.assets({"safety_status": "Out of Service", "docstatus": 1}, ap.SAFETY)
+	return len(rows), (_names(rows) if rows else _("None."))
+
+
+MAINTENANCE_TICKET_FILTER = {"ticket_type": ["like", "%Maintenance%"]}
+CLOSED_TICKET = ["Resolved", "Closed"]
+
+
+def maintenance_requests_open(start, end):
+	if not frappe.db.has_column("HD Ticket", "ticket_type"):
+		return None, _("Helpdesk is not installed on this site.")
+	rows = frappe.get_all(
+		"HD Ticket",
+		filters={**MAINTENANCE_TICKET_FILTER, "status": ["not in", CLOSED_TICKET]},
+		pluck="name",
+	)
+	return len(rows), (_names(rows) if rows else _("None."))
+
+
+def asset_repairs_open(start, end):
+	rows = frappe.get_all(
+		"Asset Repair", filters={"repair_status": "Pending", "docstatus": ["<", 2]}, pluck="name"
+	)
+	return len(rows), (_names(rows) if rows else _("None."))
 
 
 def assets_out_of_service(start, end):
@@ -1034,6 +1110,49 @@ METRICS = {
 		"Asset Maintenance Log",
 	),
 	"assets_out_of_service": ("Assets Out of Service (now)", assets_out_of_service, "Nos", True, "Asset"),
+	"safety_inspection_on_time_pct": (
+		"Safety inspections on time (%)",
+		safety_inspection_on_time_pct,
+		"Percent",
+		False,
+		"Asset Maintenance Log",
+	),
+	"maintenance_on_time_pct": (
+		"Maintenance tasks on time (%)",
+		maintenance_on_time_pct,
+		"Percent",
+		False,
+		"Asset Maintenance Log",
+	),
+	"safety_inspections_overdue": (
+		"Safety inspections overdue (now)",
+		safety_inspections_overdue,
+		"Nos",
+		True,
+		"Asset Maintenance Log",
+	),
+	"maintenance_overdue": (
+		"Maintenance tasks overdue (now)",
+		maintenance_overdue,
+		"Nos",
+		True,
+		"Asset Maintenance Log",
+	),
+	"safety_assets_out_of_service": (
+		"Safety equipment out of service (now)",
+		safety_assets_out_of_service,
+		"Nos",
+		True,
+		"Asset",
+	),
+	"maintenance_requests_open": (
+		"Open maintenance requests (now)",
+		maintenance_requests_open,
+		"Nos",
+		True,
+		"HD Ticket",
+	),
+	"asset_repairs_open": ("Open asset repairs (now)", asset_repairs_open, "Nos", True, "Asset Repair"),
 	"hk_avg_score": (
 		"Housekeeping average score (%)",
 		hk_avg_score,

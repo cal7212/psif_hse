@@ -1,9 +1,12 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
 """Executive Dashboard: the opening page. One summary card per pillar (Safety, Training,
-Quality) with headline numbers and the top items needing attention, a metric scorecard and
-goal status. Each pillar links to its own dashboard (HSE Dashboard, Training Dashboard,
-Shop QC Home) for the detail.
+Quality, Maintenance) with headline numbers and the top items needing attention, a metric
+scorecard and goal status. Each pillar links to its own dashboard (HSE Dashboard, Training
+Dashboard, Shop QC Home, Maintenance Dashboard) for the detail.
+
+Safety counts only safety equipment (Safety Equipment category or a Safety-purpose
+inspection template, see hse.asset_inspection.purpose); everything else is Maintenance.
 
 Everything is filtered by the signed-in user's read permissions."""
 
@@ -11,6 +14,7 @@ import frappe
 from frappe import _
 from frappe.utils import getdate
 
+from hse.asset_inspection.page.maintenance_dashboard import maintenance_dashboard as md
 from hse.hse.page.hse_home import hse_home as hh
 from hse.shop_qc.page.shop_qc_home import shop_qc_home as qc
 from hse.training_matrix.page.training_dashboard import training_dashboard as td
@@ -22,8 +26,8 @@ SCORECARD = [
 		[
 			"recordable_cases",
 			"incident_actions_overdue",
-			"asset_inspection_on_time_pct",
-			"assets_out_of_service",
+			"safety_inspection_on_time_pct",
+			"safety_assets_out_of_service",
 			"hk_avg_score",
 			"hk_areas_overdue",
 		],
@@ -48,6 +52,16 @@ SCORECARD = [
 			"nc_opened",
 			"capa_overdue",
 			"capa_closed_on_time_pct",
+		],
+	),
+	(
+		"Maintenance",
+		[
+			"maintenance_on_time_pct",
+			"asset_inspection_on_time_pct",
+			"maintenance_overdue",
+			"asset_repairs_open",
+			"maintenance_requests_open",
 		],
 	),
 ]
@@ -99,6 +113,7 @@ def get_dashboard(period: str = "this_month") -> dict:
 	safety_att = _attention(SAFETY_ATTENTION)
 	quality_att = _attention(QUALITY_ATTENTION, None)
 	training = hh._safe(td.pillar)
+	maintenance = hh._safe(md.pillar)
 	return {
 		"user": frappe.utils.get_fullname(frappe.session.user),
 		"today": str(getdate()),
@@ -120,6 +135,12 @@ def get_dashboard(period: str = "this_month") -> dict:
 			"pipeline": hh._safe(qc.pipeline, None, start, end),
 			"attention": quality_att,
 			"status": pillar_status(quality_att),
+		},
+		"maintenance": maintenance
+		and {
+			"summary": maintenance["summary"],
+			"attention": maintenance["attention"],
+			"status": pillar_status(maintenance["attention"]),
 		},
 		"metrics": hh._safe(hh.metric_groups, start, end, SCORECARD) or [],
 		"reviews": hh._safe(hh.latest_reviews) or [],

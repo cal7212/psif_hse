@@ -7,6 +7,7 @@
  "field_order": [
   "template_name",
   "asset_category",
+  "inspection_purpose",
   "column_break_1",
   "quality_procedure",
   "frequency_note",
@@ -32,6 +33,14 @@
    "in_standard_filter": 1,
    "label": "Asset Category",
    "options": "Asset Category"
+  },
+  {
+   "fieldname": "inspection_purpose",
+   "fieldtype": "Select",
+   "label": "Purpose",
+   "options": "\nSafety\nMaintenance",
+   "in_standard_filter": 1,
+   "description": "Leave blank to follow the asset category: Safety Equipment counts as safety, every other category as maintenance. Set Safety for a required safety check on non-safety equipment, such as the forklift daily pre-shift inspection."
   },
   {
    "fieldname": "column_break_1",
@@ -80,7 +89,7 @@
    "label": "Inspector Instructions"
   }
  ],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-11-07 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Asset Inspection",
  "name": "Asset Inspection Template",
