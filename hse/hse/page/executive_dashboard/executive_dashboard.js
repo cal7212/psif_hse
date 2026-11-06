@@ -1,4 +1,4 @@
-// Executive Dashboard: one card per pillar (Safety, Quality) with headline numbers and the top
+// Executive Dashboard: one card per pillar (Safety, Training, Quality, Maintenance) with headline numbers and the top
 // items needing attention, a metric scorecard and goal status (executive_dashboard.py).
 (() => {
 	frappe.pages["executive-dashboard"].on_page_load = function (wrapper) {
@@ -132,7 +132,7 @@
 			)}</div>`;
 			this.$body.html(`
 			<div class="hse-hero hse-card">${bar("40%")}${bar("25%")}</div>
-			<div class="hse-pillars">${card}${card}</div>`);
+			<div class="hse-pillars">${card}${card}${card}${card}</div>`);
 		}
 
 		render_error() {
@@ -158,6 +158,7 @@
 				${this.safety_html(d)}
 				${this.training_html(d)}
 				${this.quality_html(d)}
+				${this.maintenance_html(d)}
 			</div>
 			${
 				(d.metrics || []).length
@@ -192,7 +193,7 @@
 				<div>
 					<h2>${esc(greet)}${first ? ", " + esc(first) : ""}</h2>
 					<p class="hse-muted">${esc(frappe.datetime.str_to_user(d.today))} · ${__(
-				"Safety, training and quality at a glance"
+				"Safety, training, quality and maintenance at a glance"
 			)}</p>
 				</div>
 				<div class="hse-segs" role="group" aria-label="${__("Metric period")}">${periods}</div>
@@ -324,7 +325,11 @@
 				);
 			}
 			kpis.push(
-				this.metric_kpi("assets_out_of_service", __("Assets out of service"), route)
+				this.metric_kpi(
+					"safety_assets_out_of_service",
+					__("Safety equipment out of service"),
+					route
+				)
 			);
 			return this.pillar_html({
 				key: "safety",
@@ -420,11 +425,58 @@
 			});
 		}
 
+		maintenance_html(d) {
+			const p = d.maintenance;
+			if (!p) return "";
+			const s = p.summary || {};
+			const route = "/app/maintenance-dashboard";
+			const pct = s.maintenance_on_time_pct;
+			const kpis = [
+				{
+					value: s.maintenance_overdue || 0,
+					label: __("Maintenance tasks overdue"),
+					tone: s.maintenance_overdue ? "bad" : "",
+					route: route,
+				},
+				{
+					value: pct === null || pct === undefined ? "–" : this.fmt(pct, "Percent"),
+					label: __("On time this month"),
+					tone: "",
+					route: route,
+				},
+				{
+					value: s.out_of_service || 0,
+					label: __("Equipment out of service"),
+					tone: s.out_of_service ? "bad" : "",
+					route: route,
+				},
+				s.requests_open !== null &&
+					s.requests_open !== undefined && {
+						value: s.requests_open,
+						label: __("Open maintenance requests"),
+						tone: s.requests_open ? "warn" : "",
+						route: route,
+					},
+			];
+			return this.pillar_html({
+				key: "maintenance",
+				title: __("Maintenance"),
+				text: __("Maintenance tasks, repairs, equipment and requests"),
+				icon: "wrench",
+				route: route,
+				open_label: __("Open Maintenance Dashboard"),
+				status: p.status,
+				attention: p.attention,
+				kpis: kpis,
+			});
+		}
+
 		scorecard_html(groups) {
 			const routes = {
 				[__("Safety")]: ["/app/hse-dashboard", __("HSE Dashboard")],
 				[__("Training")]: ["/app/training-dashboard", __("Training Dashboard")],
 				[__("Quality")]: ["/app/shop-qc-home", __("Shop QC Home")],
+				[__("Maintenance")]: ["/app/maintenance-dashboard", __("Maintenance Dashboard")],
 			};
 			return groups
 				.map((g) => {

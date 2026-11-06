@@ -20,10 +20,16 @@ class IntegrationTestExecutiveDashboard(IntegrationTestCase):
 		frappe.set_user("Administrator")
 		data = get_dashboard("bogus")
 		self.assertEqual(data["period"]["key"], "this_month")
-		for key in ("safety", "training", "quality", "metrics", "reviews"):
+		for key in ("safety", "training", "quality", "maintenance", "metrics", "reviews"):
 			self.assertIn(key, data)
 		self.assertIn(data["safety"]["status"], ("ok", "watch", "action"))
 		groups = [g["group"] for g in data["metrics"]]
-		self.assertTrue(set(groups) <= {"Safety", "Training", "Quality"})
+		self.assertTrue(set(groups) <= {"Safety", "Training", "Quality", "Maintenance"})
 		self.assertIsNotNone(data["training"])
 		self.assertIn(data["training"]["status"], ("ok", "watch", "action"))
+		self.assertIsNotNone(data["maintenance"])
+		self.assertIn(data["maintenance"]["status"], ("ok", "watch", "action"))
+		safety = next((g for g in data["metrics"] if g["group"] == "Safety"), None)
+		if safety:
+			keys = {m["key"] for m in safety["items"]}
+			self.assertNotIn("assets_out_of_service", keys)

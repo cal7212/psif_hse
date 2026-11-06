@@ -25,7 +25,8 @@ add_to_apps_screen = [
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/hse/css/hse.css"
-# app_include_js = "/assets/hse/js/hse.js"
+# Dashboards menu and "Back to <dashboard>" button on every desk page.
+app_include_js = "/assets/hse/js/hse_nav.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/hse/css/hse.css"

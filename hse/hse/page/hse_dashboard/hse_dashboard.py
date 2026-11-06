@@ -9,6 +9,7 @@ import frappe
 from frappe import _
 from frappe.utils import getdate
 
+from hse.asset_inspection import purpose as ap
 from hse.hse.page.hse_home.hse_home import (
 	PERIODS,
 	_can,
@@ -46,7 +47,13 @@ METRIC_GROUPS = [
 	),
 	(
 		"Equipment and housekeeping",
-		["asset_inspection_on_time_pct", "assets_out_of_service", "hk_avg_score", "hk_areas_overdue"],
+		[
+			"safety_inspection_on_time_pct",
+			"safety_inspections_overdue",
+			"safety_assets_out_of_service",
+			"hk_avg_score",
+			"hk_areas_overdue",
+		],
 	),
 	(
 		"Training",
@@ -128,6 +135,15 @@ def _metric_step(key, label, tone_fn, doctype, filters=None):
 	}
 
 
+def _safety_assets_out_filter() -> dict:
+	from hse.asset_inspection.purpose import SAFETY
+	from hse.hse.page.hse_home.hse_home import _assets_out, _names_filter
+
+	if not _can("Asset"):
+		return {}
+	return _names_filter(_assets_out(SAFETY))
+
+
 def headline() -> list[dict]:
 	"""Current-state numbers: they do not change with the period."""
 	steps = [
@@ -153,11 +169,11 @@ def headline() -> list[dict]:
 			{"date_due": ["between", overdue_range()], "date_done": ["is", "not set"]},
 		),
 		_metric_step(
-			"assets_out_of_service",
-			_("Assets out of service"),
+			"safety_assets_out_of_service",
+			_("Safety equipment out of service"),
 			lambda v: "bad" if v else "",
 			"Asset",
-			{"safety_status": "Out of Service", "docstatus": 1},
+			_safety_assets_out_filter(),
 		),
 		_metric_step(
 			"hk_areas_overdue",
@@ -234,13 +250,22 @@ def recent_records() -> list[dict]:
 		extra = ["status"] if meta.has_field("status") else []
 		if date_field != "modified" and not meta.has_field(date_field):
 			date_field = "modified"
-		for r in frappe.get_list(
+		safety_only = dt == "Asset Inspection"
+		if safety_only:
+			overrides = ap.template_purposes()
+			extra += ["asset_category", "template"]
+		rows = frappe.get_list(
 			dt,
 			filters={"docstatus": ["!=", 2]},
 			fields=["name", "docstatus", "modified", f"{date_field} as on_date", *keep, *extra],
 			order_by=f"{date_field} desc, modified desc",
-			limit_page_length=5,
-		):
+			limit_page_length=40 if safety_only else 5,
+		)
+		if safety_only:
+			rows = [r for r in rows if ap.purpose_of(r.asset_category, r.template, overrides) == ap.SAFETY][
+				:5
+			]
+		for r in rows:
 			out.append(
 				{
 					"doctype": dt,
