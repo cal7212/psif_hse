@@ -4,6 +4,9 @@ app_publisher = "Calvin Johnston"
 app_description = "PSIF Integrated Management System (PSIF IMS): safety, training, quality and maintenance"
 app_email = "cjohnston@psifla.com"
 app_license = "mit"
+# App logo for the apps screen and app sidebar header. The desk navbar logo comes
+# from Navbar Settings > App Logo when more than one other app sets app_logo_url.
+app_logo_url = "/assets/hse/images/psif_ims_logo.png"
 
 # Apps
 # ------------------
@@ -14,7 +17,7 @@ app_license = "mit"
 add_to_apps_screen = [
 	{
 		"name": "hse",
-		"logo": "/assets/hse/images/psif_logo.jpg",
+		"logo": "/assets/hse/images/psif_ims_logo.png",
 		"title": "PSIF IMS",
 		"route": "/app/executive-dashboard",
 	}
