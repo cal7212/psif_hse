@@ -40,3 +40,13 @@ class TestPSIFIMSSidebar(IntegrationTestCase):
 		self.assertNotIn("hse-home", links)
 		self.assertEqual(doc.title, "PSIF IMS")
 		self.assertFalse([link for link in links if "Depreciation" in (link or "")])
+
+
+class TestPSIFIMSDock(IntegrationTestCase):
+	def test_app_dock_lands_on_psif_ims(self):
+		# The apps-screen tile opens the first dock entry, so it must be the PSIF IMS sidebar,
+		# whose first link is the Executive Dashboard.
+		doc = frappe.get_doc("Dock", "hse")
+		self.assertTrue(doc.standard)
+		first = doc.items[0]
+		self.assertEqual((first.link_type, first.link_to), ("Sidebar", "PSIF IMS"))

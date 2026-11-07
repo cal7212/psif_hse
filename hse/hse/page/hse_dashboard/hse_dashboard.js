@@ -433,6 +433,9 @@
 			return `<div class="hse-hero hse-card">
 			<div class="hse-hero-top">
 				<div>
+					<div class="hse-brand"><img src="/assets/hse/images/psif_ims_logo.png" alt="" width="28" height="25"><span>${__(
+						"PSIF IMS"
+					)}</span></div>
 					<h2>${esc(greet)}${first ? ", " + esc(first) : ""}</h2>
 					<p class="hse-muted">${esc(frappe.datetime.str_to_user(d.today))} · ${__(
 				"Incidents, equipment, housekeeping and training"
