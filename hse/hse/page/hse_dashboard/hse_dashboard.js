@@ -1,6 +1,7 @@
 // HSE Dashboard: the Safety pillar page (hse_dashboard.py), the counterpart of Shop QC Home.
 // Headline strip, attention list, incidents in the period, recent safety records, safety
-// metrics and goals. Wrapped so its names stay out of the global scope.
+// metrics and goals, plus the everyday quick actions, My work and module links that were on
+// HSE Home (now retired; /app/hse-home redirects here). Wrapped to keep names out of global scope.
 (() => {
 	frappe.pages["hse-dashboard"].on_page_load = function (wrapper) {
 		const page = frappe.ui.make_app_page({
@@ -64,7 +65,6 @@
 			this.page.add_inner_button(__("Executive Dashboard"), () =>
 				frappe.set_route("executive-dashboard")
 			);
-			this.page.add_inner_button(__("HSE Home"), () => frappe.set_route("hse-home"));
 			this.bind();
 			this.render_skeleton();
 			this.load();
@@ -87,9 +87,16 @@
 		}
 
 		// ------------------------------------------------------------------ quick actions
+		// Everyday actions first (moved here from the retired HSE Home page), then shortcuts.
+		// Each one shows when the user can create or read its doctype, whatever the metrics show.
 		actions() {
 			const can = (dt) => frappe.model.can_create(dt);
 			const read = (dt) => frappe.model.can_read(dt);
+			const supplies = (fn) => () =>
+				frappe
+					.require(["/assets/hse/js/shop_supplies.js"])
+					.then(() => window.hse.supplies[fn]());
+			const form = (this.data && this.data.incident_form) || null;
 			return [
 				{
 					key: "incident",
@@ -97,8 +104,18 @@
 					hint: __("Injury, near miss or observation"),
 					icon: "alert",
 					tone: "danger",
-					show: can(INJURY),
-					run: () => frappe.new_doc(INJURY),
+					// Employees without desk create rights get the published web form, if there is one.
+					show: can(INJURY) || !!form,
+					run: () =>
+						can(INJURY) ? frappe.new_doc(INJURY) : (window.location.href = form),
+				},
+				{
+					key: "qc",
+					label: __("QC inspection"),
+					hint: __("Inspect a unit at a stage"),
+					icon: "clipboard",
+					show: can("QC Inspection"),
+					run: () => frappe.new_doc("QC Inspection"),
 				},
 				{
 					key: "asset",
@@ -117,12 +134,63 @@
 					run: () => frappe.new_doc("Housekeeping Inspection"),
 				},
 				{
+					key: "rework",
+					label: __("Log Rework"),
+					hint: __("Escalate to NCR from the record"),
+					icon: "rework",
+					show: can("Nonconformance Report"),
+					run: () => frappe.new_doc("Nonconformance Report", { record_type: "Rework" }),
+				},
+				{
+					key: "issue",
+					label: __("Issue supplies"),
+					hint: __("Scan, then enter qty"),
+					icon: "scan",
+					show: can("Stock Entry"),
+					run: supplies("issue"),
+				},
+				{
+					key: "count",
+					label: __("Count supplies"),
+					hint: __("Scan to count a bin"),
+					icon: "box",
+					show: can("Stock Reconciliation"),
+					run: supplies("count"),
+				},
+				{
+					key: "reorder",
+					label: __("Flag for reorder"),
+					hint: __("Adds to a draft request"),
+					icon: "cart",
+					show: can("Material Request"),
+					run: supplies("flag_reorder"),
+				},
+				{
+					key: "quick_asset",
+					label: __("Add an asset"),
+					hint: __("Short form"),
+					icon: "tag",
+					show: can("Asset"),
+					run: () =>
+						frappe
+							.require(["/assets/hse/js/quick_asset.js"])
+							.then(() => window.hse.quick_asset.open()),
+				},
+				{
 					key: "training_request",
 					label: __("Request training"),
 					hint: __("Internal or external"),
 					icon: "cap",
 					show: can("Training Request"),
 					run: () => frappe.new_doc("Training Request"),
+				},
+				{
+					key: "my_training",
+					label: __("My training"),
+					hint: __("Your courses and records"),
+					icon: "user",
+					show: true,
+					run: () => (window.location.href = "/my-training"),
 				},
 				{
 					key: "osha",
@@ -147,14 +215,6 @@
 					icon: "cap",
 					show: read("Employee Training Matrix"),
 					run: () => frappe.set_route("training-dashboard"),
-				},
-				{
-					key: "hse_home",
-					label: __("HSE Home"),
-					hint: __("Everyday actions and my work"),
-					icon: "home",
-					show: true,
-					run: () => frappe.set_route("hse-home"),
 				},
 				{
 					key: "shop_qc",
@@ -191,6 +251,16 @@
 						L(__("Asset Inspections"), "Asset Inspection"),
 						L(__("Maintenance schedule"), "Asset Maintenance Log"),
 						L(__("Measuring Instruments"), "Measuring Instrument"),
+						R(
+							__("Instrument Usage"),
+							"/app/query-report/Instrument Usage",
+							"Measuring Instrument"
+						),
+						R(
+							__("Maintenance Dashboard"),
+							"/app/maintenance-dashboard",
+							"Asset Maintenance Log"
+						),
 					],
 				},
 				{
@@ -206,16 +276,29 @@
 				{
 					title: __("Training"),
 					icon: "cap",
-					text: __("Matrix, requests and evaluations"),
+					text: __("Matrix, records, skills and fit tests"),
 					links: [
-						L(__("Employee Training Matrix"), "Employee Training Matrix"),
-						L(__("Training Requests"), "Training Request"),
-						L(__("Competency Evaluations"), "Competency Evaluation"),
 						R(
 							__("Training Dashboard"),
 							"/app/training-dashboard",
 							"Employee Training Matrix"
 						),
+						R(
+							__("Training Matrix report"),
+							"/app/query-report/Training Matrix",
+							"Employee Training Matrix"
+						),
+						R(
+							__("Skill Matrix report"),
+							"/app/query-report/Skill Matrix",
+							"Employee Training Matrix"
+						),
+						L(__("Employee Training Matrix"), "Employee Training Matrix"),
+						L(__("Training Records"), "Training Record"),
+						L(__("Training Requests"), "Training Request"),
+						L(__("Skill Authorizations"), "Skill Authorization"),
+						L(__("Competency Evaluations"), "Competency Evaluation"),
+						L(__("Respirator Fit Tests"), "Respirator Fit Test"),
 					],
 				},
 				{
@@ -229,12 +312,56 @@
 					],
 				},
 				{
-					title: __("Safety goals and reviews"),
+					title: __("Shop QC"),
+					icon: "clipboard",
+					text: __("Units, stage inspections and release"),
+					links: [
+						R(__("Shop QC Dashboard"), "/app/shop-qc-home", "QC Unit"),
+						R(__("Shop QC workspace"), "/app/shop-qc", "QC Unit"),
+						L(__("QC Units"), "QC Unit"),
+						L(__("QC Inspections"), "QC Inspection"),
+						R(
+							__("Build Status report"),
+							"/app/query-report/QC Unit Build Status",
+							"QC Unit"
+						),
+						L(__("Inspection Templates"), "QC Inspection Template"),
+					],
+				},
+				{
+					title: __("Rework, NCR and CAPA"),
+					icon: "rework",
+					text: __("Nonconformance, corrective action and supplier action"),
+					links: [
+						L(__("Rework"), "Nonconformance Report", { record_type: "Rework" }),
+						L(__("NCRs"), "Nonconformance Report", { record_type: "NCR" }),
+						L(__("CAPAs"), "Nonconformance Report", { capa_required: 1 }),
+						L(__("SCARs"), "Nonconformance Report", { scar_required: 1 }),
+					],
+				},
+				{
+					title: __("Goals and reviews"),
 					icon: "chart",
-					text: __("Targets and monthly results"),
+					text: __("Targets, monthly reviews and actions"),
 					links: [
 						L(__("Quality Goals"), "Quality Goal"),
 						L(__("Quality Reviews"), "Quality Review"),
+						L(__("Quality Actions"), "Quality Action"),
+						L(__("Quality Procedures"), "Quality Procedure"),
+					],
+				},
+				{
+					title: __("Shop supplies"),
+					icon: "box",
+					text: __("Receive, issue, count and reorder"),
+					links: [
+						L(__("Supply items"), "Item", { is_stock_item: 1, is_fixed_asset: 0 }),
+						L(__("Issues and receipts"), "Stock Entry"),
+						L(__("Counts"), "Stock Reconciliation"),
+						L(__("Reorder requests"), "Material Request", {
+							shop_supplies_reorder: 1,
+						}),
+						L(__("Shop Supplies Settings"), "Shop Supplies Settings"),
 					],
 				},
 			]
@@ -258,8 +385,13 @@
 			${this.section(__("Quick actions"), this.actions_html())}
 			<div class="hse-two">
 				${this.section(__("Needs attention"), this.attention_html(d.attention || []))}
-				${this.section(__("Recent safety records"), this.recent_html(d.recent || [], d.my_drafts || []))}
+				${this.section(__("My work"), this.my_work_html(d.my_work || {}))}
 			</div>
+			${
+				(d.recent || []).length
+					? this.section(__("Recent safety records"), this.recent_html(d.recent, []))
+					: ""
+			}
 			${
 				d.incidents
 					? this.section(
@@ -384,6 +516,45 @@
 				<p class="hse-muted hse-stage-note">${__(
 					"By incident date. A report can count in more than one row. Click a row to see the reports."
 				)}</p></div>`;
+		}
+
+		my_work_html(w) {
+			const drafts = w.drafts || [];
+			const todos = w.todos || [];
+			if (!drafts.length && !todos.length) {
+				return `<div class="hse-card hse-empty">${hse_icon("check", 22)}<p>${__(
+					"No drafts or assignments. Start something from Quick actions."
+				)}</p></div>`;
+			}
+			const todo_rows = todos
+				.map(
+					(t) => `<button type="button" class="hse-row" data-doctype="${esc(
+						t.reference_type
+					)}" data-open-doc="${esc(t.reference_name)}">
+					<span class="hse-tag">${__("Assigned")}</span>
+					<span class="hse-row-text"><b>${esc(__(t.reference_type))} ${esc(t.reference_name)}</b>
+					<small>${esc(t.description)}${
+						t.date ? " · " + __("due {0}", [frappe.datetime.str_to_user(t.date)]) : ""
+					}</small></span>
+					<span class="hse-row-go">${hse_icon("arrow", 16)}</span>
+				</button>`
+				)
+				.join("");
+			const draft_rows = drafts
+				.map(
+					(r) => `<button type="button" class="hse-row" data-doctype="${esc(
+						r.doctype
+					)}" data-open-doc="${esc(r.name)}">
+					<span class="hse-tag is-draft">${__("Draft")}</span>
+					<span class="hse-row-text"><b>${esc(__(r.doctype))} ${esc(r.name)}</b>
+					<small>${esc(r.subtitle)}${r.subtitle ? " · " : ""}${esc(
+						frappe.datetime.comment_when(r.modified)
+					)}</small></span>
+					<span class="hse-row-go">${hse_icon("arrow", 16)}</span>
+				</button>`
+				)
+				.join("");
+			return `<div class="hse-card hse-list">${todo_rows}${draft_rows}</div>`;
 		}
 
 		recent_html(rows, drafts) {

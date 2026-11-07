@@ -3,6 +3,8 @@
 // 2. A "Back to <dashboard>" button on lists, forms and reports opened from a dashboard.
 //    The origin dashboard is kept in sessionStorage (per browser tab) and cleared when the
 //    user moves to another page or workspace.
+// 3. Managers (Manager Home Settings, boot.hse_manager_home) who open the /desk apps screen go
+//    to their home page, once per browser tab. Login itself is handled in manager_home.py.
 (() => {
 	const DASHBOARDS = [
 		{ page: "executive-dashboard", label: "Executive Dashboard" },
@@ -10,7 +12,6 @@
 		{ page: "training-dashboard", label: "Training Dashboard" },
 		{ page: "shop-qc-home", label: "Shop QC Dashboard" },
 		{ page: "maintenance-dashboard", label: "Maintenance Dashboard" },
-		{ page: "hse-home", label: "HSE Home" },
 	];
 	// Routes opened from a dashboard that keep the Back button.
 	const RECORD_VIEWS = [
@@ -128,6 +129,23 @@
 		});
 	}
 
+	// The /desk apps screen in v16 (also /app with no route).
+	function on_apps_screen() {
+		const path = window.location.pathname.replace(/\/+$/, "");
+		return path === "/desk" || path === "/app";
+	}
+
+	function manager_home() {
+		const home = frappe.boot && frappe.boot.hse_manager_home;
+		if (!home || sessionStorage.getItem("hse_manager_home_done")) return false;
+		if (!on_apps_screen()) return false;
+		sessionStorage.setItem("hse_manager_home_done", "1");
+		const route = home.replace(/^\/(app|desk)\/?/, "");
+		if (route) frappe.set_route(route.split("/"));
+		else window.location.href = home;
+		return true;
+	}
+
 	let timer = null;
 	function on_change() {
 		if (!frappe.get_route) return;
@@ -140,6 +158,7 @@
 	$(document).on("app_ready", () => {
 		add_styles();
 		bind();
+		manager_home();
 		$(document).on("page-change", on_change);
 		if (frappe.router && frappe.router.on) frappe.router.on("change", on_change);
 		on_change();

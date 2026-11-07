@@ -61,6 +61,9 @@
 				this.page.add_menu_item(__("Snapshot Emails"), () =>
 					frappe.set_route("Form", "HSE Snapshot Settings")
 				);
+				this.page.add_menu_item(__("Manager Home Page"), () =>
+					frappe.set_route("Form", "Manager Home Settings")
+				);
 			}
 			this.bind();
 			this.render_skeleton();
@@ -191,6 +194,7 @@
 			return `<div class="hse-hero hse-card">
 			<div class="hse-hero-top">
 				<div>
+					<div class="hse-eyebrow">${__("PSIF Integrated Management System")}</div>
 					<h2>${esc(greet)}${first ? ", " + esc(first) : ""}</h2>
 					<p class="hse-muted">${esc(frappe.datetime.str_to_user(d.today))} · ${__(
 				"Safety, training, quality and maintenance at a glance"

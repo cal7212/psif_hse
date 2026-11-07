@@ -27,6 +27,7 @@ from hse.hse.page.hse_home.hse_home import (
 	att_training_requests,
 	latest_reviews,
 	metric_groups,
+	my_work,
 	overdue_range,
 	period_bounds,
 )
@@ -113,7 +114,8 @@ def get_dashboard(period: str = "this_month") -> dict:
 		"attention": attention,
 		"incidents": _safe(incident_breakdown, start, end),
 		"recent": _safe(recent_records) or [],
-		"my_drafts": _safe(my_drafts) or [],
+		"my_work": _safe(my_work, frappe.session.user) or {"drafts": [], "todos": []},
+		"incident_form": _safe(incident_form),
 		"metrics": _safe(metric_groups, start, end, METRIC_GROUPS) or [],
 		"reviews": _safe(latest_reviews, safety_goals()) or [],
 	}
@@ -280,21 +282,10 @@ def recent_records() -> list[dict]:
 	return out[:10]
 
 
-def my_drafts() -> list[dict]:
-	out = []
-	for dt in RECENT:
-		if not _can(dt):
-			continue
-		for r in frappe.get_list(
-			dt,
-			filters={"docstatus": 0, "owner": frappe.session.user},
-			fields=["name", "modified"],
-			order_by="modified desc",
-			limit_page_length=4,
-		):
-			out.append({"doctype": dt, "name": r.name, "modified": str(r.modified)})
-	out.sort(key=lambda r: r["modified"], reverse=True)
-	return out[:6]
+def incident_form() -> str | None:
+	"""Route of a published Web Form for injury reports, for people who cannot create one in the desk."""
+	route = frappe.db.get_value("Web Form", {"doc_type": INJURY, "published": 1}, "route")
+	return f"/{route.strip('/')}" if route else None
 
 
 def safety_goals() -> list[str]:

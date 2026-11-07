@@ -32,7 +32,7 @@ class IntegrationTestHSEDashboard(IntegrationTestCase):
 			"attention",
 			"incidents",
 			"recent",
-			"my_drafts",
+			"my_work",
 			"metrics",
 			"reviews",
 		):
@@ -44,6 +44,8 @@ class IntegrationTestHSEDashboard(IntegrationTestCase):
 		self.assertIn("causes", data["incidents"])
 		self.assertIsInstance(data["headline"], list)
 		self.assertIsInstance(data["recent"], list)
+		self.assertIn("drafts", data["my_work"])
+		self.assertIn("todos", data["my_work"])
 		levels = [a["level"] for a in data["attention"]]
 		order = {"danger": 0, "warning": 1, "info": 2}
 		self.assertEqual(levels, sorted(levels, key=lambda lvl: order.get(lvl, 9)))
