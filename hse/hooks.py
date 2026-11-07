@@ -28,6 +28,10 @@ add_to_apps_screen = [
 # Dashboards menu and "Back to <dashboard>" button on every desk page.
 app_include_js = "/assets/hse/js/hse_nav.js"
 
+# Managers open the Executive Dashboard after login (Manager Home Settings).
+on_session_creation = "hse.hse.manager_home.on_session_creation"
+extend_bootinfo = "hse.hse.manager_home.boot_session"
+
 # include js, css files in header of web template
 # web_include_css = "/assets/hse/css/hse.css"
 # web_include_js = "/assets/hse/js/hse.js"

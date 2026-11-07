@@ -61,6 +61,9 @@
 				this.page.add_menu_item(__("Snapshot Emails"), () =>
 					frappe.set_route("Form", "HSE Snapshot Settings")
 				);
+				this.page.add_menu_item(__("Manager Home Page"), () =>
+					frappe.set_route("Form", "Manager Home Settings")
+				);
 			}
 			this.bind();
 			this.render_skeleton();

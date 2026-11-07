@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "creation": "2026-11-07 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "track_changes": 1,
+ "description": "Which users open the Executive Dashboard after login instead of the usual landing page.",
+ "field_order": [
+  "section_rules",
+  "enabled",
+  "include_direct_reports",
+  "include_system_managers",
+  "column_break_r",
+  "home_page",
+  "section_include",
+  "include_users",
+  "section_exclude",
+  "exclude_users",
+  "section_preview",
+  "show_users",
+  "preview_html"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_rules",
+   "fieldtype": "Section Break",
+   "label": "Rules",
+   "description": "Managers land on the home page below after login, and the first time they open the apps screen in a browser tab. Everyone else keeps the usual landing. Administrator and Guest are never included. A link opened with a redirect (for example from an email) still goes to that link."
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1"
+  },
+  {
+   "fieldname": "include_direct_reports",
+   "fieldtype": "Check",
+   "label": "Include people with direct reports",
+   "default": "1",
+   "description": "Users linked (Employee User ID) to an employee that at least one active employee reports to."
+  },
+  {
+   "fieldname": "include_system_managers",
+   "fieldtype": "Check",
+   "label": "Include System Managers",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_r",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "home_page",
+   "fieldtype": "Data",
+   "label": "Home Page",
+   "default": "/app/executive-dashboard",
+   "reqd": 1,
+   "description": "A desk path starting with /app/ or /desk."
+  },
+  {
+   "fieldname": "section_include",
+   "fieldtype": "Section Break",
+   "label": "Also include"
+  },
+  {
+   "fieldname": "include_users",
+   "fieldtype": "Table",
+   "label": "Also include",
+   "options": "Manager Home User"
+  },
+  {
+   "fieldname": "section_exclude",
+   "fieldtype": "Section Break",
+   "label": "Exclude",
+   "description": "Exclude wins over every include rule."
+  },
+  {
+   "fieldname": "exclude_users",
+   "fieldtype": "Table",
+   "label": "Exclude",
+   "options": "Manager Home User"
+  },
+  {
+   "fieldname": "section_preview",
+   "fieldtype": "Section Break",
+   "label": "Who lands on the dashboard"
+  },
+  {
+   "fieldname": "show_users",
+   "fieldtype": "Button",
+   "label": "Show who lands on the dashboard"
+  },
+  {
+   "fieldname": "preview_html",
+   "fieldtype": "HTML",
+   "label": "Preview"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-07 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Manager Home Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
