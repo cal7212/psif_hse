@@ -12,7 +12,6 @@
 		{ page: "training-dashboard", label: "Training Dashboard" },
 		{ page: "shop-qc-home", label: "Shop QC Dashboard" },
 		{ page: "maintenance-dashboard", label: "Maintenance Dashboard" },
-		{ page: "hse-home", label: "HSE Home" },
 	];
 	// Routes opened from a dashboard that keep the Back button.
 	const RECORD_VIEWS = [

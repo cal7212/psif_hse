@@ -1,7 +1,7 @@
 app_name = "hse"
-app_title = "HSE"
+app_title = "PSIF Integrated Management System"
 app_publisher = "Calvin Johnston"
-app_description = "App to manage the OSH program"
+app_description = "PSIF Integrated Management System (PSIF IMS): safety, training, quality and maintenance"
 app_email = "cjohnston@psifla.com"
 app_license = "mit"
 
@@ -15,8 +15,8 @@ add_to_apps_screen = [
 	{
 		"name": "hse",
 		"logo": "/assets/hse/images/psif_logo.jpg",
-		"title": "HSE",
-		"route": "/app/hse-home",
+		"title": "PSIF IMS",
+		"route": "/app/executive-dashboard",
 	}
 ]
 

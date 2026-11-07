@@ -534,7 +534,7 @@
 		render_error() {
 			this.$body.html(`
 			<div class="hse-card hse-empty">
-				<p>${__("HSE Home could not load. Check your connection and try again.")}</p>
+				<p>${__("Shop QC Home could not load. Check your connection and try again.")}</p>
 				<button class="btn btn-default btn-sm" data-period="${esc(this.period)}">${__(
 				"Try again"
 			)}</button>

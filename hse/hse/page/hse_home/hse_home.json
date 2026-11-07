@@ -5,7 +5,7 @@
  "doctype": "Page",
  "icon": "shield",
  "idx": 0,
- "modified": "2026-11-03 09:00:00.000000",
+ "modified": "2026-11-06 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "HSE",
  "name": "hse-home",
@@ -16,5 +16,5 @@
  "standard": "Yes",
  "style": null,
  "system_page": 0,
- "title": "HSE Home"
+ "title": "HSE Home (moved to HSE Dashboard)"
 }
