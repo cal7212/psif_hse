@@ -50,3 +50,15 @@ class TestPSIFIMSDock(IntegrationTestCase):
 		self.assertTrue(doc.standard)
 		first = doc.items[0]
 		self.assertEqual((first.link_type, first.link_to), ("Sidebar", "PSIF IMS"))
+
+
+class TestPSIFIMSShopQCSection(IntegrationTestCase):
+	def test_shop_qc_workspace_linked(self):
+		doc = frappe.get_doc("Sidebar", "PSIF IMS")
+		labels = [row.label for row in doc.items]
+		start = labels.index("Shop QC")
+		self.assertEqual(doc.items[start].type, "Section Break")
+		first = doc.items[start + 1]
+		self.assertEqual((first.link_type, first.link_to), ("Workspace", "Shop QC"))
+		self.assertTrue(frappe.db.exists("Workspace", "Shop QC"))
+		self.assertLess(start, labels.index("Assets and Maintenance"))
