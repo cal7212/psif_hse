@@ -33,7 +33,9 @@ class UnitTestShopQCDashboard(UnitTestCase):
 		self.assertEqual(dashboard._card(0)["value"], 0)
 
 	def test_workspace_points_at_shipped_cards_and_charts(self):
-		ws = json.loads((HERE / "workspace" / "shop_qc" / "shop_qc.json").read_text())
+		# Filed under module HSE so it opens inside the PSIF IMS sidebar.
+		ws = json.loads((HERE.parent / "hse" / "workspace" / "shop_qc" / "shop_qc.json").read_text())
+		self.assertEqual(ws["module"], "HSE")
 		cards = {c["name"] for c in _files("number_card")}
 		charts = {c["name"] for c in _files("dashboard_chart")}
 		quick_lists = {q["label"] for q in ws["quick_lists"]}

@@ -60,5 +60,7 @@ class TestPSIFIMSShopQCSection(IntegrationTestCase):
 		self.assertEqual(doc.items[start].type, "Section Break")
 		first = doc.items[start + 1]
 		self.assertEqual((first.link_type, first.link_to), ("Workspace", "Shop QC"))
-		self.assertTrue(frappe.db.exists("Workspace", "Shop QC"))
+		# v16 opens a public workspace in the sidebar of the module that stores it, so the
+		# workspace sits in module HSE to keep PSIF IMS on screen.
+		self.assertEqual(frappe.db.get_value("Workspace", "Shop QC", "module"), "HSE")
 		self.assertLess(start, labels.index("Assets and Maintenance"))
