@@ -485,19 +485,22 @@
    "fieldname": "auth_project_manager",
    "fieldtype": "Link",
    "label": "Project Manager",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "auth_operations_manager",
    "fieldtype": "Link",
    "label": "Operations Manager",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "auth_quality_manager",
    "fieldtype": "Link",
    "label": "Quality Manager",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "description": "Customer approver name or approval reference.",
@@ -532,7 +535,8 @@
    "fieldname": "verified_by",
    "fieldtype": "Link",
    "label": "Inspected By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "verification_date",
@@ -543,7 +547,8 @@
    "fieldname": "approved_by",
    "fieldtype": "Link",
    "label": "Approved By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "approved_date",
@@ -786,7 +791,8 @@
    "fieldname": "rw_inspected_by",
    "fieldtype": "Link",
    "label": "Inspected By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "rw_inspected_date",
@@ -797,7 +803,8 @@
    "fieldname": "rw_approved_by",
    "fieldtype": "Link",
    "label": "Approved By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "rw_approved_date",
@@ -899,7 +906,8 @@
    "fieldname": "capa_assigned_to",
    "fieldtype": "Link",
    "label": "Assigned To",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "capa_assigned_date",
@@ -911,7 +919,8 @@
    "fieldname": "capa_extension_approved_by",
    "fieldtype": "Link",
    "label": "Extension Approval",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "capa_extended_until",
@@ -962,7 +971,8 @@
    "fieldname": "capa_containment_done_by",
    "fieldtype": "Link",
    "label": "Containment Completed By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "description": "Date the corrective action was implemented. Moves the CAPA to Verification.",
@@ -975,7 +985,8 @@
    "fieldname": "capa_correction_done_by",
    "fieldtype": "Link",
    "label": "Correction Completed By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "depends_on": "eval:doc.capa_required",
@@ -1084,7 +1095,8 @@
    "fieldname": "capa_verified_by",
    "fieldtype": "Link",
    "label": "Verified By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "capa_verification_date",
@@ -1104,7 +1116,8 @@
    "fieldname": "capa_closed_by",
    "fieldtype": "Link",
    "label": "Closed By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "capa_closure_date",
@@ -1293,7 +1306,8 @@
    "fieldname": "scar_poc",
    "fieldtype": "Link",
    "label": "PSIF Point of Contact",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "scar_rejection_reason",
@@ -1309,7 +1323,8 @@
    "fieldname": "scar_rejected_by",
    "fieldtype": "Link",
    "label": "Corrective Action Rejected By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "scar_rejected_date",
@@ -1320,7 +1335,8 @@
    "fieldname": "scar_approved_by",
    "fieldtype": "Link",
    "label": "Corrective Action Approved By",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "scar_approved_date",
@@ -1329,7 +1345,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-04 16:00:00.000000",
+ "modified": "2026-11-12 15:00:39.622140",
  "modified_by": "Administrator",
  "module": "Quality Metrics",
  "name": "Nonconformance Report",
