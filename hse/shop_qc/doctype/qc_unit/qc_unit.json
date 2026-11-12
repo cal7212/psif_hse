@@ -1239,10 +1239,12 @@
    "label": "Surface Coating and Fittings"
   },
   {
-   "description": "e.g. SSPC-SP6",
+   "default": "SSPC-SP3",
+   "description": "SSPC surface preparation standard (default SSPC-SP3).<br><b>SP1</b> Solvent Cleaning: removes oil, grease and dirt; done before other prep.<br><b>SP2</b> Hand Tool Cleaning: hand wire brush/scrape off loose rust, scale and paint.<br><b>SP3</b> Power Tool Cleaning: power brush/grind off loose rust, scale and paint; tight material may remain.<br><b>SP5</b> White Metal Blast: bare metal, no visible rust, scale, paint or stains.<br><b>SP6</b> Commercial Blast: bare metal; stains on up to 33% of surface.<br><b>SP7</b> Brush-Off Blast: loose material only; tight scale, rust and paint may remain.<br><b>SP10</b> Near-White Blast: bare metal; stains on up to 5% of surface.<br><b>SP11</b> Power Tool to Bare Metal: bare metal with 1 mil minimum profile.<br><b>SP13</b> Concrete Preparation: prep of concrete or masonry surfaces.<br><b>SP14</b> Industrial Blast: tight scale, rust and coating on up to 10% of surface.<br><b>SP15</b> Commercial Grade Power Tool: bare metal, 1 mil profile; stains on up to 33% of surface.<br><b>SP16</b> Brush-Off Blast, Non-Ferrous: roughens galvanized, stainless and non-ferrous metals.<br><b>SP WJ-1</b> Waterjet, Clean to Bare Substrate: no visible rust, scale or coating.<br><b>SP WJ-2</b> Waterjet, Very Thorough: stains on up to 5% of surface.<br><b>SP WJ-3</b> Waterjet, Thorough: stains on up to 33% of surface.<br><b>SP WJ-4</b> Waterjet, Light: loose rust, scale and coating only.",
    "fieldname": "coat_preparation_level",
-   "fieldtype": "Data",
-   "label": "Preparation Level"
+   "fieldtype": "Select",
+   "label": "Preparation Level",
+   "options": "\nSSPC-SP1\nSSPC-SP2\nSSPC-SP3\nSSPC-SP5\nSSPC-SP6\nSSPC-SP7\nSSPC-SP10\nSSPC-SP11\nSSPC-SP13\nSSPC-SP14\nSSPC-SP15\nSSPC-SP16\nSSPC-SP WJ-1\nSSPC-SP WJ-2\nSSPC-SP WJ-3\nSSPC-SP WJ-4"
   },
   {
    "fieldname": "coat_application_method",
@@ -1624,7 +1626,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-11-12 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
