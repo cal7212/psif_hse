@@ -110,7 +110,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-25 16:00:00.000000",
+ "modified": "2026-11-14 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Skill Authorization",
@@ -199,7 +199,21 @@
    "export": 1,
    "email": 1,
    "share": 1
-  }
+  },
+  {
+ "amend": 1,
+ "cancel": 1,
+ "create": 1,
+ "email": 1,
+ "export": 1,
+ "print": 1,
+ "read": 1,
+ "report": 1,
+ "role": "CUI Authorizer",
+ "share": 1,
+ "submit": 1,
+ "write": 1
+}
  ],
  "sort_field": "authorization_date",
  "sort_order": "DESC",
