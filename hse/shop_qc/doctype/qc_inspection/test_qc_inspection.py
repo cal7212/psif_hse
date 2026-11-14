@@ -11,6 +11,7 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	PASS,
 	build_hose_tests,
 	build_items,
+	build_pmg_tests,
 	crimp_status,
 	evaluate_accumulator,
 	evaluate_hose,
@@ -18,6 +19,7 @@ from hse.shop_qc.doctype.qc_inspection.qc_inspection import (
 	evaluate_pmg,
 	evaluate_proof,
 	get_stage_test_rows,
+	parse_number,
 )
 from hse.shop_qc.doctype.qc_unit.qc_unit import (
 	crimp_diameter_warning,
@@ -131,6 +133,32 @@ class UnitTestQCInspection(UnitTestCase):
 		# no tolerance: the inspector decides, unless an answer is "No"
 		self.assertIsNone(evaluate_pmg(frappe._dict(row, tolerance_psi=0)))
 		self.assertEqual(evaluate_pmg(frappe._dict(row, tolerance_psi=0, nameplate_verified="No")), FAIL)
+
+	def test_pmg_run_limits(self):
+		row = frappe._dict(
+			relief_spec=3000,
+			tolerance_psi=90,
+			nameplate_verified="Yes",
+			rotation_verified="Yes",
+			relief_as_set=3050,
+			flow_min_gpm=38,
+			flow_max_gpm=44,
+			temp_rise_max_f=40,
+			sound_limit_db=85,
+		)
+		self.assertEqual(evaluate_pmg(row), "")  # flow not entered yet
+		row.actual_flow_gpm = 40
+		self.assertEqual(evaluate_pmg(row), PASS)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, actual_flow_gpm=37)), FAIL)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, actual_flow_gpm=45)), FAIL)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, fluid_temp_begin_f=80, fluid_temp_end_f=125)), FAIL)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, fluid_temp_begin_f=80, fluid_temp_end_f=120)), PASS)
+		self.assertEqual(evaluate_pmg(frappe._dict(row, sound_level_db=86)), FAIL)
+		# a reading over its limit fails even when the inspector would otherwise decide
+		self.assertEqual(evaluate_pmg(frappe._dict(row, tolerance_psi=0, sound_level_db=90)), FAIL)
+		self.assertIsNone(evaluate_pmg(frappe._dict(row, tolerance_psi=0)))
+		self.assertEqual(parse_number("85 dBA at 1 m"), 85)
+		self.assertEqual(parse_number("quiet"), 0)
 
 	def test_hose_evaluation(self):
 		row = frappe._dict(
@@ -1154,6 +1182,11 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			doc.pmg_tests[1].finding = "Relief set high"
 			doc.save()
 			self.assertEqual([g.result for g in doc.pmg_tests], [PASS, FAIL])
+			with self.assertRaises(frappe.ValidationError):
+				doc.submit()  # test-run temperatures and sound level missing
+			doc.reload()
+			doc.pmg_tests[0].update({"fluid_temp_begin_f": 80, "fluid_temp_end_f": 110, "sound_level_db": 78})
+			doc.save()
 			self.assertEqual(doc.pmg_tests[0].instrument, "_T-G1")
 			doc.submit()
 			self.assertEqual(doc.status, "Rejected")
@@ -1162,6 +1195,95 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			)
 		finally:
 			frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 0)
+
+	def test_pmg_rows_get_new_build_limits(self):
+		self.set_pmgs(
+			[
+				{
+					"relief_setting_psi": 3000,
+					"displacement": 80,
+					"displacement_uom": "cc/rev",
+					"motor_rpm": 1780,
+				}
+			],
+			env_noise_level="80 dBA",
+		)
+		row = build_pmg_tests(WO)[0]
+		self.assertEqual(row["tolerance_psi"], 90)  # 3% of relief: the unit has no Setting Tolerance
+		self.assertAlmostEqual(row["flow_min_gpm"], 35.74, places=2)
+		self.assertAlmostEqual(row["flow_max_gpm"], 41.38, places=2)
+		self.assertEqual((row["temp_rise_max_f"], row["sound_limit_db"]), (40, 80))
+		frappe.db.set_value("QC Unit", WO, "setting_tolerance_psi", 50)
+		self.assertEqual(build_pmg_tests(WO)[0]["tolerance_psi"], 50)
+		frappe.db.set_value("QC Unit", WO, "job_type", "Repair")
+		try:
+			repair = build_pmg_tests(WO)[0]
+			self.assertNotIn("flow_min_gpm", repair)
+			self.assertNotIn("sound_limit_db", repair)
+		finally:
+			frappe.db.set_value("QC Unit", WO, "job_type", "New Build")
+
+	def test_unit_values_on_checklist(self):
+		# A second template for the stage would make the default ambiguous for other tests, so
+		# this one lives only for the test.
+		tname = "_T Assembly Unit Values"
+		frappe.get_doc(
+			{
+				"doctype": "QC Inspection Template",
+				"template_name": tname,
+				"stage": "_T Assembly",
+				"quality_procedure": PROC,
+				"items": [
+					{"check_item": "Fluid", "record_text": 1, "unit_text_field": "fluid"},
+					{
+						"check_item": "Cleanliness",
+						"record_text": 1,
+						"unit_text_field": "target_cleanliness",
+						"prefill_text_value": 0,
+					},
+					{"check_item": "Motors", "record_text": 1, "unit_text_field": "pmg_motor_nameplates"},
+					{"check_item": "Max pressure hold", "unit_text_field": "max_operating_psi"},
+				],
+			}
+		).insert()
+		try:
+			self.check_unit_values_on_checklist(tname)
+		finally:
+			self.clear_unit(WO)
+			frappe.delete_doc("QC Inspection Template", tname, force=1)
+
+	def check_unit_values_on_checklist(self, tname):
+		self.set_pmgs(
+			[{"motor_manufacturer": "Baldor", "motor_serial": "M-77", "motor_hp": 30}],
+			fluid="ISO VG 46",
+			target_cleanliness="17/15/12",
+			max_operating_psi=2500,
+		)
+		rows = {r["check_item"]: r for r in build_items(tname, WO)}
+		self.assertEqual(rows["Fluid"]["text_value"], "ISO VG 46")
+		self.assertIn("[Hydraulic Fluid: ISO VG 46]", rows["Fluid"]["criteria"])
+		self.assertNotIn("text_value", rows["Cleanliness"])  # measured, so only shown
+		self.assertIn("17/15/12", rows["Cleanliness"]["criteria"])
+		self.assertEqual(rows["Motors"]["text_value"], "PMG-1: Baldor, SN M-77, 30 HP")
+		self.assertIn("2500", rows["Max pressure hold"]["criteria"])
+
+		# A draft made before the unit had a value picks it up on save, until the line is checked.
+		frappe.db.set_value("QC Unit", WO, "fluid", None)
+		doc = self.make("_T Assembly", submit=False, template=tname)
+		fluid = next(r for r in doc.items if r.check_item == "Fluid")
+		self.assertFalse(fluid.text_value)
+		self.assertIn("blank on the unit", fluid.criteria)
+		frappe.db.set_value("QC Unit", WO, "fluid", "ISO VG 32")
+		fluid.result = None
+		doc.save()
+		fluid = next(r for r in doc.items if r.check_item == "Fluid")
+		self.assertEqual(fluid.text_value, "ISO VG 32")
+		fluid.result = PASS
+		doc.save()
+		frappe.db.set_value("QC Unit", WO, "fluid", "ISO VG 68")
+		doc.reload()
+		doc.save()
+		self.assertEqual(next(r for r in doc.items if r.check_item == "Fluid").text_value, "ISO VG 32")
 
 	def test_unit_order_documents_and_theoretical_flow(self):
 		unit = self.set_pmgs([{"displacement": 80, "displacement_uom": "cc/rev", "motor_rpm": 1780}])
@@ -1189,7 +1311,14 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			self.assertEqual(doc.accumulator_tests[0].precharge_spec, 1000)
 			self.assertEqual(doc.proof_tests[0].p1_spec, 4500)
 			doc.pmg_tests[0].update(
-				{"nameplate_verified": "Yes", "rotation_verified": "Yes", "relief_as_set": 3000}
+				{
+					"nameplate_verified": "Yes",
+					"rotation_verified": "Yes",
+					"relief_as_set": 3000,
+					"fluid_temp_begin_f": 80,
+					"fluid_temp_end_f": 100,
+					"sound_level_db": 80,
+				}
 			)
 			doc.device_tests[0].update({"as_set": "1500 psi", "result": PASS})
 			doc.accumulator_tests[0].precharge_actual = 1010
