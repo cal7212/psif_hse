@@ -390,6 +390,10 @@ frappe.ui.form.on("QC PMG Test", {
 	rotation_verified: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
 	relief_as_set: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
 	compensator_as_set: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	actual_flow_gpm: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	fluid_temp_begin_f: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	fluid_temp_end_f: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
+	sound_level_db: (frm, cdt, cdn) => evaluate_pmg_row(cdt, cdn),
 	motor_amps(frm, cdt, cdn) {
 		const r = locals[cdt][cdn];
 		if (flt(r.motor_fla) && flt(r.motor_amps) > flt(r.motor_fla)) {
@@ -408,20 +412,41 @@ frappe.ui.form.on("QC PMG Test", {
 	},
 });
 
+// Mirrors pmg_limit_failures() in qc_inspection.py.
+function pmg_limit_failed(r) {
+	const flow = flt(r.actual_flow_gpm);
+	const rise = flt(r.fluid_temp_end_f) - flt(r.fluid_temp_begin_f);
+	return Boolean(
+		(flow && flt(r.flow_min_gpm) && flow < flt(r.flow_min_gpm)) ||
+			(flow && flt(r.flow_max_gpm) && flow > flt(r.flow_max_gpm)) ||
+			(flt(r.fluid_temp_begin_f) &&
+				flt(r.fluid_temp_end_f) &&
+				flt(r.temp_rise_max_f) &&
+				rise > flt(r.temp_rise_max_f)) ||
+			(flt(r.sound_level_db) &&
+				flt(r.sound_limit_db) &&
+				flt(r.sound_level_db) > flt(r.sound_limit_db))
+	);
+}
+
 // Mirrors evaluate_pmg() in qc_inspection.py; the server result on save is final.
 function evaluate_pmg_row(cdt, cdn) {
 	const r = locals[cdt][cdn];
 	if (r.result === "N/A") return;
 	let result = null; // null = leave the inspector's choice
-	if (r.nameplate_verified === "No" || r.rotation_verified === "No") {
+	if (r.nameplate_verified === "No" || r.rotation_verified === "No" || pmg_limit_failed(r)) {
 		result = "Fail";
 	} else if (flt(r.tolerance_psi)) {
 		const pairs = [
 			[flt(r.relief_spec), flt(r.relief_as_set)],
 			[flt(r.compensator_spec), flt(r.compensator_as_set)],
 		];
+		const needs_flow = flt(r.flow_min_gpm) || flt(r.flow_max_gpm);
 		const complete =
-			r.nameplate_verified && r.rotation_verified && pairs.every(([s, a]) => !s || a);
+			r.nameplate_verified &&
+			r.rotation_verified &&
+			pairs.every(([s, a]) => !s || a) &&
+			(!needs_flow || flt(r.actual_flow_gpm));
 		result = complete
 			? pairs.every(([s, a]) => !s || Math.abs(a - s) <= flt(r.tolerance_psi))
 				? "Pass"

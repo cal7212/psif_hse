@@ -19,7 +19,9 @@
   "unit_spec_field",
   "tolerance_minus_pct",
   "tolerance_plus_pct",
-  "record_text"
+  "record_text",
+  "unit_text_field",
+  "prefill_text_value"
  ],
  "fields": [
   {
@@ -117,11 +119,27 @@
    "fieldname": "record_text",
    "fieldtype": "Check",
    "label": "Record Text Value"
+  },
+  {
+   "depends_on": "eval:!doc.numeric",
+   "description": "Show this QC Unit value in the line's criteria. pmg_motor_nameplates and pmg_pump_nameplates summarise the unit's Pump / Motor Groups.",
+   "fieldname": "unit_text_field",
+   "fieldtype": "Select",
+   "label": "Show Unit Value",
+   "options": "\nmodel\nserial_no\nitem_code\ndrawing_rev\nvoltage\ncontrol_voltage\nfluid\nfluid_brand\nfluid_viscosity\ntarget_cleanliness\nvalve_settings\nmax_operating_psi\nproof_test_psi\npmg_motor_nameplates\npmg_pump_nameplates"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:doc.record_text && doc.unit_text_field",
+   "description": "Start the Recorded Value as the unit value, for the inspector to confirm or correct. Untick for a measured value (e.g. an actual cleanliness code) that is judged against the unit value rather than copied from it.",
+   "fieldname": "prefill_text_value",
+   "fieldtype": "Check",
+   "label": "Pre-fill Recorded Value"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-11-13 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection Template Item",
