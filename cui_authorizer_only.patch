@@ -1,0 +1,163 @@
+diff --git a/hse/patches.txt b/hse/patches.txt
+index 8cec5d0..cb55f1f 100644
+--- a/hse/patches.txt
++++ b/hse/patches.txt
+@@ -30,3 +30,4 @@ hse.patches.add_executive_dashboard_desktop_icon
+ hse.patches.convert_early_housekeeping_ncrs_to_rework
+ hse.patches.asset_safety_maintenance_purpose
+ hse.patches.shop_qc_coat_preparation_level_select
++hse.patches.training_matrix_cui_authorizer_role
+diff --git a/hse/patches/training_matrix_cui_authorizer_role.py b/hse/patches/training_matrix_cui_authorizer_role.py
+new file mode 100644
+index 0000000..cb50cdb
+--- /dev/null
++++ b/hse/patches/training_matrix_cui_authorizer_role.py
+@@ -0,0 +1,9 @@
++# Copyright (c) 2026, Calvin Johnston and contributors
++# For license information, please see license.txt
++"""CUI Authorizer role, for skills only it may authorize."""
++
++from hse.training_matrix.install import make_roles
++
++
++def execute():
++	make_roles()
+diff --git a/hse/training_matrix/doctype/skill_authorization/skill_authorization.py b/hse/training_matrix/doctype/skill_authorization/skill_authorization.py
+index ebd5ff8..14e523c 100644
+--- a/hse/training_matrix/doctype/skill_authorization/skill_authorization.py
++++ b/hse/training_matrix/doctype/skill_authorization/skill_authorization.py
+@@ -10,7 +10,8 @@ from hse.training_matrix import skill_status as ss
+ from hse.training_matrix.matrix import sync_matrix
+ from hse.training_matrix.skills import authorization_expiry
+ 
+-# Besides the employee's own manager (Reports To), these roles may authorize skills.
++# Besides the employee's own manager (Reports To), these roles may authorize skills,
++# unless the Skill Definition has Only This Role Can Authorize checked.
+ AUTHORIZER_ROLES = ("System Manager", "HR Manager")
+ 
+ 
+@@ -50,7 +51,17 @@ class SkillAuthorization(Document):
+ 		if frappe.db.get_value("Employee", self.employee, "user_id") == user:
+ 			frappe.throw(_("You cannot authorize your own skills."), frappe.PermissionError)
+ 		roles = set(frappe.get_roles(user))
+-		skill_role = frappe.db.get_value("Skill Definition", self.skill, "authorizer_role")
++		skill_role, role_only = frappe.db.get_value(
++			"Skill Definition", self.skill, ["authorizer_role", "authorizer_role_only"]
++		) or (None, 0)
++		if skill_role and role_only:
++			# Restricted skill (e.g. CUI): only the named role, no manager/HR/System Manager fallback.
++			if skill_role in roles:
++				return
++			frappe.throw(
++				_("Only a {0} can authorize {1}.").format(skill_role, frappe.bold(self.skill)),
++				frappe.PermissionError,
++			)
+ 		if roles & set(AUTHORIZER_ROLES) or (skill_role and skill_role in roles):
+ 			return
+ 		manager = frappe.db.get_value("Employee", self.employee, "reports_to")
+diff --git a/hse/training_matrix/doctype/skill_authorization/test_skill_authorization.py b/hse/training_matrix/doctype/skill_authorization/test_skill_authorization.py
+index 648aafa..7e3dc04 100644
+--- a/hse/training_matrix/doctype/skill_authorization/test_skill_authorization.py
++++ b/hse/training_matrix/doctype/skill_authorization/test_skill_authorization.py
+@@ -155,3 +155,33 @@ class IntegrationTestSkillAuthorization(IntegrationTestCase):
+ 		finally:
+ 			frappe.set_user("Administrator")
+ 			frappe.db.set_value("Skill Definition", MECH, "authorizer_role", None)
++
++	def test_skill_authorizer_role_only(self):
++		from hse.training_matrix.install import CUI_AUTHORIZER, make_roles
++
++		make_roles()
++		user = "_t_cui_authorizer@example.com"
++		if not frappe.db.exists("User", user):
++			frappe.get_doc({"doctype": "User", "email": user, "first_name": "CUI"}).insert()
++		frappe.get_doc("User", user).add_roles(CUI_AUTHORIZER)
++		hr_user = "_t_skill_hr@example.com"
++		if not frappe.db.exists("User", hr_user):
++			frappe.get_doc({"doctype": "User", "email": hr_user, "first_name": "HR"}).insert()
++		frappe.get_doc("User", hr_user).add_roles("HR Manager")
++		sync_matrix(self.worker)
++		self.complete("_T-MECH", today())
++		frappe.db.set_value(
++			"Skill Definition", MECH, {"authorizer_role": CUI_AUTHORIZER, "authorizer_role_only": 1}
++		)
++		try:
++			self.assertRaises(frappe.PermissionError, self.authorize, self.manager_user)  # Reports To
++			frappe.set_user("Administrator")
++			self.assertRaises(frappe.PermissionError, self.authorize, hr_user)
++			frappe.set_user("Administrator")
++			self.authorize(user)
++			self.assertEqual(self.skill_row(MECH).status, ss.AUTHORIZED)
++		finally:
++			frappe.set_user("Administrator")
++			frappe.db.set_value(
++				"Skill Definition", MECH, {"authorizer_role": None, "authorizer_role_only": 0}
++			)
+diff --git a/hse/training_matrix/doctype/skill_definition/skill_definition.json b/hse/training_matrix/doctype/skill_definition/skill_definition.json
+index a60da65..98c3ee5 100644
+--- a/hse/training_matrix/doctype/skill_definition/skill_definition.json
++++ b/hse/training_matrix/doctype/skill_definition/skill_definition.json
+@@ -10,6 +10,7 @@
+   "proficiency",
+   "authorization_valid_months",
+   "authorizer_role",
++  "authorizer_role_only",
+   "section_requirements",
+   "description",
+   "prerequisites",
+@@ -56,7 +57,15 @@
+    "fieldtype": "Link",
+    "label": "Also Authorized By (Role)",
+    "options": "Role",
+-   "description": "Users with this role can also authorize this skill for any employee, in addition to the employee's manager and HR Manager."
++   "description": "Users with this role can also authorize this skill for any employee, in addition to the employee's manager and HR Manager. Check Only This Role Can Authorize to make them the only authorizers."
++  },
++  {
++   "fieldname": "authorizer_role_only",
++   "fieldtype": "Check",
++   "label": "Only This Role Can Authorize",
++   "default": "0",
++   "depends_on": "authorizer_role",
++   "description": "Only users with the role above can authorize this skill. The employee's manager, HR Manager and System Manager cannot (e.g. CUI access)."
+   },
+   {
+    "fieldname": "section_requirements",
+@@ -96,7 +105,7 @@
+   }
+  ],
+  "links": [],
+- "modified": "2026-10-25 16:00:00.000000",
++ "modified": "2026-11-12 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Training Matrix",
+  "name": "Skill Definition",
+diff --git a/hse/training_matrix/doctype/skill_definition/skill_definition.py b/hse/training_matrix/doctype/skill_definition/skill_definition.py
+index df296d7..7d841ed 100644
+--- a/hse/training_matrix/doctype/skill_definition/skill_definition.py
++++ b/hse/training_matrix/doctype/skill_definition/skill_definition.py
+@@ -31,6 +31,7 @@ class SkillDefinition(Document):
+ 
+ 		authorization_valid_months: DF.Int
+ 		authorizer_role: DF.Link | None
++		authorizer_role_only: DF.Check
+ 		courses: DF.Table[SkillDefinitionCourse]
+ 		description: DF.SmallText | None
+ 		disabled: DF.Check
+diff --git a/hse/training_matrix/install.py b/hse/training_matrix/install.py
+index 3d539c7..9dc5cc0 100644
+--- a/hse/training_matrix/install.py
++++ b/hse/training_matrix/install.py
+@@ -12,10 +12,12 @@ TRAINING_COORDINATOR = "Training Coordinator"
+ QUALIFIED_TRAINER = "Qualified Trainer"
+ # Authorizes the skills that name it in Also Authorized By (e.g. Respirator Fit Tester).
+ SAFETY_MANAGER = "Safety Manager"
++# Give to the IT Manager and CUI Manager; set as the only authorizer on the CUI skill.
++CUI_AUTHORIZER = "CUI Authorizer"
+ 
+ 
+ def make_roles():
+-	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER, SAFETY_MANAGER):
++	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER, SAFETY_MANAGER, CUI_AUTHORIZER):
+ 		if not frappe.db.exists("Role", role):
+ 			frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(
+ 				ignore_permissions=True

@@ -31,6 +31,7 @@ class SkillDefinition(Document):
 
 		authorization_valid_months: DF.Int
 		authorizer_role: DF.Link | None
+		authorizer_role_only: DF.Check
 		courses: DF.Table[SkillDefinitionCourse]
 		description: DF.SmallText | None
 		disabled: DF.Check

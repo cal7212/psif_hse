@@ -10,7 +10,8 @@ from hse.training_matrix import skill_status as ss
 from hse.training_matrix.matrix import sync_matrix
 from hse.training_matrix.skills import authorization_expiry
 
-# Besides the employee's own manager (Reports To), these roles may authorize skills.
+# Besides the employee's own manager (Reports To), these roles may authorize skills,
+# unless the Skill Definition has Only This Role Can Authorize checked.
 AUTHORIZER_ROLES = ("System Manager", "HR Manager")
 
 
@@ -50,7 +51,17 @@ class SkillAuthorization(Document):
 		if frappe.db.get_value("Employee", self.employee, "user_id") == user:
 			frappe.throw(_("You cannot authorize your own skills."), frappe.PermissionError)
 		roles = set(frappe.get_roles(user))
-		skill_role = frappe.db.get_value("Skill Definition", self.skill, "authorizer_role")
+		skill_role, role_only = frappe.db.get_value(
+			"Skill Definition", self.skill, ["authorizer_role", "authorizer_role_only"]
+		) or (None, 0)
+		if skill_role and role_only:
+			# Restricted skill (e.g. CUI): only the named role, no manager/HR/System Manager fallback.
+			if skill_role in roles:
+				return
+			frappe.throw(
+				_("Only a {0} can authorize {1}.").format(skill_role, frappe.bold(self.skill)),
+				frappe.PermissionError,
+			)
 		if roles & set(AUTHORIZER_ROLES) or (skill_role and skill_role in roles):
 			return
 		manager = frappe.db.get_value("Employee", self.employee, "reports_to")

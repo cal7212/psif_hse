@@ -155,3 +155,33 @@ class IntegrationTestSkillAuthorization(IntegrationTestCase):
 		finally:
 			frappe.set_user("Administrator")
 			frappe.db.set_value("Skill Definition", MECH, "authorizer_role", None)
+
+	def test_skill_authorizer_role_only(self):
+		from hse.training_matrix.install import CUI_AUTHORIZER, make_roles
+
+		make_roles()
+		user = "_t_cui_authorizer@example.com"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc({"doctype": "User", "email": user, "first_name": "CUI"}).insert()
+		frappe.get_doc("User", user).add_roles(CUI_AUTHORIZER)
+		hr_user = "_t_skill_hr@example.com"
+		if not frappe.db.exists("User", hr_user):
+			frappe.get_doc({"doctype": "User", "email": hr_user, "first_name": "HR"}).insert()
+		frappe.get_doc("User", hr_user).add_roles("HR Manager")
+		sync_matrix(self.worker)
+		self.complete("_T-MECH", today())
+		frappe.db.set_value(
+			"Skill Definition", MECH, {"authorizer_role": CUI_AUTHORIZER, "authorizer_role_only": 1}
+		)
+		try:
+			self.assertRaises(frappe.PermissionError, self.authorize, self.manager_user)  # Reports To
+			frappe.set_user("Administrator")
+			self.assertRaises(frappe.PermissionError, self.authorize, hr_user)
+			frappe.set_user("Administrator")
+			self.authorize(user)
+			self.assertEqual(self.skill_row(MECH).status, ss.AUTHORIZED)
+		finally:
+			frappe.set_user("Administrator")
+			frappe.db.set_value(
+				"Skill Definition", MECH, {"authorizer_role": None, "authorizer_role_only": 0}
+			)

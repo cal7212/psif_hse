@@ -10,6 +10,7 @@
   "proficiency",
   "authorization_valid_months",
   "authorizer_role",
+  "authorizer_role_only",
   "section_requirements",
   "description",
   "prerequisites",
@@ -56,7 +57,15 @@
    "fieldtype": "Link",
    "label": "Also Authorized By (Role)",
    "options": "Role",
-   "description": "Users with this role can also authorize this skill for any employee, in addition to the employee's manager and HR Manager."
+   "description": "Users with this role can also authorize this skill for any employee, in addition to the employee's manager and HR Manager. Check Only This Role Can Authorize to make them the only authorizers."
+  },
+  {
+   "fieldname": "authorizer_role_only",
+   "fieldtype": "Check",
+   "label": "Only This Role Can Authorize",
+   "default": "0",
+   "depends_on": "authorizer_role",
+   "description": "Only users with the role above can authorize this skill. The employee's manager, HR Manager and System Manager cannot (e.g. CUI access)."
   },
   {
    "fieldname": "section_requirements",
@@ -96,7 +105,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-25 16:00:00.000000",
+ "modified": "2026-11-12 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Skill Definition",

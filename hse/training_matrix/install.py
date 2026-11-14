@@ -12,10 +12,12 @@ TRAINING_COORDINATOR = "Training Coordinator"
 QUALIFIED_TRAINER = "Qualified Trainer"
 # Authorizes the skills that name it in Also Authorized By (e.g. Respirator Fit Tester).
 SAFETY_MANAGER = "Safety Manager"
+# Give to the IT Manager and CUI Manager; set as the only authorizer on the CUI skill.
+CUI_AUTHORIZER = "CUI Authorizer"
 
 
 def make_roles():
-	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER, SAFETY_MANAGER):
+	for role in (TRAINING_COORDINATOR, QUALIFIED_TRAINER, SAFETY_MANAGER, CUI_AUTHORIZER):
 		if not frappe.db.exists("Role", role):
 			frappe.get_doc({"doctype": "Role", "role_name": role, "desk_access": 1}).insert(
 				ignore_permissions=True
