@@ -13,6 +13,10 @@
   "tolerance_psi",
   "motor_fla",
   "theoretical_flow_gpm",
+  "flow_min_gpm",
+  "flow_max_gpm",
+  "temp_rise_max_f",
+  "sound_limit_db",
   "cb_a",
   "nameplate_verified",
   "rotation_verified",
@@ -75,6 +79,33 @@
    "fieldname": "theoretical_flow_gpm",
    "fieldtype": "Float",
    "label": "Theoretical Flow (GPM)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "flow_min_gpm",
+   "fieldtype": "Float",
+   "label": "Flow Min (GPM)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "flow_max_gpm",
+   "fieldtype": "Float",
+   "label": "Flow Max (GPM)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "temp_rise_max_f",
+   "fieldtype": "Float",
+   "label": "Max Temp Rise (°F)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "description": "From the unit's Noise Level Limit, else 85 dB.",
+   "fieldname": "sound_limit_db",
+   "fieldtype": "Float",
+   "label": "Sound Limit (dB)",
+   "precision": "0",
    "read_only": 1
   },
   {
@@ -182,7 +213,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-10-14 14:00:00.000000",
+ "modified": "2026-11-13 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC PMG Test",

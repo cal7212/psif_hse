@@ -19,6 +19,8 @@ class QCInspectionTemplate(Document):
 			if not row.numeric:
 				row.unit_spec_field = None
 				row.min_value = row.max_value = 0
+			else:
+				row.unit_text_field = None  # numeric lines take limits, not text, from the unit
 			if row.unit_spec_field:
 				row.min_value = row.max_value = 0
 				if flt(row.tolerance_minus_pct) < 0 or flt(row.tolerance_plus_pct) < 0:

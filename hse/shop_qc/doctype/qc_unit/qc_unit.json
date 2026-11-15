@@ -1362,7 +1362,8 @@
   {
    "fieldname": "env_noise_level",
    "fieldtype": "Data",
-   "label": "Noise Level Limit"
+   "label": "Noise Level Limit",
+   "description": "e.g. 80 dBA. The number becomes the sound limit on the Pump / Motor Group tests (85 dB when blank)."
   },
   {
    "description": "e.g. Outdoor, marine, washdown",
@@ -1626,7 +1627,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-12 12:00:00.000000",
+ "modified": "2026-11-13 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

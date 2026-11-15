@@ -31,3 +31,4 @@ hse.patches.convert_early_housekeeping_ncrs_to_rework
 hse.patches.asset_safety_maintenance_purpose
 hse.patches.shop_qc_coat_preparation_level_select
 hse.patches.training_matrix_cui_authorizer_role
+hse.patches.shop_qc_unit_values_on_checklists

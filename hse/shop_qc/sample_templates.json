@@ -74,7 +74,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "drawing_rev",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Welding to code",
@@ -101,19 +103,23 @@
   "items": [
    {
     "check_item": "Motor nameplate matches order",
-    "criteria": "HP, voltage, frame and enclosure match QC Unit design data",
+    "criteria": "Installed motors match the Pump / Motor Groups on the QC Unit (make, model, HP, voltage, frame, enclosure); correct the recorded value for anything different or missing, such as a serial number",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "pmg_motor_nameplates",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Pump model/serial recorded",
-    "criteria": "Pump model and serial number recorded",
+    "criteria": "Installed pumps match the Pump / Motor Groups on the QC Unit; correct the recorded value for anything different or missing, such as a serial number",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "pmg_pump_nameplates",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Coupling alignment - parallel offset (in)",
@@ -495,7 +501,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "fluid",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Flush duration (min)",
@@ -512,7 +520,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "target_cleanliness",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Particle count / sample report attached",
@@ -539,11 +549,13 @@
   "items": [
    {
     "check_item": "Fluid brand",
-    "criteria": "Record the fluid brand in the reservoir",
+    "criteria": "Fluid in the reservoir matches the order",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "fluid_brand",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Fluid type",
@@ -551,7 +563,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "fluid",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Fluid viscosity",
@@ -559,15 +573,19 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "fluid_viscosity",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Fluid ISO level",
-    "criteria": "Record the ISO 4406 cleanliness code and date checked",
+    "criteria": "Record the measured ISO 4406 cleanliness code and date checked; at or better than the target",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "target_cleanliness",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Cover gaskets installed and secured",
@@ -655,7 +673,8 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 0,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "voltage"
    },
    {
     "check_item": "Wire sizes confirmed",
@@ -696,34 +715,13 @@
   "stage": "Pressure & Function Test",
   "items": [
    {
-    "check_item": "Relief valve setting (psi)",
-    "criteria": "Design relief setting -3% / +3%",
-    "is_critical": 0,
-    "numeric": 1,
-    "record_text": 0,
-    "requires_photo": 0,
-    "unit_spec_field": "relief_setting_psi",
-    "tolerance_minus_pct": 3,
-    "tolerance_plus_pct": 3
-   },
-   {
-    "check_item": "Flow at test pressure (gpm)",
-    "criteria": "Design flow -5% / +10%",
-    "is_critical": 0,
-    "numeric": 1,
-    "record_text": 0,
-    "requires_photo": 0,
-    "unit_spec_field": "flow_gpm",
-    "tolerance_minus_pct": 5,
-    "tolerance_plus_pct": 10
-   },
-   {
     "check_item": "Pressure hold at max operating pressure",
     "criteria": "Hold for test duration per procedure; no leaks, no pressure decay beyond limit",
     "is_critical": 1,
     "numeric": 0,
     "record_text": 0,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "max_operating_psi"
    },
    {
     "check_item": "External leak check - all joints",
@@ -734,15 +732,6 @@
     "requires_photo": 0
    },
    {
-    "check_item": "Fluid temperature rise (deg F)",
-    "criteria": "Rise during test run",
-    "is_critical": 0,
-    "numeric": 1,
-    "record_text": 0,
-    "requires_photo": 0,
-    "max_value": 40
-   },
-   {
     "check_item": "Valve and control functions",
     "criteria": "Every function operated per schematic/sequence of operation",
     "is_critical": 0,
@@ -751,17 +740,8 @@
     "requires_photo": 0
    },
    {
-    "check_item": "Sound level at 1 m (dBA)",
-    "criteria": "Record",
-    "is_critical": 0,
-    "numeric": 1,
-    "record_text": 0,
-    "requires_photo": 0,
-    "max_value": 85
-   },
-   {
     "check_item": "Test report complete",
-    "criteria": "Test record present and current; settings and results recorded for every circuit",
+    "criteria": "Test record present and current; relief and compensator settings, flow, amps, fluid temperatures and sound level recorded on the Pump / Motor Group tests",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 0,
@@ -864,11 +844,13 @@
    },
    {
     "check_item": "Nameplate and serial number",
-    "criteria": "Nameplate installed; serial matches QC Unit record",
+    "criteria": "Nameplate installed; serial on the nameplate matches the QC Unit record",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 1
+    "requires_photo": 1,
+    "unit_text_field": "serial_no",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Ports capped, loose parts secured for shipping",
@@ -1075,7 +1057,9 @@
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 1
+    "record_text": 1,
+    "unit_text_field": "valve_settings",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Valve function",
@@ -1175,7 +1159,9 @@
     "is_critical": 0,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 1
+    "record_text": 1,
+    "unit_text_field": "model",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Cartridges and valves installed per drawing",
@@ -1237,7 +1223,9 @@
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 1
+    "record_text": 1,
+    "unit_text_field": "control_voltage",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Connectors",
@@ -1315,7 +1303,9 @@
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 1
+    "record_text": 1,
+    "unit_text_field": "target_cleanliness",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Ports capped after flush",
@@ -1361,7 +1351,8 @@
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 0
+    "record_text": 0,
+    "unit_text_field": "serial_no"
    },
    {
     "check_item": "Finish",
@@ -1515,7 +1506,9 @@
     "is_critical": 1,
     "requires_photo": 0,
     "numeric": 0,
-    "record_text": 1
+    "record_text": 1,
+    "unit_text_field": "proof_test_psi",
+    "prefill_text_value": 0
    },
    {
     "check_item": "External leak check",
@@ -1664,7 +1657,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "drawing_rev",
+    "prefill_text_value": 0
    }
   ]
  },
@@ -1687,7 +1682,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "model",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Cartridges and valves installed per drawing",
@@ -1821,7 +1818,9 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "control_voltage",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Connectors",
@@ -1900,7 +1899,9 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "target_cleanliness",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Ports capped after flush",
@@ -1949,7 +1950,9 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "valve_settings",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Valve function",
@@ -2012,7 +2015,9 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 1
+    "requires_photo": 1,
+    "unit_text_field": "serial_no",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Finish",
@@ -2090,7 +2095,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "drawing_rev",
+    "prefill_text_value": 0
    }
   ]
  },
@@ -2282,7 +2289,9 @@
     "is_critical": 0,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "target_cleanliness",
+    "prefill_text_value": 0
    },
    {
     "check_item": "Ports capped",
@@ -2368,7 +2377,9 @@
     "is_critical": 1,
     "numeric": 0,
     "record_text": 1,
-    "requires_photo": 1
+    "requires_photo": 1,
+    "unit_text_field": "serial_no",
+    "prefill_text_value": 1
    },
    {
     "check_item": "Ports and openings protected",

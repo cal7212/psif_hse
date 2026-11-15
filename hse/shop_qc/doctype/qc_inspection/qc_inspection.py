@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Calvin Johnston and contributors
 # For license information, please see license.txt
 
+import re
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -47,6 +49,7 @@ TEMPLATE_ROW_FIELDS = (
 	"max_value",
 	"uom",
 	"unit_spec_field",
+	"unit_text_field",
 )
 SPEC_LABELS = {
 	"relief_setting_psi": "Relief Setting (psi)",
@@ -56,6 +59,36 @@ SPEC_LABELS = {
 	"motor_hp": "Motor HP",
 	"reservoir_gal": "Reservoir (gal)",
 }
+# Unit values a checklist line can show in its criteria and, for a Record Text line, pre-fill
+# as the recorded value. Keys are QC Unit fields, except the pmg_* summaries of the unit's
+# Pump / Motor Groups. Keep in step with the unit_text_field options on QC Inspection
+# Template Item.
+UNIT_TEXT_LABELS = {
+	"model": "Model / Part No.",
+	"serial_no": "Unit Serial No",
+	"item_code": "Item",
+	"drawing_rev": "Drawing / Rev",
+	"voltage": "Supply Voltage",
+	"control_voltage": "Control Voltage",
+	"fluid": "Hydraulic Fluid",
+	"fluid_brand": "Fluid Brand",
+	"fluid_viscosity": "Fluid Viscosity",
+	"target_cleanliness": "Target Cleanliness (ISO 4406)",
+	"valve_settings": "Valve / Cartridge Settings",
+	"max_operating_psi": "Max Operating Pressure (psi)",
+	"proof_test_psi": "Proof Test Pressure (psi)",
+	"pmg_motor_nameplates": "Motor Nameplates (Pump / Motor Groups)",
+	"pmg_pump_nameplates": "Pump Nameplates (Pump / Motor Groups)",
+}
+
+# Pressure & Function Test limits applied to each pump/motor group on a new build. These were
+# checklist readings on the HPU test template; they now live on the PMG test row so the value
+# is entered once.
+PMG_SETTING_TOLERANCE_PCT = 3  # relief/compensator, when the unit has no Setting Tolerance
+PMG_FLOW_MINUS_PCT = 5
+PMG_FLOW_PLUS_PCT = 10
+PMG_TEMP_RISE_MAX_F = 40
+PMG_SOUND_LIMIT_DB = 85  # when the unit's Noise Level Limit has no number in it
 
 
 def _changed(field: str, new, old) -> bool:
@@ -116,11 +149,32 @@ def evaluate_hose(row) -> str | None:
 	return PASS if ok else FAIL
 
 
+def pmg_limit_failures(row) -> list[str]:
+	"""Entered test readings outside the limits loaded on a PMG test row. Blank readings and
+	blank limits are skipped; completeness is checked on submit."""
+	failures = []
+	flow = flt(row.actual_flow_gpm)
+	if flow and flt(row.flow_min_gpm) and flow < flt(row.flow_min_gpm):
+		failures.append(_("flow below {0} GPM").format(f"{flt(row.flow_min_gpm):g}"))
+	if flow and flt(row.flow_max_gpm) and flow > flt(row.flow_max_gpm):
+		failures.append(_("flow above {0} GPM").format(f"{flt(row.flow_max_gpm):g}"))
+	begin, end = flt(row.fluid_temp_begin_f), flt(row.fluid_temp_end_f)
+	if begin and end and flt(row.temp_rise_max_f) and end - begin > flt(row.temp_rise_max_f):
+		failures.append(_("fluid temperature rise over {0} °F").format(f"{flt(row.temp_rise_max_f):g}"))
+	sound = flt(row.sound_level_db)
+	if sound and flt(row.sound_limit_db) and sound > flt(row.sound_limit_db):
+		failures.append(_("sound level over {0} dB").format(f"{flt(row.sound_limit_db):g}"))
+	return failures
+
+
 def evaluate_pmg(row) -> str | None:
-	"""Pass/Fail for one pump/motor group. A "No" answer always fails. Settings are judged
-	against the design value only when the unit has a setting tolerance; otherwise the
-	inspector's result stands (None = leave it)."""
+	"""Pass/Fail for one pump/motor group. A "No" answer, or a reading outside the row's flow,
+	temperature-rise or sound limit, always fails. Settings are judged against the design value
+	only when the row has a setting tolerance; otherwise the inspector's result stands
+	(None = leave it). "" = not complete yet."""
 	if row.nameplate_verified == "No" or row.rotation_verified == "No":
+		return FAIL
+	if pmg_limit_failures(row):
 		return FAIL
 	tol = flt(row.tolerance_psi)
 	if not tol:
@@ -132,6 +186,8 @@ def evaluate_pmg(row) -> str | None:
 	if not (row.nameplate_verified and row.rotation_verified):
 		return ""
 	if any(spec and not actual for spec, actual in pairs):
+		return ""
+	if (flt(row.flow_min_gpm) or flt(row.flow_max_gpm)) and not flt(row.actual_flow_gpm):
 		return ""
 	ok = all(abs(actual - spec) <= tol for spec, actual in pairs if spec)
 	return PASS if ok else FAIL
@@ -391,21 +447,34 @@ class QCInspection(Document):
 		return bool(self.stage and frappe.get_cached_value("QC Stage", self.stage, "pmg_test"))
 
 	def refresh_spec_limits(self):
-		"""While in draft, keep checklist limits that come from the unit's design data in step
-		with the unit (drafts are often created before those values are entered)."""
+		"""While in draft, keep checklist limits and unit values that come from the unit's design
+		data in step with the unit (drafts are often created before those values are entered).
+		A pre-filled recorded value follows the unit until the inspector changes it."""
 		if self.docstatus != 0 or not self.items or not self.template or not self.qc_unit:
 			return
-		if not any(r.unit_spec_field for r in self.items):
+		if not any(r.unit_spec_field or r.unit_text_field for r in self.items):
 			return
 		specs = {
-			r["check_item"]: r for r in build_items(self.template, self.qc_unit) if r.get("unit_spec_field")
+			r["check_item"]: r
+			for r in build_items(self.template, self.qc_unit)
+			if r.get("unit_spec_field") or r.get("unit_text_field")
 		}
 		for row in self.items:
 			spec = specs.get(row.check_item)
-			if not row.unit_spec_field or not spec:
+			if not spec:
 				continue
-			for field in ("min_value", "max_value", "criteria"):
-				row.set(field, spec.get(field))
+			if row.unit_spec_field:
+				for field in ("min_value", "max_value", "criteria"):
+					row.set(field, spec.get(field))
+			if row.unit_text_field:
+				row.criteria = spec.get("criteria")
+				# Only lines not yet checked: a checked line keeps the value the inspector confirmed.
+				untouched = not row.result and (
+					not cstr(row.text_value).strip() or row.text_value == row.unit_text_value
+				)
+				if "text_value" in spec and untouched:
+					row.text_value = spec["text_value"]
+				row.unit_text_value = spec.get("unit_text_value")
 
 	def refresh_hose_specs(self):
 		"""While in draft, keep each hose row's limits in step with the unit, so a spec
@@ -544,7 +613,20 @@ class QCInspection(Document):
 					)
 				)
 			if row.record_text and not cstr(row.text_value).strip():
-				errors.append(_("Row {0}: Record the value for '{1}'.").format(row.idx, label))
+				if row.unit_text_field and not cstr(row.unit_text_value).strip():
+					errors.append(
+						_(
+							"Row {0}: Record the value for '{1}'. {2} is blank on QC Unit {3}; "
+							"enter it there to pre-fill this line, or type the value here."
+						).format(
+							row.idx,
+							label,
+							UNIT_TEXT_LABELS.get(row.unit_text_field, row.unit_text_field),
+							self.qc_unit,
+						)
+					)
+				else:
+					errors.append(_("Row {0}: Record the value for '{1}'.").format(row.idx, label))
 			if row.requires_photo and not row.photo and row.check_item not in photo_items:
 				errors.append(
 					_(
@@ -588,10 +670,13 @@ class QCInspection(Document):
 				errors.append(_("{0}: enter the relief as-set pressure.").format(tag))
 			if flt(row.compensator_spec) and not flt(row.compensator_as_set):
 				errors.append(_("{0}: enter the compensator as-set pressure.").format(tag))
+			if (flt(row.flow_min_gpm) or flt(row.flow_max_gpm)) and not flt(row.actual_flow_gpm):
+				errors.append(_("{0}: enter the actual flow.").format(tag))
 			if not row.result:
 				errors.append(_("{0}: select the result.").format(tag))
 			elif row.result == FAIL and not cstr(row.finding).strip():
 				errors.append(_("{0}: a finding is required for a failed pump/motor group.").format(tag))
+		errors += self.pmg_run_errors()
 		errors += self.circuit_test_errors()
 		if (
 			self.is_pmg_test_stage()
@@ -605,6 +690,19 @@ class QCInspection(Document):
 			)
 		if errors:
 			frappe.throw("<br>".join(errors), title=_("Inspection Incomplete"))
+
+	def pmg_run_errors(self) -> list:
+		"""Fluid temperature and sound level are taken for the test run, not for every group:
+		at least one tested group must carry them when the rows have those limits."""
+		tested = [r for r in self.pmg_tests if r.result != NA]
+		errors = []
+		if any(flt(r.temp_rise_max_f) for r in tested) and not any(
+			flt(r.fluid_temp_begin_f) and flt(r.fluid_temp_end_f) for r in tested
+		):
+			errors.append(_("Enter the fluid temperature at the beginning and end of the test run."))
+		if any(flt(r.sound_limit_db) for r in tested) and not any(flt(r.sound_level_db) for r in tested):
+			errors.append(_("Enter the sound level for the test run."))
+		return errors
 
 	def circuit_test_errors(self) -> list:
 		errors = []
@@ -1095,35 +1193,113 @@ def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 
 
 def build_pmg_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
-	"""One test row per pump/motor group on the unit, with its design settings."""
+	"""One test row per pump/motor group on the unit, with its design settings. A new build also
+	gets the test-run limits (flow, temperature rise, sound) and, when the unit has no Setting
+	Tolerance, a default tolerance on the relief and compensator settings."""
 	unit = frappe.get_doc("QC Unit", qc_unit)
 	if unit.product_type != "Power Unit":
 		return []
+	new_build = unit.job_type != "Repair"
+	single = len(unit.pump_motor_groups) == 1
+	sound_limit = parse_number(unit.env_noise_level) or PMG_SOUND_LIMIT_DB
 	rows = []
 	for g in unit.pump_motor_groups:
 		if only_tags is not None and g.pmg_tag not in only_tags:
 			continue
-		rows.append(
-			{
-				"pmg_tag": g.pmg_tag,
-				"service": g.service,
-				"relief_spec": g.relief_setting_psi,
-				"compensator_spec": g.compensator_setting_psi,
-				"tolerance_psi": unit.setting_tolerance_psi,
-				"motor_fla": g.motor_fla,
-				"theoretical_flow_gpm": g.design_flow_gpm,
-			}
-		)
+		row = {
+			"pmg_tag": g.pmg_tag,
+			"service": g.service,
+			"relief_spec": g.relief_setting_psi,
+			"compensator_spec": g.compensator_setting_psi,
+			"tolerance_psi": unit.setting_tolerance_psi,
+			"motor_fla": g.motor_fla,
+			"theoretical_flow_gpm": g.design_flow_gpm,
+		}
+		if new_build:
+			if not flt(row["tolerance_psi"]) and flt(g.relief_setting_psi):
+				row["tolerance_psi"] = round(flt(g.relief_setting_psi) * PMG_SETTING_TOLERANCE_PCT / 100)
+			# The group's own flow; a single-group unit falls back to the unit's design flow.
+			flow = flt(g.design_flow_gpm) or (flt(unit.flow_gpm) if single else 0)
+			if flow:
+				row["flow_min_gpm"] = round(flow * (1 - PMG_FLOW_MINUS_PCT / 100), 2)
+				row["flow_max_gpm"] = round(flow * (1 + PMG_FLOW_PLUS_PCT / 100), 2)
+			row["temp_rise_max_f"] = PMG_TEMP_RISE_MAX_F
+			row["sound_limit_db"] = sound_limit
+		rows.append(row)
 	return rows
 
 
+def parse_number(value) -> float:
+	"""The first number in a free-text value such as "85 dBA"; 0 when there is none."""
+	match = re.search(r"\d+(?:\.\d+)?", cstr(value))
+	return flt(match.group()) if match else 0
+
+
+def unit_text_value(unit, field: str) -> str:
+	"""A unit value as checklist text; the pmg_* keys summarise the Pump / Motor Groups."""
+	if field == "pmg_motor_nameplates":
+		parts = [
+			(
+				g.pmg_tag,
+				[
+					" ".join(x for x in (g.motor_manufacturer, g.motor_model) if x),
+					g.motor_serial and f"SN {g.motor_serial}",
+					flt(g.motor_hp) and f"{flt(g.motor_hp):g} HP",
+					g.motor_voltage and f"{g.motor_voltage} V",
+					g.motor_frame,
+					g.motor_enclosure,
+				],
+			)
+			for g in unit.pump_motor_groups
+		]
+	elif field == "pmg_pump_nameplates":
+		parts = [
+			(
+				g.pmg_tag,
+				[
+					" ".join(x for x in (g.pump_manufacturer, g.pump_model) if x),
+					g.pump_serial and f"SN {g.pump_serial}",
+					g.pump_type,
+					flt(g.displacement) and f"{flt(g.displacement):g} {g.displacement_uom or ''}".strip(),
+				],
+			)
+			for g in unit.pump_motor_groups
+		]
+	else:
+		value = unit.get(field)
+		if isinstance(value, float | int):
+			return f"{flt(value):g}" if flt(value) else ""
+		return cstr(value).strip()
+	lines = []
+	for tag, bits in parts:
+		text = ", ".join(cstr(b) for b in bits if b)
+		if text:
+			lines.append(f"{tag}: {text}")
+	return "; ".join(lines)
+
+
 def build_items(template: str, qc_unit: str | None = None) -> list[dict]:
-	"""Template rows with spec-linked limits resolved from the QC Unit design data."""
+	"""Template rows with spec-linked limits and unit values resolved from the QC Unit."""
 	doc = frappe.get_cached_doc("QC Inspection Template", template)
 	unit = frappe.db.get_value("QC Unit", qc_unit, list(SPEC_LABELS), as_dict=True) if qc_unit else None
+	unit_doc = None
+	if qc_unit and any(t.unit_text_field for t in doc.items):
+		unit_doc = frappe.get_doc("QC Unit", qc_unit)
 	rows = []
 	for t in doc.items:
 		row = {f: t.get(f) for f in TEMPLATE_ROW_FIELDS}
+		if t.unit_text_field and not t.numeric:
+			label = UNIT_TEXT_LABELS.get(t.unit_text_field, t.unit_text_field)
+			value = unit_text_value(unit_doc, t.unit_text_field) if unit_doc else ""
+			row["unit_text_value"] = value or None
+			if value:
+				row["criteria"] = f"{cstr(t.criteria)} [{label}: {value}]".strip()
+			elif unit_doc:
+				row["criteria"] = f"{cstr(t.criteria)} [{label} blank on the unit]".strip()
+			if t.record_text and t.prefill_text_value and value:
+				row["text_value"] = value
+		elif t.unit_text_field:
+			row["unit_text_field"] = None
 		if t.numeric and t.unit_spec_field:
 			nominal = flt((unit or {}).get(t.unit_spec_field))
 			if nominal:
