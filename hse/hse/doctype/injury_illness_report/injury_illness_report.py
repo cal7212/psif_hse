@@ -4,10 +4,11 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, date_diff, getdate
+from frappe.utils import add_days, cstr, date_diff, getdate
 
 DAY_CAP = 180  # 29 CFR 1904.7(b)(3)(vii): total may be capped at 180 calendar days
 DAY_TABLES = ("days_away", "job_restriction")
+WHY_FIELDS = ("why_1", "why_2", "why_3", "why_4", "why_5")
 
 
 def count_days(start_date, return_date, incident_date=None):
@@ -24,6 +25,20 @@ def count_days(start_date, return_date, incident_date=None):
 	return max(date_diff(return_date, start), 0)
 
 
+def five_whys_errors(doc) -> list[str]:
+	"""Each why answers the one before it, so they are filled in order, starting from a
+	problem statement. Blank is fine: not every report needs a 5 Whys."""
+	answered = [bool(cstr(doc.get(f)).strip()) for f in WHY_FIELDS]
+	errors = []
+	if any(answered) and not cstr(doc.get("five_whys_problem")).strip():
+		errors.append(_("5 Whys: enter the Problem Statement the whys start from."))
+	last = max((n for n, a in enumerate(answered, 1) if a), default=0)
+	for n in range(1, last):
+		if not answered[n - 1]:
+			errors.append(_("5 Whys: answer Why {0} before Why {1}.").format(n, n + 1))
+	return errors
+
+
 def apply_cap(day_counts, cap=DAY_CAP):
 	"""Cap the running total of a table at `cap`; later rows get what is left."""
 	remaining, out = cap, []
@@ -38,6 +53,11 @@ class Injury_IllnessReport(Document):
 	def validate(self):
 		self.set_status_label()
 		self.calculate_days()
+		self.validate_five_whys()
+
+	def validate_five_whys(self):
+		if errors := five_whys_errors(self):
+			frappe.throw("<br>".join(errors), title=_("5 Whys"))
 
 	def set_status_label(self):
 		"""Mirror Is Recordable into status_label (options: checked / unchecked)."""
