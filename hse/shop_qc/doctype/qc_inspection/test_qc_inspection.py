@@ -1285,6 +1285,52 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		doc.save()
 		self.assertEqual(next(r for r in doc.items if r.check_item == "Fluid").text_value, "ISO VG 32")
 
+	def test_change_order_sends_stage_back(self):
+		from hse.shop_qc.utils import get_accepted_by_stage, get_stage_progress
+
+		first = self.make("_T Assembly")
+		self.assertEqual(get_accepted_by_stage(WO)["_T Assembly"].name, first.name)
+
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.append(
+			"change_orders",
+			{
+				"co_no": "CO-1",
+				"source": "Engineering & Design",
+				"description": "Move the filter",
+				"affected_stages": "_T Assembly",
+			},
+		)
+		unit.save()
+		self.assertFalse(unit.change_orders[0].superseded_inspections)  # still pending
+		self.assertIn("_T Assembly", get_accepted_by_stage(WO))
+
+		unit.change_orders[0].status = "Approved"
+		unit.save()
+		co = unit.change_orders[0]
+		self.assertEqual(co.superseded_inspections, first.name)
+		self.assertTrue(co.approved_on)
+		self.assertNotIn("_T Assembly", get_accepted_by_stage(WO))
+		row = next(r for r in get_stage_progress(WO) if r["stage"] == "_T Assembly")
+		self.assertIn("CO-1", row["status"])
+
+		unit.reload()
+		unit.change_orders[0].affected_stages = ""
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()  # approved: stages are locked
+		unit.reload()
+
+		second = self.make("_T Assembly")  # the stage can be inspected again
+		self.assertEqual(get_accepted_by_stage(WO)["_T Assembly"].name, second.name)
+
+		unit.reload()
+		unit.append(
+			"change_orders",
+			{"co_no": "CO-2", "source": "Customer", "description": "x", "affected_stages": "No Such Stage"},
+		)
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()
+
 	def test_unit_order_documents_and_theoretical_flow(self):
 		unit = self.set_pmgs([{"displacement": 80, "displacement_uom": "cc/rev", "motor_rpm": 1780}])
 		self.assertEqual(len(unit.construction_documents), 18)

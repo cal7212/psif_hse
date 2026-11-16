@@ -63,15 +63,31 @@ def get_final_stage(stages: list[dict]):
 	return next((s for s in reversed(stages) if s.is_final_release), None)
 
 
+def superseded_inspections(qc_unit: str) -> dict:
+	"""{inspection: change order no.} for accepted inspections an approved change order sent back
+	for re-inspection."""
+	out = {}
+	for co in frappe.get_all(
+		"QC Change Order",
+		filters={"parent": qc_unit, "parenttype": "QC Unit", "status": "Approved"},
+		fields=["co_no", "superseded_inspections"],
+	):
+		for name in cstr(co.superseded_inspections).split():
+			out[name] = co.co_no
+	return out
+
+
 def get_accepted_by_stage(qc_unit: str) -> dict:
-	"""{stage: latest accepted, submitted inspection} for a unit."""
+	"""{stage: latest accepted, submitted inspection} for a unit. Inspections an approved change
+	order sent back for re-inspection do not count."""
+	skip = superseded_inspections(qc_unit)
 	rows = frappe.get_all(
 		"QC Inspection",
 		filters={"qc_unit": qc_unit, "docstatus": 1, "status": "Accepted"},
 		fields=["name", "stage", "inspection_date", "inspected_by", "inspector_name", "modified_by"],
 		order_by="inspection_date asc",
 	)
-	return {r.stage: r for r in rows}
+	return {r.stage: r for r in rows if r.name not in skip}
 
 
 def count_open_ncs(qc_unit: str) -> int:
@@ -141,6 +157,7 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 def get_stage_progress(qc_unit: str) -> list[dict]:
 	"""One row per applicable stage with the latest inspection outcome, for the QC Unit form."""
 	frappe.has_permission("QC Unit", "read", qc_unit, throw=True)
+	skip = superseded_inspections(qc_unit)
 	latest = {}
 	for r in frappe.get_all(
 		"QC Inspection",
@@ -150,7 +167,7 @@ def get_stage_progress(qc_unit: str) -> list[dict]:
 	):
 		prev = latest.get(r.stage)
 		# An Accepted record wins over a later draft; otherwise show the most recent.
-		if not (prev and prev.status == "Accepted" and prev.docstatus == 1):
+		if not (prev and prev.status == "Accepted" and prev.docstatus == 1 and prev.name not in skip):
 			latest[r.stage] = r
 	out = []
 	for s in get_stages(qc_unit):
@@ -162,12 +179,22 @@ def get_stage_progress(qc_unit: str) -> list[dict]:
 				"is_required": s.is_required,
 				"is_final_release": s.is_final_release,
 				"inspection": r.name if r else None,
-				"status": (r.status if r.docstatus == 1 else "Draft") if r else "Not Started",
+				"status": stage_progress_status(r, skip),
 				"inspection_date": r.inspection_date if r else None,
 				"inspector_name": r.inspector_name if r else None,
 			}
 		)
 	return out
+
+
+def stage_progress_status(r, skip: dict) -> str:
+	if not r:
+		return "Not Started"
+	if r.docstatus != 1:
+		return "Draft"
+	if r.name in skip:
+		return _("Re-inspect ({0})").format(skip[r.name])
+	return r.status
 
 
 @frappe.whitelist()

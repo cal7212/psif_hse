@@ -159,6 +159,8 @@
   "section_cdocs",
   "construction_document_template",
   "construction_documents",
+  "section_change_orders",
+  "change_orders",
   "section_qdocs",
   "quality_document_template",
   "quality_documents",
@@ -1169,6 +1171,18 @@
    "options": "QC Order Document"
   },
   {
+   "fieldname": "section_change_orders",
+   "fieldtype": "Section Break",
+   "label": "Change Orders",
+   "description": "Customer and engineering / design changes to this build. Approving one sends the stages it affects back for re-inspection."
+  },
+  {
+   "fieldname": "change_orders",
+   "fieldtype": "Table",
+   "label": "Change Orders",
+   "options": "QC Change Order"
+  },
+  {
    "fieldname": "section_qdocs",
    "fieldtype": "Section Break",
    "label": "Quality Documents"
@@ -1627,7 +1641,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-13 12:00:00.000000",
+ "modified": "2026-11-16 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
