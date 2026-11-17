@@ -37,7 +37,9 @@ class UnitTestInjury_IllnessReport(UnitTestCase):
 		self.assertEqual(five_whys_errors(frappe._dict(five_whys_problem="Truck struck bollard")), [])
 
 	def test_five_whys_in_order(self):
-		doc = frappe._dict(five_whys_problem="Truck struck bollard", why_1="Driver did not see it", why_2="No spotter")
+		doc = frappe._dict(
+			five_whys_problem="Truck struck bollard", why_1="Driver did not see it", why_2="No spotter"
+		)
 		self.assertEqual(five_whys_errors(doc), [])
 		doc.why_2, doc.why_3 = "  ", "No backing procedure"
 		self.assertEqual(len(five_whys_errors(doc)), 1)  # Why 2 skipped

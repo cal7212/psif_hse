@@ -61,9 +61,16 @@ def get_unit_stage_selection(qc_unit: str | None) -> set | None:
 
 def create_draft_inspections(unit) -> list[str]:
 	"""A draft QC Inspection for each ticked stage that has none yet (drafts or submitted)."""
-	existing = set(
-		frappe.get_all("QC Inspection", filters={"qc_unit": unit.name, "docstatus": ("<", 2)}, pluck="stage")
-	)
+	from hse.shop_qc.utils import superseded_inspections
+
+	skip = superseded_inspections(unit.name)
+	existing = {
+		r.stage
+		for r in frappe.get_all(
+			"QC Inspection", filters={"qc_unit": unit.name, "docstatus": ("<", 2)}, fields=["name", "stage"]
+		)
+		if r.name not in skip
+	}
 	created, skipped = [], []
 	for row in unit.get("qc_stages"):
 		if not cint(row.required) or row.stage in existing:

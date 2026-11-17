@@ -855,17 +855,8 @@ class QCInspection(Document):
 			)
 
 	def check_not_already_accepted(self):
-		existing = frappe.db.get_value(
-			"QC Inspection",
-			{
-				"qc_unit": self.qc_unit,
-				"stage": self.stage,
-				"docstatus": 1,
-				"status": "Accepted",
-				"name": ("!=", self.name),
-			},
-			"name",
-		)
+		accepted = get_accepted_by_stage(self.qc_unit).get(self.stage)
+		existing = accepted.name if accepted and accepted.name != self.name else None
 		if existing:
 			frappe.throw(
 				_(

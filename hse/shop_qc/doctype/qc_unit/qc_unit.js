@@ -568,3 +568,47 @@ frappe.ui.form.on(
 	"QC Unit",
 	Object.fromEntries(REPAIR_PRICING_INPUTS.map((f) => [f, hse_calc_repair_costing]))
 );
+
+frappe.ui.form.on("QC Change Order", {
+	pick_stages(frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		const listed = (frm.doc.qc_stages || []).map((r) => r.stage);
+		if (listed.length) {
+			hse_pick_co_stages(cdt, cdn, row, listed);
+		} else if (!frm.is_new()) {
+			frappe
+				.xcall("hse.shop_qc.utils.get_applicable_stages", { qc_unit: frm.doc.name })
+				.then((stages) => hse_pick_co_stages(cdt, cdn, row, stages || []));
+		}
+	},
+});
+
+function hse_pick_co_stages(cdt, cdn, row, stages) {
+	if (!stages.length) {
+		frappe.msgprint(__("This unit has no QC stages yet."));
+		return;
+	}
+	const chosen = new Set(
+		(row.affected_stages || "")
+			.split("\n")
+			.map((s) => s.trim())
+			.filter(Boolean)
+	);
+	const d = new frappe.ui.Dialog({
+		title: __("Stages This Change Affects"),
+		fields: [
+			{
+				fieldname: "stages",
+				fieldtype: "MultiCheck",
+				columns: 2,
+				options: stages.map((s) => ({ label: s, value: s, checked: chosen.has(s) })),
+			},
+		],
+		primary_action_label: __("Set"),
+		primary_action(values) {
+			frappe.model.set_value(cdt, cdn, "affected_stages", (values.stages || []).join("\n"));
+			d.hide();
+		},
+	});
+	d.show();
+}

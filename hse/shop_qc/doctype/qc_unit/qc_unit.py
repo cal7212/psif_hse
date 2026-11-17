@@ -6,7 +6,7 @@ import re
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, cstr, flt
+from frappe.utils import cint, cstr, flt, now_datetime
 
 from hse.shop_qc import missing_parts, sub_assemblies
 from hse.shop_qc.multi_unit import (
@@ -21,6 +21,9 @@ from hse.shop_qc.unit_stages import create_draft_inspections, set_qc_stages
 from hse.shop_qc.utils import LOCKED_STATUSES, update_unit_status
 
 REPAIR = "Repair"
+CO_APPROVED = "Approved"
+CO_APPROVER_ROLES = ("Quality Manager", "Manufacturing Manager", "System Manager")
+CO_LOCKED_FIELDS = ("co_no", "affected_stages")
 PMG_TAG = re.compile(r"^PMG-?\d+$")
 MAX_PMG = 10
 PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
@@ -119,9 +122,13 @@ class QCUnit(Document):
 		self.set_repair_costing()
 		self.validate_status_change()
 		missing_parts.validate_unit(self)
+		self.validate_change_orders()
 
 	def on_update(self):
 		missing_parts.on_update_unit(self)
+		if self.flags.change_orders_approved and not self.flags.in_insert:
+			# Approved change orders sent stages back: give each one a new draft inspection.
+			create_draft_inspections(self)
 		if self.has_value_changed("installed_in") and not self.flags.in_insert:
 			# Linked or unlinked: its test stages now follow (or no longer follow) the parent unit.
 			status = update_unit_status(self.name, update_modified=False)
@@ -403,6 +410,104 @@ class QCUnit(Document):
 				frappe.throw(
 					_("Hose Tag {0} is already used on {1}.").format(other[0].hose_tag, other[0].parent)
 				)
+
+	def validate_change_orders(self):
+		"""Change orders from the customer or engineering / design. Approving one sets aside the
+		accepted inspections of the stages it affects, so those stages must be inspected again."""
+		before = self.get_doc_before_save()
+		old = {r.name: r for r in (before.get("change_orders") if before else [])}
+		unit_stages = {r.stage for r in self.get("qc_stages")}
+		if not unit_stages and not self.is_new():
+			from hse.shop_qc.utils import get_stages
+
+			unit_stages = {s.name for s in get_stages(self.name)}
+		seen = set()
+		approvals = []
+		for row in self.get("change_orders"):
+			row.co_no = cstr(row.co_no).strip()
+			if row.co_no.upper() in seen:
+				frappe.throw(_("Change order {0} is listed twice.").format(frappe.bold(row.co_no)))
+			seen.add(row.co_no.upper())
+			stages = list(
+				dict.fromkeys(s.strip() for s in cstr(row.affected_stages).splitlines() if s.strip())
+			)
+			unknown = [s for s in stages if s not in unit_stages]
+			if unknown:
+				frappe.throw(
+					_("Change order {0}: {1} is not a QC stage of this unit.").format(
+						frappe.bold(row.co_no), ", ".join(unknown)
+					)
+				)
+			row.affected_stages = "\n".join(stages) or None
+			prev = old.get(row.name)
+			was_approved = bool(prev and prev.status == CO_APPROVED)
+			if was_approved:
+				for field in CO_LOCKED_FIELDS:
+					if cstr(row.get(field)) != cstr(prev.get(field)):
+						frappe.throw(
+							_(
+								"Change order {0} is approved: set it back to Pending before changing {1}."
+							).format(frappe.bold(row.co_no), _(row.meta.get_label(field)))
+						)
+			if (row.status == CO_APPROVED) != was_approved:
+				if not set(frappe.get_roles()) & set(CO_APPROVER_ROLES):
+					frappe.throw(
+						_("Only a {0} can approve change order {1} or withdraw its approval.").format(
+							" / ".join(_(r) for r in CO_APPROVER_ROLES), frappe.bold(row.co_no)
+						)
+					)
+			if row.status != CO_APPROVED:
+				row.approved_by = row.approved_on = row.superseded_inspections = None
+			elif not was_approved:
+				approvals.append((row, stages))
+		for row, stages in approvals:
+			row.approved_by = frappe.session.user
+			row.approved_on = now_datetime()
+			done = (
+				frappe.get_all(
+					"QC Inspection",
+					filters={
+						"qc_unit": self.name,
+						"stage": ("in", stages),
+						"docstatus": 1,
+						"status": "Accepted",
+					},
+					pluck="name",
+				)
+				if stages and not self.is_new()
+				else []
+			)
+			row.superseded_inspections = "\n".join(done) or None
+			if done:
+				self.flags.change_orders_approved = True
+				frappe.msgprint(
+					_("Change order {0}: {1} must be inspected again.").format(
+						frappe.bold(row.co_no), ", ".join(stages)
+					),
+					indicator="orange",
+					alert=True,
+				)
+		latest = next(
+			(
+				r
+				for r in sorted(self.get("change_orders"), key=lambda r: cstr(r.approved_on), reverse=True)
+				if r.status == CO_APPROVED and r.to_rev
+			),
+			None,
+		)
+		if (
+			approvals
+			and latest
+			and self.drawing_rev
+			and cstr(latest.to_rev).strip() not in cstr(self.drawing_rev)
+		):
+			frappe.msgprint(
+				_(
+					"Change order {0} moves the drawing to Rev {1}, but Drawing / Rev is still {2}. Update it in TrulinX."
+				).format(frappe.bold(latest.co_no), latest.to_rev, self.drawing_rev),
+				indicator="orange",
+				alert=True,
+			)
 
 	def validate_status_change(self):
 		if self.status in ("Released", "Shipped") and (self.open_non_conformances or 0) > 0:
