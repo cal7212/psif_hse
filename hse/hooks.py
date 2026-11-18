@@ -386,6 +386,10 @@ scheduler_events = {
 		"*/10 * * * *": [
 			"hse.hse.snapshot.scheduled",
 		],
+		# Schedule smartsheet date update for qc unit
+		"*/15 * * * *": [
+			"hse.shop_qc.smartsheet_sync.scheduled",
+		],
 	},
 }
 
