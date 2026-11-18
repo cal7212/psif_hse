@@ -222,7 +222,79 @@ STAMP_FIELDS = ("checked_on", "checked_by")
 COATING_LAYERS = ("Surface Conditioning", "Base Coat / Primer", "Intermediate Coat", "Top Coat", "Sealer")
 
 
+# Missing-part lines that name an inspection: the one a part was reported in, and found in.
+MISSING_PART_INSPECTION_LINKS = ("reported_inspection", "found_inspection")
+SELF = object()  # relink target: the inspection being saved
+
+
+def live_amendment(name: str) -> str | None:
+	"""The current (not cancelled) amendment of a cancelled inspection, or None."""
+	seen = set()
+	while name and name not in seen:
+		seen.add(name)
+		nxt = frappe.db.get_value(
+			"QC Inspection",
+			{"amended_from": name},
+			["name", "docstatus"],
+			as_dict=True,
+			order_by="creation desc",
+		)
+		if not nxt:
+			return None
+		if nxt.docstatus != 2:
+			return nxt.name
+		name = nxt.name
+	return None
+
+
 class QCInspection(Document):
+	def _validate_links(self):
+		# Runs before before_insert / validate, so stale links must be fixed here.
+		self.relink_cancelled_inspections()
+		super()._validate_links()
+
+	def relink_cancelled_inspections(self):
+		"""Missing-part lines are shared across the unit's checks and name the inspection a part
+		was reported or found in. Once that inspection is cancelled (most often the one being
+		amended), Frappe refuses the link: point it at the inspection's live amendment instead,
+		or clear it when there is none. The unit's list is corrected in validate."""
+		rows = self.get("missing_parts") or []
+		names = {r.get(f) for r in rows for f in MISSING_PART_INSPECTION_LINKS if r.get(f)}
+		if not names:
+			return
+		cancelled = frappe.get_all(
+			"QC Inspection", filters={"name": ("in", list(names)), "docstatus": 2}, pluck="name"
+		)
+		relinks = self.flags.inspection_relinks = {}
+		for old in cancelled:
+			# This amendment is not named yet when new; None until validate fills it in.
+			relinks[old] = SELF if old == self.amended_from else live_amendment(old)
+		for row in rows:
+			for field in MISSING_PART_INSPECTION_LINKS:
+				if row.get(field) in relinks:
+					new = relinks[row.get(field)]
+					row.set(
+						field,
+						self.name if new is SELF and not self.is_new() else (None if new is SELF else new),
+					)
+					if new is SELF:
+						row.flags.relink_to_self = [*(row.flags.relink_to_self or []), field]
+
+	def apply_inspection_relinks(self):
+		"""Finish relink_cancelled_inspections once this inspection has its name, and correct the
+		unit's shared missing-parts list the same way so the next copy is clean."""
+		for row in self.get("missing_parts") or []:
+			for field in row.flags.pop("relink_to_self", None) or []:
+				row.set(field, self.name)
+		relinks = self.flags.pop("inspection_relinks", None) or {}
+		for old, new in relinks.items():
+			for field in MISSING_PART_INSPECTION_LINKS:
+				frappe.db.sql(
+					f"""update `tabQC Missing Part` set `{field}` = %s
+					where parenttype = 'QC Unit' and parent = %s and `{field}` = %s""",
+					(self.name if new is SELF else new, self.qc_unit, old),
+				)
+
 	def autoname(self):
 		shop = self.shop or frappe.db.get_value("QC Unit", self.qc_unit, "shop")
 		prefix = frappe.db.get_value("Build Shop", shop, "inspection_prefix") if shop else None
@@ -230,6 +302,7 @@ class QCInspection(Document):
 
 	# ------------------------------------------------------------------ validate
 	def validate(self):
+		self.apply_inspection_relinks()
 		self.validate_unit()
 		self.validate_template()
 		self.validate_reinspection()

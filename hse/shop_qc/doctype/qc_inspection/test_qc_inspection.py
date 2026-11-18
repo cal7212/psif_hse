@@ -1408,6 +1408,42 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		for name in frappe.get_all("QC Unit", {"trulinx_work_order": MU_WO}, pluck="name"):
 			self.clear_unit(name)
 
+	def test_amend_keeps_missing_part_links(self):
+		"""Amending a cancelled inspection must not fail on missing-part lines that name it."""
+		asm = self.make("_T Assembly", submit=False)
+		asm.append(
+			"missing_parts",
+			{"item_description": "Gauge", "part_number": "_T-G-9", "qty": 1, "reason": "Missing", "found": 1},
+		)
+		asm.save()
+		self.assertEqual(asm.missing_parts[0].reported_inspection, asm.name)
+		asm.submit()
+		asm.cancel()
+
+		amended = frappe.copy_doc(asm)
+		amended.amended_from = asm.name
+		amended.docstatus = 0
+		amended.insert()  # used to raise "Cannot link cancelled document"
+		row = next(r for r in amended.missing_parts if r.part_number == "_T-G-9")
+		self.assertEqual(row.reported_inspection, amended.name)
+		self.assertIn(row.found_inspection, (amended.name, None))
+
+		# Another check of the unit with a line still naming the cancelled one saves too.
+		other = self.make("_T Test", submit=False)
+		other.append(
+			"missing_parts",
+			{
+				"item_description": "Hose",
+				"qty": 1,
+				"reason": "Missing",
+				"found": 1,
+				"reported_inspection": asm.name,
+			},
+		)
+		other.save()
+		hose = next(r for r in other.missing_parts if r.item_description == "Hose")
+		self.assertEqual(hose.reported_inspection, amended.name)
+
 	def test_multi_unit_naming_and_create_remaining(self):
 		self.clear_order()
 		with self.assertRaises(frappe.ValidationError):
