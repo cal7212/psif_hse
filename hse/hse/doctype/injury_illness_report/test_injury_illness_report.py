@@ -5,6 +5,7 @@ import frappe
 from frappe.tests import UnitTestCase
 
 from hse.hse.doctype.injury_illness_report.injury_illness_report import (
+	Injury_IllnessReport,
 	apply_cap,
 	count_days,
 	five_whys_errors,
@@ -49,3 +50,17 @@ class UnitTestInjury_IllnessReport(UnitTestCase):
 		errors = five_whys_errors(frappe._dict(why_1="Driver did not see it"))
 		self.assertEqual(len(errors), 1)
 		self.assertIn("Problem Statement", errors[0])
+
+	def test_signature_needs_completed_by(self):
+		doc = frappe._dict(completed_by_signature="data:image/png;base64,AAAA")
+		with self.assertRaises(frappe.ValidationError):
+			Injury_IllnessReport.validate_sign_off(doc)
+
+	def test_signing_dates_the_report(self):
+		doc = frappe._dict(completed_by="EMP-0001", completed_by_signature="data:image/png;base64,AAAA")
+		Injury_IllnessReport.validate_sign_off(doc)
+		self.assertTrue(doc.completed_by_date)
+		doc.completed_by_date = "2026-10-29"
+		Injury_IllnessReport.validate_sign_off(doc)
+		self.assertEqual(doc.completed_by_date, "2026-10-29")  # an entered date is kept
+		Injury_IllnessReport.validate_sign_off(frappe._dict())  # unsigned is fine

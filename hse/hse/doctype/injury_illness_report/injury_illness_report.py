@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, cstr, date_diff, getdate
+from frappe.utils import add_days, cstr, date_diff, getdate, today
 
 DAY_CAP = 180  # 29 CFR 1904.7(b)(3)(vii): total may be capped at 180 calendar days
 DAY_TABLES = ("days_away", "job_restriction")
@@ -54,6 +54,14 @@ class Injury_IllnessReport(Document):
 		self.set_status_label()
 		self.calculate_days()
 		self.validate_five_whys()
+		self.validate_sign_off()
+
+	def validate_sign_off(self):
+		"""A signature belongs to the person named as completing the report."""
+		if self.completed_by_signature and not self.completed_by:
+			frappe.throw(_("Select who completed the report (Completed By) before signing it."), title=_("Sign-off"))
+		if self.completed_by_signature and not self.completed_by_date:
+			self.completed_by_date = today()
 
 	def validate_five_whys(self):
 		if errors := five_whys_errors(self):

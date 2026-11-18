@@ -45,6 +45,12 @@ frappe.ui.form.on("Injury_Illness Report", {
 		frm.set_value("status_label", frm.doc.is_recordable ? "checked" : "unchecked");
 	},
 	incident_date: recalculate_all,
+	completed_by_signature(frm) {
+		// The server also does this on save.
+		if (frm.doc.completed_by_signature && !frm.doc.completed_by_date) {
+			frm.set_value("completed_by_date", frappe.datetime.get_today());
+		}
+	},
 	days_away_remove: (frm) => recalculate_table(frm, "days_away"),
 	job_restriction_remove: (frm) => recalculate_table(frm, "job_restriction"),
 });
