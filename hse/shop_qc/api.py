@@ -30,7 +30,6 @@ FIELD_MAP = {
 	"trulinx_url": "trulinx_url",
 	"customer_name": "customer_name",
 	"wo_date": "wo_date",
-	"promised_date": "promised_date",
 	"ship_date": "trulinx_ship_date",
 	"model": "model",
 	"description": "description",
@@ -53,7 +52,7 @@ FIELD_MAP = {
 }
 DEFAULT_SHOP = "HPU"  # work orders without a shop column are HPU builds
 DEFAULT_PRODUCT_TYPE = "Power Unit"
-DATE_FIELDS = {"wo_date", "promised_date", "trulinx_ship_date"}
+DATE_FIELDS = {"wo_date", "trulinx_ship_date"}
 FLOAT_FIELDS = {"motor_hp", "flow_gpm", "relief_setting_psi", "max_operating_psi", "reservoir_gal"}
 INT_FIELDS = {"unit_qty"}
 
