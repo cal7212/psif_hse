@@ -219,6 +219,31 @@
   "ship_carrier",
   "ship_service",
   "ship_trailer",
+  "tab_rfd",
+  "section_rfd_guide",
+  "rfd_guide",
+  "section_rfd_header",
+  "rfd_to",
+  "rfd_from",
+  "rfd_date",
+  "rfd_source",
+  "cb_rfd_header",
+  "rfd_project_name",
+  "rfd_project_number",
+  "rfd_number",
+  "rfd_date_issued",
+  "rfd_change_order",
+  "section_rfd_details",
+  "rfd_description",
+  "rfd_reason",
+  "rfd_impact",
+  "section_rfd_cost",
+  "rfd_cost_lines",
+  "cb_rfd_cost",
+  "rfd_total_cost",
+  "rfd_cost_loaded",
+  "section_rfd_payment",
+  "rfd_payment_schedule",
   "tab_qc",
   "section_missing_parts",
   "missing_parts",
@@ -1490,6 +1515,166 @@
    "options": "\nBox\nFlat Bed\nLow Deck"
   },
   {
+   "fieldname": "tab_rfd",
+   "fieldtype": "Tab Break",
+   "label": "Deviation (QM-144)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_rfd_guide",
+   "fieldtype": "Section Break",
+   "label": "How to Complete QM-144"
+  },
+  {
+   "fieldname": "rfd_guide",
+   "fieldtype": "HTML",
+   "label": "QM-144 Guide",
+   "options": "<div style=\"font-size:12px; line-height:1.5\">\n<p><b>Completing QM-144 Request for Deviation (RFD)</b>. Fill in the fields below in the same order as the paper form, save, then print with <b>Print &gt; QM-144 Request for Deviation</b>.</p>\n<table class=\"table table-bordered table-condensed\" style=\"font-size:12px; margin-bottom:6px\">\n<tr><th style=\"width:24%\">Form block</th><th>What to enter</th></tr>\n<tr><td>To / From / Date</td><td>Who the RFD goes to (customer contact or approver), who is sending it, and the date. Date defaults to the Date Issued.</td></tr>\n<tr><td>Requested By</td><td>Customer, or Engineering &amp; Design. Not printed; it becomes the Source of the change order.</td></tr>\n<tr><td>Project Name / Number</td><td>Leave blank to use the unit's Project Name and TrulinX work order (RGA number for repairs).</td></tr>\n<tr><td>RFD Number</td><td>RFD-YY-NNN. Leave blank and the next number for the year is assigned on save.</td></tr>\n<tr><td>Date Issued</td><td>Defaults to today.</td></tr>\n<tr><td>Description of Deviation</td><td>The nature and scope of the deviation, with specific details of the changes to the design, engineering or fabrication of the project.</td></tr>\n<tr><td>Reason for Deviation</td><td>Why: design revisions, engineering modifications, unforeseen fabrication challenges, client-requested changes or other factors.</td></tr>\n<tr><td>Impact on Project</td><td>The effect on schedule, budget and any other project parameters related to design, engineering and fabrication.</td></tr>\n<tr><td>Cost Breakdown (if needed)</td><td>The standard categories are loaded once. Enter Quantity and Unit Price (Total is calculated) or a lump-sum Total; add rows for other categories. Leave the table blank if there is no cost.</td></tr>\n<tr><td>Payment Schedule (if needed)</td><td>Payment terms and schedule, including down payments or milestone payments.</td></tr>\n</table>\n<p style=\"margin-bottom:0\"><b>Change order.</b> Once Description and Requested By are filled in, saving adds or updates a <b>Pending</b> row in Change Orders on the Construction Requirements tab (CO No. = RFD Number). Pick the affected stages there; approving it sends those stages back for re-inspection. An approved, rejected or cancelled row is not changed by later RFD edits.</p>\n</div>"
+  },
+  {
+   "fieldname": "section_rfd_header",
+   "fieldtype": "Section Break",
+   "label": "Request for Deviation (RFD)"
+  },
+  {
+   "description": "Customer contact or approver the RFD is sent to.",
+   "fieldname": "rfd_to",
+   "fieldtype": "Data",
+   "label": "To"
+  },
+  {
+   "description": "Who is sending the RFD.",
+   "fieldname": "rfd_from",
+   "fieldtype": "Data",
+   "label": "From"
+  },
+  {
+   "description": "Defaults to Date Issued.",
+   "fieldname": "rfd_date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "description": "Becomes the Source of the change order. Not printed.",
+   "fieldname": "rfd_source",
+   "fieldtype": "Select",
+   "label": "Requested By",
+   "mandatory_depends_on": "eval:doc.rfd_description",
+   "options": "\nCustomer\nEngineering & Design"
+  },
+  {
+   "fieldname": "cb_rfd_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Leave blank to use the unit's Project Name.",
+   "fieldname": "rfd_project_name",
+   "fieldtype": "Data",
+   "label": "Project Name"
+  },
+  {
+   "description": "Leave blank to use the TrulinX work order (RGA number for repairs).",
+   "fieldname": "rfd_project_number",
+   "fieldtype": "Data",
+   "label": "Project Number"
+  },
+  {
+   "description": "RFD-YY-NNN. Leave blank to assign the next number on save.",
+   "fieldname": "rfd_number",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "RFD Number",
+   "no_copy": 1,
+   "search_index": 1
+  },
+  {
+   "description": "Defaults to today.",
+   "fieldname": "rfd_date_issued",
+   "fieldtype": "Date",
+   "label": "Date Issued",
+   "no_copy": 1
+  },
+  {
+   "description": "The Change Orders row this RFD fills (Construction Requirements tab).",
+   "fieldname": "rfd_change_order",
+   "fieldtype": "Data",
+   "label": "Change Order",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_rfd_details",
+   "fieldtype": "Section Break",
+   "label": "Deviation"
+  },
+  {
+   "description": "Describe the nature and scope of the deviation, including specific details about the changes to be made to the design, engineering, or fabrication aspects of the project.",
+   "fieldname": "rfd_description",
+   "fieldtype": "Text",
+   "label": "Description of Deviation",
+   "no_copy": 1
+  },
+  {
+   "description": "Explain the reason for the deviation, such as design revisions, engineering modifications, unforeseen fabrication challenges, client-requested changes, or other relevant factors.",
+   "fieldname": "rfd_reason",
+   "fieldtype": "Text",
+   "label": "Reason for Deviation",
+   "no_copy": 1
+  },
+  {
+   "description": "Detail how this deviation will impact the project, including its effect on the project schedule, budget, and any other relevant project parameters related to design, engineering, and fabrication.",
+   "fieldname": "rfd_impact",
+   "fieldtype": "Text",
+   "label": "Impact on Project",
+   "no_copy": 1
+  },
+  {
+   "description": "If needed. Total = Quantity x Unit Price, or enter a lump-sum Total.",
+   "fieldname": "section_rfd_cost",
+   "fieldtype": "Section Break",
+   "label": "Cost Breakdown"
+  },
+  {
+   "fieldname": "rfd_cost_lines",
+   "fieldtype": "Table",
+   "label": "Cost Breakdown",
+   "no_copy": 1,
+   "options": "QC RFD Cost Line"
+  },
+  {
+   "fieldname": "cb_rfd_cost",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "rfd_total_cost",
+   "fieldtype": "Currency",
+   "label": "Total Change Order Cost",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rfd_cost_loaded",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "RFD Cost Categories Loaded",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_rfd_payment",
+   "fieldtype": "Section Break",
+   "label": "Payment Schedule"
+  },
+  {
+   "description": "If needed. Specify the payment terms and schedule for the deviation, including any down payments or milestone payments related to design, engineering, and fabrication.",
+   "fieldname": "rfd_payment_schedule",
+   "fieldtype": "Text",
+   "label": "Payment Schedule",
+   "no_copy": 1
+  },
+  {
    "fieldname": "tab_qc",
    "fieldtype": "Tab Break",
    "label": "QC Status"
@@ -1641,7 +1826,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-16 12:00:00.000000",
+ "modified": "2026-11-16 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",

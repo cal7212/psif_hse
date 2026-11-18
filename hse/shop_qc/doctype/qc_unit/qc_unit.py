@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, now_datetime
 
-from hse.shop_qc import missing_parts, sub_assemblies
+from hse.shop_qc import missing_parts, rfd, sub_assemblies
 from hse.shop_qc.multi_unit import (
 	hose_build_name,
 	unit_base,
@@ -122,6 +122,7 @@ class QCUnit(Document):
 		self.set_repair_costing()
 		self.validate_status_change()
 		missing_parts.validate_unit(self)
+		rfd.validate_unit(self)  # QM-144: pre-fills its Change Orders row
 		self.validate_change_orders()
 
 	def on_update(self):
