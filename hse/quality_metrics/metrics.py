@@ -548,6 +548,7 @@ def capa_effective_pct(start, end):
 
 # ---------------------------------------------------------------- Incidents (Injury_Illness Report)
 INJURY = "Injury_Illness Report"
+INJURY_ACTION = "Incident Corrective Action"
 INJURY_OPEN = ("To-Do", "In Progress", "Reopened")
 NOT_CANCELLED = {"docstatus": ["!=", 2]}
 
@@ -630,19 +631,28 @@ def incident_actions_overdue(start, end):
 
 
 def incident_actions_on_time_pct(start, end):
+	"""Each corrective action completed in the period, judged on its own due date (a report
+	can have several)."""
 	rows = frappe.get_all(
-		INJURY,
-		filters={"date_done": ["between", [getdate(start), getdate(end)]], **NOT_CANCELLED},
-		fields=["name", "date_due", "date_done"],
+		INJURY_ACTION,
+		filters={"parenttype": INJURY, "date_done": ["between", [getdate(start), getdate(end)]]},
+		fields=["parent", "date_due", "date_done"],
 	)
+	if rows:
+		cancelled = set(
+			frappe.get_all(
+				INJURY, filters={"name": ["in", {r.parent for r in rows}], "docstatus": 2}, pluck="name"
+			)
+		)
+		rows = [r for r in rows if r.parent not in cancelled]
 	if not rows:
 		return None, _("No corrective actions completed in the period.")
-	late = [r.name for r in rows if r.date_due and getdate(r.date_done) > getdate(r.date_due)]
+	late = [r for r in rows if r.date_due and getdate(r.date_done) > getdate(r.date_due)]
 	detail = _("{0} of {1} corrective actions completed by the due date.").format(
 		len(rows) - len(late), len(rows)
 	)
 	if late:
-		detail += " " + _("Late: {0}").format(_names(late))
+		detail += " " + _("Late: {0}").format(_names(sorted({r.parent for r in late})))
 	return _pct(len(rows) - len(late), len(rows)), detail
 
 

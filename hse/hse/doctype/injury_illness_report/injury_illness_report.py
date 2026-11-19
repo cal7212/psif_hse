@@ -39,6 +39,20 @@ def five_whys_errors(doc) -> list[str]:
 	return errors
 
 
+def corrective_action_summary(rows) -> tuple:
+	"""(Next Action Due, All Actions Completed) for the report, from its corrective actions.
+	While any action is open: the earliest due date among the open ones, and no completion
+	date. Once every action is completed: no due date, and the latest completion date. The
+	dashboards count a report as overdue on these two fields."""
+	if not rows:
+		return None, None
+	open_rows = [r for r in rows if not r.date_done]
+	if open_rows:
+		due = [getdate(r.date_due) for r in open_rows if r.date_due]
+		return (min(due) if due else None), None
+	return None, max(getdate(r.date_done) for r in rows)
+
+
 def apply_cap(day_counts, cap=DAY_CAP):
 	"""Cap the running total of a table at `cap`; later rows get what is left."""
 	remaining, out = cap, []
@@ -55,6 +69,14 @@ class Injury_IllnessReport(Document):
 		self.calculate_days()
 		self.validate_five_whys()
 		self.validate_sign_off()
+		self.set_corrective_action_summary()
+
+	def before_update_after_submit(self):
+		# Corrective actions are usually finished after the report is submitted.
+		self.set_corrective_action_summary()
+
+	def set_corrective_action_summary(self):
+		self.date_due, self.date_done = corrective_action_summary(self.corrective_actions)
 
 	def validate_sign_off(self):
 		"""A signature belongs to the person named as completing the report."""
