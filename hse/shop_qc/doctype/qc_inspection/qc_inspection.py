@@ -289,10 +289,12 @@ class QCInspection(Document):
 		relinks = self.flags.pop("inspection_relinks", None) or {}
 		for old, new in relinks.items():
 			for field in MISSING_PART_INSPECTION_LINKS:
-				frappe.db.sql(
-					f"""update `tabQC Missing Part` set `{field}` = %s
-					where parenttype = 'QC Unit' and parent = %s and `{field}` = %s""",
-					(self.name if new is SELF else new, self.qc_unit, old),
+				frappe.db.set_value(
+					"QC Missing Part",
+					{"parenttype": "QC Unit", "parent": self.qc_unit, field: old},
+					field,
+					self.name if new is SELF else new,
+					update_modified=False,
 				)
 
 	def autoname(self):
