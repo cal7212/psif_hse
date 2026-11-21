@@ -57,4 +57,6 @@ def execute():
 		frappe.db.set_value(PARENT, old.name, {"date_due": due, "date_done": done}, update_modified=False)
 		moved += 1
 	if moved:
-		print(f"Moved the corrective action of {moved} injury/illness report(s) into the Corrective Actions table.")
+		print(
+			f"Moved the corrective action of {moved} injury/illness report(s) into the Corrective Actions table."
+		)
