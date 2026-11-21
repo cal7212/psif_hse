@@ -12,6 +12,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, get_url, getdate, today
 
+from hse.hse.email_settings import email_enabled
 from hse.training_matrix.notifications import _assign, settings, users_with_roles
 from hse.training_matrix.skills import is_manager_of, manager_users
 
@@ -105,17 +106,18 @@ def decide_training_request(name: str, decision: str, notes: str | None = None) 
 	)
 	doc.flags.ignore_permissions = True
 	doc.save()
-	user = frappe.db.get_value("Employee", doc.employee, "user_id")
-	_notify(
-		[user],
-		_("Your training request was {0}: {1}").format(_(decision).lower(), doc.training_title),
-		_("<p>{0}</p><p>{1}</p><p>See <a href='{2}'>My Training</a>.</p>").format(
-			frappe.utils.escape_html(doc.training_title),
-			frappe.utils.escape_html(notes or ""),
-			get_url("/my-training"),
-		),
-		doc.name,
-	)
+	if email_enabled("request_decision_email"):
+		user = frappe.db.get_value("Employee", doc.employee, "user_id")
+		_notify(
+			[user],
+			_("Your training request was {0}: {1}").format(_(decision).lower(), doc.training_title),
+			_("<p>{0}</p><p>{1}</p><p>See <a href='{2}'>My Training</a>.</p>").format(
+				frappe.utils.escape_html(doc.training_title),
+				frappe.utils.escape_html(notes or ""),
+				get_url("/my-training"),
+			),
+			doc.name,
+		)
 	if decision == "Approved":
 		_assign(
 			sorted(users_with_roles([COORDINATOR])),
@@ -153,7 +155,11 @@ def complete_training_request(name: str, completed_on: str) -> None:
 
 
 def remind_overdue_certificates(on_date=None) -> None:
-	"""Daily: one reminder to the employee and manager when an external certificate is late."""
+	"""Daily: one reminder to the employee and manager when an external certificate is late.
+	With the email off nothing is marked reminded, so switching it back on reminds once for each
+	certificate that is still late."""
+	if not email_enabled("certificate_reminder_email"):
+		return
 	on_date = getdate(on_date or today())
 	for r in frappe.get_all(
 		REQUEST,

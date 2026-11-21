@@ -427,6 +427,7 @@ override_doctype_dashboards = {
 #
 # If hse/hooks.py has NO after_install / after_migrate yet, use:
 after_install = [
+	"hse.hse.email_settings.ensure_defaults",
 	"hse.asset_inspection.install.after_install",
 	"hse.housekeeping_inspection.install.after_install",
 	"hse.hse.sds_setup.after_install",
@@ -437,6 +438,7 @@ after_install = [
 ]
 after_migrate = [
 	"hse.module_setup.ensure_module_defs",  # must run first
+	"hse.hse.email_settings.ensure_defaults",  # before anything saves Training Matrix Settings
 	"hse.asset_inspection.install.after_migrate",
 	"hse.housekeeping_inspection.install.after_migrate",
 	"hse.hse.sds_setup.after_migrate",

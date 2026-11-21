@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_url, getdate, today
 
+from hse.hse.email_settings import email_enabled
 from hse.training_matrix import status as st
 from hse.training_matrix.evidence import QUIZ_METHODS, QUIZ_PASS_MARK, acknowledgment_required, recalculate
 from hse.training_matrix.trainers import check_authorized
@@ -124,8 +125,8 @@ class TrainingRecord(Document):
 		recipients = [
 			r.user_id for r in self.attendees if r.user_id and not r.acknowledged and r.result != "Fail"
 		]
-		if not recipients:
-			return
+		if not recipients or not email_enabled("acknowledgment_email"):
+			return  # with the email off, the training still waits for acknowledgment in My Training
 		frappe.sendmail(
 			recipients=recipients,
 			subject=_("Please acknowledge your training: {0}").format(

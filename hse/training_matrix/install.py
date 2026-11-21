@@ -34,7 +34,6 @@ def default_settings():
 	settings.update(
 		{
 			"escalation_days": 14,
-			"monthly_email": 1,
 			"absence_days": 90,
 			"absence_due_days": 0,
 			"certificate_business_days": 10,

@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_url, getdate
 
+from hse.hse.email_settings import email_enabled
 from hse.training_matrix.retraining import apply_retraining, can_assign
 
 
@@ -77,6 +78,8 @@ class RetrainingAssignment(Document):
 			apply_retraining(row.employee)
 
 	def notify_employees(self):
+		if not email_enabled("retraining_email"):
+			return
 		users = [frappe.db.get_value("Employee", r.employee, "user_id") for r in self.employees]
 		users = [u for u in users if u]
 		if not users:

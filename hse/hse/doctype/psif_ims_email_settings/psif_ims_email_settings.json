@@ -1,0 +1,130 @@
+{
+ "actions": [],
+ "creation": "2026-11-21 12:00:00.000000",
+ "description": "Switch each automatic PSIF IMS email on or off.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_training",
+  "escalation_email",
+  "acknowledgment_email",
+  "retraining_email",
+  "column_break_training",
+  "monthly_email",
+  "request_decision_email",
+  "certificate_reminder_email",
+  "section_all",
+  "assignment_emails",
+  "section_snapshot",
+  "snapshot_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_training",
+   "fieldtype": "Section Break",
+   "label": "Training Matrix",
+   "description": "Untick an email to stop it going out. Records, statuses and ToDos carry on as normal; only the email is skipped. Recipients and timing are set in Training Matrix Settings."
+  },
+  {
+   "fieldname": "escalation_email",
+   "fieldtype": "Check",
+   "label": "Overdue Escalation Email",
+   "default": "1",
+   "description": "To the escalation recipients when a course is still overdue after Escalate After days. When off, the escalation ToDo is still assigned and the course is marked escalated, so it is not emailed later."
+  },
+  {
+   "fieldname": "acknowledgment_email",
+   "fieldtype": "Check",
+   "label": "Training Acknowledgment Request",
+   "default": "1",
+   "description": "To attendees when a Training Record is submitted. When off, the training still waits for their acknowledgment in My Training."
+  },
+  {
+   "fieldname": "retraining_email",
+   "fieldtype": "Check",
+   "label": "Retraining Required",
+   "default": "1",
+   "description": "To the employees on a submitted Retraining Assignment."
+  },
+  {
+   "fieldname": "column_break_training",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "monthly_email",
+   "fieldtype": "Check",
+   "label": "Monthly Training Status Report",
+   "default": "1",
+   "description": "First Monday of the month: each manager's team report and the company-wide report."
+  },
+  {
+   "fieldname": "request_decision_email",
+   "fieldtype": "Check",
+   "label": "Training Request Decision",
+   "default": "1",
+   "description": "To the employee when their manager approves or rejects a Training Request."
+  },
+  {
+   "fieldname": "certificate_reminder_email",
+   "fieldtype": "Check",
+   "label": "Overdue Certificate Reminder",
+   "default": "1",
+   "description": "To the employee and manager when an external training certificate is late. When off, no reminder is recorded, so turning it back on reminds once for each certificate still late."
+  },
+  {
+   "fieldname": "section_all",
+   "fieldtype": "Section Break",
+   "label": "All Modules"
+  },
+  {
+   "fieldname": "assignment_emails",
+   "fieldtype": "Check",
+   "label": "ToDo Assignment Emails",
+   "default": "1",
+   "description": "The bell notification and email when PSIF IMS assigns someone a ToDo (overdue training, training requests, skills ready for authorization, failed evaluations, housekeeping findings). When off, the ToDo is still assigned. Assignments made by hand in the desk are not affected; each person's Notification Settings still apply when on."
+  },
+  {
+   "fieldname": "section_snapshot",
+   "fieldtype": "Section Break",
+   "label": "HSE Snapshot"
+  },
+  {
+   "fieldname": "snapshot_note",
+   "fieldtype": "HTML",
+   "label": "HSE Snapshot",
+   "options": "<p class=\"text-muted\">The weekly and monthly HSE Snapshot emails are switched on, scheduled and addressed in <a href=\"/app/hse-snapshot-settings\">HSE Snapshot Settings</a>.</p>"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-11-21 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "PSIF IMS Email Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "HR Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Training Coordinator",
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -135,3 +135,29 @@ class IntegrationTestRetrainingAssignment(IntegrationTestCase):
 		self.assertIsNone(row(self.employee, "_T-RT-LOTO").escalated_on)
 		process_overdue(add_days(overdue.overdue_since, 14))
 		self.assertIsNotNone(row(self.employee, "_T-RT-LOTO").escalated_on)
+
+	def test_email_switch_off_skips_only_the_email(self):
+		settings = "PSIF IMS Email Settings"
+		frappe.db.set_single_value(settings, "retraining_email", 0)
+		frappe.clear_document_cache(settings, settings)
+		try:
+			name = create_assignment(
+				"Incident or Near Miss",
+				[self.employee],
+				["_T-RT-HAZCOM"],
+				today(),
+				add_days(today(), 14),
+				"test",
+			)
+			# the retraining still applies to the matrix ...
+			self.assertEqual(row(self.employee, "_T-RT-HAZCOM").status, st.DUE)
+			# ... but no "Retraining required" email is queued
+			self.assertFalse(
+				frappe.db.exists(
+					"Email Queue", {"reference_doctype": "Retraining Assignment", "reference_name": name}
+				)
+			)
+			frappe.get_doc("Retraining Assignment", name).cancel()
+		finally:
+			frappe.db.set_single_value(settings, "retraining_email", 1)
+			frappe.clear_document_cache(settings, settings)

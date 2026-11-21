@@ -10,7 +10,6 @@
   "column_break_e",
   "escalation_users",
   "section_report",
-  "monthly_email",
   "report_roles",
   "column_break_r",
   "report_users",
@@ -26,7 +25,7 @@
    "fieldname": "section_escalation",
    "fieldtype": "Section Break",
    "label": "Overdue Escalation (TRN-700 §4.9)",
-   "description": "The employee's manager is notified the day a course goes overdue. If it is still overdue after this many days, it escalates to the people below."
+   "description": "The employee's manager is notified the day a course goes overdue. If it is still overdue after this many days, it escalates to the people below. The escalation email is switched on or off in PSIF IMS Email Settings."
   },
   {
    "fieldname": "escalation_days",
@@ -56,13 +55,7 @@
    "fieldname": "section_report",
    "fieldtype": "Section Break",
    "label": "Monthly Status Report",
-   "description": "Sent on the first Monday of each month. Managers get their own team's report; the company-wide report goes to the people below."
-  },
-  {
-   "fieldname": "monthly_email",
-   "fieldtype": "Check",
-   "label": "Send Monthly Status Email",
-   "default": "1"
+   "description": "Sent on the first Monday of each month. Managers get their own team's report; the company-wide report goes to the people below. Switch it on or off in PSIF IMS Email Settings."
   },
   {
    "fieldname": "report_roles",
@@ -119,7 +112,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-19 12:00:00.000000",
+ "modified": "2026-11-21 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Training Matrix",
  "name": "Training Matrix Settings",
