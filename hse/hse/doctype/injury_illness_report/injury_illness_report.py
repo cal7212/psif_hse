@@ -81,7 +81,9 @@ class Injury_IllnessReport(Document):
 	def validate_sign_off(self):
 		"""A signature belongs to the person named as completing the report."""
 		if self.completed_by_signature and not self.completed_by:
-			frappe.throw(_("Select who completed the report (Completed By) before signing it."), title=_("Sign-off"))
+			frappe.throw(
+				_("Select who completed the report (Completed By) before signing it."), title=_("Sign-off")
+			)
 		if self.completed_by_signature and not self.completed_by_date:
 			self.completed_by_date = today()
 
