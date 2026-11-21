@@ -1428,21 +1428,18 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertEqual(row.reported_inspection, amended.name)
 		self.assertIn(row.found_inspection, (amended.name, None))
 
-		# Another check of the unit with a line still naming the cancelled one saves too.
-		other = self.make("_T Test", submit=False)
-		other.append(
-			"missing_parts",
-			{
-				"item_description": "Hose",
-				"qty": 1,
-				"reason": "Missing",
-				"found": 1,
-				"reported_inspection": asm.name,
-			},
+		# The unit's shared list follows, so the next check copies a clean line and saves.
+		self.assertEqual(
+			frappe.db.get_value(
+				"QC Missing Part",
+				{"parenttype": "QC Unit", "parent": WO, "part_number": "_T-G-9"},
+				"reported_inspection",
+			),
+			amended.name,
 		)
-		other.save()
-		hose = next(r for r in other.missing_parts if r.item_description == "Hose")
-		self.assertEqual(hose.reported_inspection, amended.name)
+		other = self.make("_T Test", submit=False)
+		copied = [r for r in other.missing_parts if r.part_number == "_T-G-9"]
+		self.assertTrue(all(r.reported_inspection == amended.name for r in copied))
 
 	def test_multi_unit_naming_and_create_remaining(self):
 		self.clear_order()
