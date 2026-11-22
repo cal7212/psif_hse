@@ -5,6 +5,7 @@
 - The day a required course goes overdue, the employee's manager gets a ToDo.
 - After Training Matrix Settings → Escalate After days (14), it escalates by email and ToDo to the
   escalation recipients (roles and / or people in Settings; HR Manager when none are set).
+- PSIF IMS Email Settings switches each of these emails on or off.
 - On the first Monday of each month, every manager gets their team's report and the company-wide
   report goes to the report recipients (the escalation recipients when none are set).
 """
@@ -22,6 +23,8 @@ from frappe.utils import (
 	today,
 )
 
+from hse.hse.assignments import assign
+from hse.hse.email_settings import email_enabled
 from hse.training_matrix import status as st
 from hse.training_matrix.skills import manager_users
 
@@ -68,14 +71,7 @@ def report_recipients() -> list[str]:
 
 
 def _assign(users, doctype, name, description) -> None:
-	from frappe.desk.form.assign_to import add as assign
-
-	if not users:
-		return
-	try:
-		assign({"assign_to": list(users), "doctype": doctype, "name": name, "description": description})
-	except Exception:
-		pass  # already assigned to an open ToDo
+	assign(users, doctype, name, description)  # skips anyone with an open ToDo on it already
 
 
 # ---------------------------------------------------------------- overdue
@@ -129,13 +125,14 @@ def process_overdue(on_date=None) -> None:
 		return
 	recipients = escalation_recipients()
 	if recipients:
-		frappe.sendmail(
-			recipients=recipients,
-			subject=_("Training overdue {0}+ days: {1} item(s)").format(days, len(due)),
-			message=_overdue_table(
-				due, on_date, _("These required courses are still overdue after {0} days.").format(days)
-			),
-		)
+		if email_enabled("escalation_email"):
+			frappe.sendmail(
+				recipients=recipients,
+				subject=_("Training overdue {0}+ days: {1} item(s)").format(days, len(due)),
+				message=_overdue_table(
+					due, on_date, _("These required courses are still overdue after {0} days.").format(days)
+				),
+			)
 		for matrix in sorted({r.parent for r in due}):
 			_assign(
 				recipients,
@@ -153,7 +150,7 @@ def process_overdue(on_date=None) -> None:
 def monthly_status_email(on_date=None) -> None:
 	"""Runs every Monday; sends only on the first Monday of the month."""
 	on_date = getdate(on_date or today())
-	if on_date.weekday() != 0 or on_date.day > 7 or not settings().monthly_email:
+	if on_date.weekday() != 0 or on_date.day > 7 or not email_enabled("monthly_email"):
 		return
 	send_monthly_report(on_date)
 

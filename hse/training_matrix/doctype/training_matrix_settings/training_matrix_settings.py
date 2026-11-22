@@ -28,7 +28,6 @@ class TrainingMatrixSettings(Document):
 		escalation_days: DF.Int
 		escalation_roles: DF.TableMultiSelect[TrainingMatrixSettingsRole]
 		escalation_users: DF.TableMultiSelect[TrainingMatrixSettingsUser]
-		monthly_email: DF.Check
 		report_roles: DF.TableMultiSelect[TrainingMatrixSettingsRole]
 		report_users: DF.TableMultiSelect[TrainingMatrixSettingsUser]
 	# end: auto-generated types

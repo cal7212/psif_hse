@@ -3,10 +3,10 @@
 
 import frappe
 from frappe import _
-from frappe.desk.form.assign_to import add as assign
 from frappe.model.document import Document
 from frappe.utils import getdate, today
 
+from hse.hse.assignments import assign
 from hse.training_matrix.evidence import recalculate
 from hse.training_matrix.trainers import check_authorized, is_authorized
 
@@ -106,17 +106,14 @@ class CompetencyEvaluation(Document):
 		users = [u for u in users if u] or frappe.get_all(
 			"Has Role", filters={"role": "Training Coordinator", "parenttype": "User"}, pluck="parent"
 		)
-		if users:
-			assign(
-				{
-					"assign_to": list(dict.fromkeys(users)),
-					"doctype": self.doctype,
-					"name": self.name,
-					"description": _("{0} did not pass {1}. Arrange retraining and re-evaluation.").format(
-						self.employee_name, self.training_requirement
-					),
-				}
-			)
+		assign(
+			users,
+			self.doctype,
+			self.name,
+			_("{0} did not pass {1}. Arrange retraining and re-evaluation.").format(
+				self.employee_name, self.training_requirement
+			),
+		)
 
 
 @frappe.whitelist()

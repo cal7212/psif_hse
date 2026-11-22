@@ -391,17 +391,14 @@ class HousekeepingInspection(Document):
 		user = frappe.db.get_value("Employee", self.area_owner, "user_id")
 		if not user:
 			return
-		from frappe.desk.form.assign_to import add as assign
+		from hse.hse.assignments import assign
 
 		assign(
-			{
-				"assign_to": [user],
-				"doctype": "Nonconformance Report",
-				"name": nc.name,
-				"description": _("Correct housekeeping findings in {0}").format(self.housekeeping_area),
-				"priority": "High" if nc.severity == "Critical" else "Medium",
-			},
-			ignore_permissions=True,
+			[user],
+			"Nonconformance Report",
+			nc.name,
+			_("Correct housekeeping findings in {0}").format(self.housekeeping_area),
+			priority="High" if nc.severity == "Critical" else "Medium",
 		)
 
 	def link_reinspection_to_original_nc(self):

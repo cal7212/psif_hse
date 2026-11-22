@@ -178,24 +178,16 @@ def after_matrix_update(matrix) -> None:
 
 
 def notify_ready(matrix, skill: str) -> None:
-	from frappe.desk.form.assign_to import add as assign
+	from hse.hse.assignments import assign
 
-	users = manager_users(matrix.employee)
-	if not users:
-		return
-	try:
-		assign(
-			{
-				"assign_to": users,
-				"doctype": matrix.doctype,
-				"name": matrix.name,
-				"description": _(
-					"{0} is ready for authorization as {1}. Review and submit a Skill Authorization."
-				).format(matrix.employee_name, skill),
-			}
-		)
-	except Exception:
-		pass  # already assigned
+	assign(
+		manager_users(matrix.employee),
+		matrix.doctype,
+		matrix.name,
+		_("{0} is ready for authorization as {1}. Review and submit a Skill Authorization.").format(
+			matrix.employee_name, skill
+		),
+	)
 
 
 def manager_users(employee: str) -> list[str]:
