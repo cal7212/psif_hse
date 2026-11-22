@@ -1,0 +1,478 @@
+{
+ "autoname": "naming_series:",
+ "creation": "2026-11-22 12:00:00.000000",
+ "custom": 0,
+ "default_print_format": "Risk Assessment",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_assessment",
+  "naming_series",
+  "title",
+  "assessment_type",
+  "review_trigger",
+  "injury_report",
+  "column_break_assessment",
+  "status",
+  "revision",
+  "previous_assessment",
+  "superseded_by",
+  "section_scope",
+  "company",
+  "department",
+  "location",
+  "asset",
+  "column_break_scope",
+  "activity_description",
+  "persons_at_risk",
+  "section_team",
+  "assessment_date",
+  "assessed_by",
+  "assessed_by_name",
+  "column_break_team",
+  "review_interval_months",
+  "next_review_date",
+  "team",
+  "section_hazards",
+  "risk_matrix",
+  "hazards",
+  "section_summary",
+  "hazard_count",
+  "highest_initial_score",
+  "highest_initial_rating",
+  "column_break_summary",
+  "highest_residual_score",
+  "highest_residual_rating",
+  "high_risk_count",
+  "section_actions",
+  "actions",
+  "date_due",
+  "column_break_actions",
+  "date_done",
+  "section_approval",
+  "residual_risk_acceptance",
+  "column_break_approval",
+  "approved_by",
+  "approved_by_name",
+  "approved_on",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_assessment",
+   "fieldtype": "Section Break",
+   "label": "Assessment"
+  },
+  {
+   "default": "HSE-RA-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Assessment No.",
+   "options": "HSE-RA-.YYYY.-.####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Activity / Area Assessed",
+   "reqd": 1
+  },
+  {
+   "default": "Task / Job Hazard Analysis",
+   "fieldname": "assessment_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Assessment Type",
+   "options": "Task / Job Hazard Analysis\nArea / Workplace\nEquipment / Machine\nChemical / Substance\nProcess Change\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "Initial Assessment",
+   "fieldname": "review_trigger",
+   "fieldtype": "Select",
+   "label": "Reason for Assessment",
+   "options": "Initial Assessment\nScheduled Review\nIncident\nProcess / Equipment Change\nOther"
+  },
+  {
+   "depends_on": "eval:doc.review_trigger=='Incident'",
+   "fieldname": "injury_report",
+   "fieldtype": "Link",
+   "label": "Incident Report",
+   "mandatory_depends_on": "eval:doc.review_trigger=='Incident'",
+   "options": "Injury_Illness Report"
+  },
+  {
+   "fieldname": "column_break_assessment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nActive\nSuperseded\nCancelled",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "read_only": 1
+  },
+  {
+   "depends_on": "previous_assessment",
+   "fieldname": "previous_assessment",
+   "fieldtype": "Link",
+   "label": "Supersedes",
+   "options": "Risk Assessment",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "superseded_by",
+   "fieldname": "superseded_by",
+   "fieldtype": "Link",
+   "label": "Superseded By",
+   "no_copy": 1,
+   "options": "Risk Assessment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_scope",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Equipment",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "activity_description",
+   "fieldtype": "Small Text",
+   "label": "Scope / Description of Work"
+  },
+  {
+   "description": "e.g. operators, maintenance, contractors, visitors",
+   "fieldname": "persons_at_risk",
+   "fieldtype": "Small Text",
+   "label": "Who Might Be Harmed"
+  },
+  {
+   "fieldname": "section_team",
+   "fieldtype": "Section Break",
+   "label": "Assessment Team"
+  },
+  {
+   "default": "Today",
+   "fieldname": "assessment_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Assessment Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "assessed_by",
+   "fieldtype": "Link",
+   "label": "Lead Assessor",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "assessed_by.employee_name",
+   "fieldname": "assessed_by_name",
+   "fieldtype": "Data",
+   "label": "Lead Assessor Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_team",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "12",
+   "fieldname": "review_interval_months",
+   "fieldtype": "Int",
+   "label": "Review Every (Months)",
+   "non_negative": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Defaults to the assessment date plus the review interval. Bring it forward after an incident or a change.",
+   "fieldname": "next_review_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Next Review Due",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "team",
+   "fieldtype": "Table",
+   "label": "Team",
+   "options": "Risk Assessment Team Member"
+  },
+  {
+   "fieldname": "section_hazards",
+   "fieldtype": "Section Break",
+   "label": "Hazards and Controls"
+  },
+  {
+   "fieldname": "risk_matrix",
+   "fieldtype": "HTML",
+   "label": "Risk Matrix"
+  },
+  {
+   "fieldname": "hazards",
+   "fieldtype": "Table",
+   "label": "Hazards",
+   "options": "Risk Assessment Hazard"
+  },
+  {
+   "fieldname": "section_summary",
+   "fieldtype": "Section Break",
+   "label": "Risk Summary"
+  },
+  {
+   "fieldname": "hazard_count",
+   "fieldtype": "Int",
+   "label": "Hazards",
+   "read_only": 1
+  },
+  {
+   "fieldname": "highest_initial_score",
+   "fieldtype": "Int",
+   "label": "Highest Initial Risk",
+   "read_only": 1
+  },
+  {
+   "fieldname": "highest_initial_rating",
+   "fieldtype": "Select",
+   "label": "Highest Initial Rating",
+   "options": "\nLow\nMedium\nHigh\nCritical",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_summary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "highest_residual_score",
+   "fieldtype": "Int",
+   "label": "Highest Residual Risk",
+   "read_only": 1
+  },
+  {
+   "fieldname": "highest_residual_rating",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Highest Residual Rating",
+   "options": "\nLow\nMedium\nHigh\nCritical",
+   "read_only": 1
+  },
+  {
+   "fieldname": "high_risk_count",
+   "fieldtype": "Int",
+   "label": "Hazards Still High or Critical",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_actions",
+   "fieldtype": "Section Break",
+   "label": "Actions"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "actions",
+   "fieldtype": "Table",
+   "label": "Actions",
+   "options": "Risk Assessment Action"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "date_due",
+   "fieldtype": "Date",
+   "label": "Next Action Due",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_actions",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "date_done",
+   "fieldtype": "Date",
+   "label": "All Actions Completed",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "depends_on": "eval:doc.highest_residual_rating=='High'",
+   "description": "Needed to approve while a hazard is still High after controls: why the remaining risk is accepted and the limits on the work (supervision, permits, duration).",
+   "fieldname": "residual_risk_acceptance",
+   "fieldtype": "Small Text",
+   "label": "High Residual Risk Acceptance",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "approved_by.full_name",
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Approver Name",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Date",
+   "label": "Approved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Risk Assessment",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Risk Assessment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Safety Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "search_fields": "assessment_type,location,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "assessment_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

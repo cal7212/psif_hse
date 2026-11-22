@@ -1,0 +1,531 @@
+{
+ "autoname": "naming_series:",
+ "creation": "2026-11-22 12:00:00.000000",
+ "custom": 0,
+ "default_print_format": "Energized Electrical Work Permit",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_request",
+  "naming_series",
+  "equipment_description",
+  "location",
+  "asset",
+  "company",
+  "job_hazard_analysis",
+  "column_break_request",
+  "status",
+  "work_start",
+  "work_end",
+  "requested_by",
+  "requested_by_name",
+  "section_work",
+  "work_description",
+  "justification_type",
+  "column_break_work",
+  "justification",
+  "esc_not_feasible",
+  "section_shock",
+  "nominal_voltage",
+  "limited_approach",
+  "restricted_approach",
+  "column_break_shock",
+  "shock_ppe",
+  "section_arc",
+  "arc_method",
+  "incident_energy",
+  "working_distance",
+  "ppe_category",
+  "column_break_arc",
+  "arc_flash_boundary",
+  "arc_flash_ppe",
+  "label_verified",
+  "section_practices",
+  "safe_work_practices",
+  "column_break_practices",
+  "acc_barricade",
+  "acc_signs",
+  "acc_attendant",
+  "access_other",
+  "section_briefing",
+  "briefing_done",
+  "briefing_time",
+  "briefing_notes",
+  "workers",
+  "section_approval",
+  "approved_by",
+  "approved_by_name",
+  "column_break_approval",
+  "approved_on",
+  "section_closure",
+  "closure_reason",
+  "closed_by",
+  "closed_on",
+  "column_break_closure",
+  "closure_notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "description": "NFPA 70E 130.2(B). Testing, troubleshooting and voltage measuring by qualified persons using the required PPE and safe work practices do not need this permit.",
+   "fieldname": "section_request",
+   "fieldtype": "Section Break",
+   "label": "Request"
+  },
+  {
+   "default": "HSE-EEWP-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Permit No.",
+   "options": "HSE-EEWP-.YYYY.-.####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "equipment_description",
+   "fieldtype": "Small Text",
+   "in_global_search": 1,
+   "label": "Circuit / Equipment and Location",
+   "reqd": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Equipment",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "job_hazard_analysis",
+   "fieldtype": "Link",
+   "label": "Job Hazard Analysis",
+   "options": "Job Hazard Analysis"
+  },
+  {
+   "fieldname": "column_break_request",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nApproved\nClosed\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "work_start",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Work From",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_end",
+   "fieldtype": "Datetime",
+   "label": "Work Until",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "requested_by.employee_name",
+   "fieldname": "requested_by_name",
+   "fieldtype": "Data",
+   "label": "Requester Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_work",
+   "fieldtype": "Section Break",
+   "label": "Work and Justification"
+  },
+  {
+   "fieldname": "work_description",
+   "fieldtype": "Small Text",
+   "label": "Work to Be Performed",
+   "reqd": 1
+  },
+  {
+   "description": "Greater Hazard: de-energizing would create a greater hazard (e.g. life-support, alarms, hazardous-location ventilation). Infeasibility: the task cannot be done de-energized (e.g. a continuous process that cannot be shut down).",
+   "fieldname": "justification_type",
+   "fieldtype": "Select",
+   "label": "Justification",
+   "options": "\nGreater Hazard\nInfeasibility"
+  },
+  {
+   "fieldname": "column_break_work",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Small Text",
+   "label": "Why the Work Must Be Done Energized"
+  },
+  {
+   "fieldname": "esc_not_feasible",
+   "fieldtype": "Check",
+   "label": "An electrically safe work condition cannot be established for this work"
+  },
+  {
+   "fieldname": "section_shock",
+   "fieldtype": "Section Break",
+   "label": "Shock Risk Assessment"
+  },
+  {
+   "description": "e.g. 480 V AC, 3-phase",
+   "fieldname": "nominal_voltage",
+   "fieldtype": "Data",
+   "label": "Voltage Exposure"
+  },
+  {
+   "description": "e.g. 3 ft 6 in",
+   "fieldname": "limited_approach",
+   "fieldtype": "Data",
+   "label": "Limited Approach Boundary"
+  },
+  {
+   "description": "e.g. 1 ft 0 in",
+   "fieldname": "restricted_approach",
+   "fieldtype": "Data",
+   "label": "Restricted Approach Boundary"
+  },
+  {
+   "fieldname": "column_break_shock",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "PPE and other protection, e.g. Class 0 rubber insulating gloves with leather protectors, insulated tools, insulating blankets",
+   "fieldname": "shock_ppe",
+   "fieldtype": "Small Text",
+   "label": "Shock Protection"
+  },
+  {
+   "fieldname": "section_arc",
+   "fieldtype": "Section Break",
+   "label": "Arc Flash Risk Assessment"
+  },
+  {
+   "default": "Incident Energy Analysis",
+   "fieldname": "arc_method",
+   "fieldtype": "Select",
+   "label": "Method",
+   "options": "Incident Energy Analysis\nPPE Category Method"
+  },
+  {
+   "depends_on": "eval:doc.arc_method=='Incident Energy Analysis'",
+   "fieldname": "incident_energy",
+   "fieldtype": "Float",
+   "label": "Incident Energy (cal/cm²)",
+   "precision": "1"
+  },
+  {
+   "description": "e.g. 18 in",
+   "fieldname": "working_distance",
+   "fieldtype": "Data",
+   "label": "Working Distance"
+  },
+  {
+   "depends_on": "eval:doc.arc_method=='PPE Category Method'",
+   "fieldname": "ppe_category",
+   "fieldtype": "Select",
+   "label": "Arc Flash PPE Category",
+   "options": "\n1\n2\n3\n4"
+  },
+  {
+   "fieldname": "column_break_arc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "arc_flash_boundary",
+   "fieldtype": "Data",
+   "label": "Arc Flash Boundary"
+  },
+  {
+   "description": "e.g. arc-rated shirt, pants and face shield with balaclava rated at least 8 cal/cm², hearing protection",
+   "fieldname": "arc_flash_ppe",
+   "fieldtype": "Small Text",
+   "label": "Arc Flash PPE"
+  },
+  {
+   "fieldname": "label_verified",
+   "fieldtype": "Check",
+   "label": "Equipment label checked against this assessment"
+  },
+  {
+   "fieldname": "section_practices",
+   "fieldtype": "Section Break",
+   "label": "Safe Work Practices and Access"
+  },
+  {
+   "description": "How the work will be done safely: sequence, tools, test-before-touch, insulating covers, escape route.",
+   "fieldname": "safe_work_practices",
+   "fieldtype": "Small Text",
+   "label": "Safe Work Practices"
+  },
+  {
+   "fieldname": "column_break_practices",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "acc_barricade",
+   "fieldtype": "Check",
+   "label": "Barricades / barrier tape at the limited approach or arc flash boundary"
+  },
+  {
+   "fieldname": "acc_signs",
+   "fieldtype": "Check",
+   "label": "Danger signs posted"
+  },
+  {
+   "fieldname": "acc_attendant",
+   "fieldtype": "Check",
+   "label": "Attendant posted to keep unqualified persons out"
+  },
+  {
+   "fieldname": "access_other",
+   "fieldtype": "Small Text",
+   "label": "Other Means of Restricting Access"
+  },
+  {
+   "fieldname": "section_briefing",
+   "fieldtype": "Section Break",
+   "label": "Job Briefing and Workers"
+  },
+  {
+   "fieldname": "briefing_done",
+   "fieldtype": "Check",
+   "label": "Job briefing held, covering the job-specific hazards"
+  },
+  {
+   "depends_on": "briefing_done",
+   "fieldname": "briefing_time",
+   "fieldtype": "Datetime",
+   "label": "Briefing Held"
+  },
+  {
+   "depends_on": "briefing_done",
+   "fieldname": "briefing_notes",
+   "fieldtype": "Small Text",
+   "label": "Briefing Notes"
+  },
+  {
+   "fieldname": "workers",
+   "fieldtype": "Table",
+   "label": "Workers",
+   "options": "Permit Worker"
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "approved_by.full_name",
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Approver Name",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "section_closure",
+   "fieldtype": "Section Break",
+   "label": "Closure"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_reason",
+   "fieldtype": "Select",
+   "label": "Closure Reason",
+   "no_copy": 1,
+   "options": "\nWork Completed\nProhibited Condition\nPermit Expired",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closed_by",
+   "fieldtype": "Link",
+   "label": "Closed By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closed_on",
+   "fieldtype": "Datetime",
+   "label": "Closed On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_closure",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_notes",
+   "fieldtype": "Small Text",
+   "label": "Closure Notes",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Energized Electrical Work Permit",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Energized Electrical Work Permit",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Safety Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "search_fields": "location,status",
+ "sort_field": "work_start",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "equipment_description",
+ "track_changes": 1
+}

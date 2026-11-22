@@ -294,6 +294,9 @@ doctype_js = {
 	"Asset Inspection": "public/js/inspection_instruments.js",
 	# Shop Supplies: Issue Supplies against a QC Unit's work order.
 	"QC Unit": ["public/js/shop_supplies.js", "public/js/shop_supplies_qc_unit.js"],
+	# HSE work permits: Close Permit and the expired-permit warning (hse/hse/permits.py).
+	"Confined Space Permit": "public/js/hse_permits.js",
+	"Energized Electrical Work Permit": "public/js/hse_permits.js",
 }
 
 doctype_list_js = {
@@ -306,6 +309,8 @@ doctype_list_js = {
 	"Stock Entry": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 	"Stock Reconciliation": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
 	"Material Request": ["public/js/shop_supplies.js", "public/js/shop_supplies_lists.js"],
+	"Confined Space Permit": "public/js/hse_permits.js",
+	"Energized Electrical Work Permit": "public/js/hse_permits.js",
 }
 
 doc_events = {
@@ -373,6 +378,8 @@ scheduler_events = {
 		"hse.training_matrix.trainers.refresh_register",
 		"hse.training_matrix.lms.reopen_due_refreshers",
 		"hse.training_matrix.training_requests.remind_overdue_certificates",
+		# Risk Assessment and Job Hazard Analysis: ToDo when a review falls due
+		"hse.hse.doctype.risk_assessment.risk_assessment.assign_due_reviews",
 	],
 	"cron": {
 		"0 2 1 * *": [

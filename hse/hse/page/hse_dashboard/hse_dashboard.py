@@ -7,7 +7,7 @@ records, safety metrics and goals. Everything is filtered by read permission."""
 
 import frappe
 from frappe import _
-from frappe.utils import getdate
+from frappe.utils import getdate, now_datetime
 
 from hse.asset_inspection import purpose as ap
 from hse.hse.page.hse_home.hse_home import (
@@ -75,8 +75,68 @@ def att_actions_overdue():
 	return _item("actions", _("Incident corrective actions overdue"), _count(INJURY, f), INJURY, f, "danger")
 
 
+RA, JHA = "Risk Assessment", "Job Hazard Analysis"
+
+
+def att_risk_actions_overdue():
+	if not _can(RA):
+		return None
+	f = {
+		"docstatus": 1,
+		"status": "Active",
+		"date_due": ["between", overdue_range()],
+		"date_done": ["is", "not set"],
+	}
+	return _item("risk_actions", _("Risk assessment actions overdue"), _count(RA, f), RA, f, "danger")
+
+
+def _permit_expired(doctype, end_field, open_status, key, label):
+	if not _can(doctype):
+		return None
+	f = {"docstatus": 1, "status": open_status, end_field: ["<", str(now_datetime())]}
+	return _item(key, label, _count(doctype, f), doctype, f, "danger")
+
+
+def att_csp_expired():
+	return _permit_expired(
+		"Confined Space Permit",
+		"permit_end",
+		"Issued",
+		"csp_expired",
+		_("Confined space permits past their end time"),
+	)
+
+
+def att_eewp_expired():
+	return _permit_expired(
+		"Energized Electrical Work Permit",
+		"work_end",
+		"Approved",
+		"eewp_expired",
+		_("Energized work permits past their end time"),
+	)
+
+
+def _reviews_due(doctype, key, label):
+	if not _can(doctype):
+		return None
+	f = {"docstatus": 1, "status": "Active", "next_review_date": ["<=", str(getdate())]}
+	return _item(key, label, _count(doctype, f), doctype, f, "warning")
+
+
+def att_risk_reviews_due():
+	return _reviews_due(RA, "risk_reviews", _("Risk assessment reviews due"))
+
+
+def att_jha_reviews_due():
+	return _reviews_due(JHA, "jha_reviews", _("Job hazard analysis reviews due"))
+
+
 ATTENTION = [
 	att_actions_overdue,
+	att_risk_actions_overdue,
+	att_csp_expired,
+	att_eewp_expired,
 	att_assets_out,
 	att_injury_open,
 	att_hk_overdue,
@@ -85,6 +145,8 @@ ATTENTION = [
 	att_calibration,
 	att_hk_due,
 	att_training_requests,
+	att_risk_reviews_due,
+	att_jha_reviews_due,
 	att_sds_review,
 ]
 
