@@ -1,0 +1,515 @@
+{
+ "autoname": "naming_series:",
+ "creation": "2026-11-22 12:00:00.000000",
+ "custom": 0,
+ "default_print_format": "Job Hazard Analysis",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_job",
+  "naming_series",
+  "job_title",
+  "company",
+  "department",
+  "location",
+  "asset",
+  "risk_assessment",
+  "column_break_job",
+  "status",
+  "revision",
+  "previous_analysis",
+  "superseded_by",
+  "analysis_date",
+  "prepared_by",
+  "prepared_by_name",
+  "supervisor",
+  "supervisor_name",
+  "review_interval_months",
+  "next_review_date",
+  "section_ppe",
+  "ppe_safety_glasses",
+  "ppe_face_shield",
+  "ppe_hearing",
+  "ppe_gloves",
+  "column_break_ppe1",
+  "ppe_safety_shoes",
+  "ppe_hard_hat",
+  "ppe_hi_vis",
+  "ppe_respirator",
+  "column_break_ppe2",
+  "ppe_fall_protection",
+  "ppe_arc_rated",
+  "ppe_other",
+  "section_requirements",
+  "req_loto",
+  "req_hot_work",
+  "req_confined_space",
+  "column_break_req",
+  "req_energized_electrical",
+  "req_lifting_plan",
+  "req_other",
+  "column_break_req2",
+  "tools_equipment",
+  "training_required",
+  "section_steps",
+  "steps",
+  "highest_risk_score",
+  "highest_risk_rating",
+  "section_workers",
+  "workers",
+  "section_approval",
+  "approved_by",
+  "approved_by_name",
+  "column_break_approval",
+  "approved_on",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_job",
+   "fieldtype": "Section Break",
+   "label": "Job"
+  },
+  {
+   "default": "HSE-JHA-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "JHA No.",
+   "options": "HSE-JHA-.YYYY.-.####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "job_title",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Job / Task",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Equipment",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "risk_assessment",
+   "fieldtype": "Link",
+   "label": "Risk Assessment",
+   "options": "Risk Assessment"
+  },
+  {
+   "fieldname": "column_break_job",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nActive\nSuperseded\nCancelled",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "read_only": 1
+  },
+  {
+   "depends_on": "previous_analysis",
+   "fieldname": "previous_analysis",
+   "fieldtype": "Link",
+   "label": "Supersedes",
+   "options": "Job Hazard Analysis",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "superseded_by",
+   "fieldname": "superseded_by",
+   "fieldtype": "Link",
+   "label": "Superseded By",
+   "no_copy": 1,
+   "options": "Job Hazard Analysis",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "analysis_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Analysis Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prepared_by",
+   "fieldtype": "Link",
+   "label": "Prepared By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "prepared_by.employee_name",
+   "fieldname": "prepared_by_name",
+   "fieldtype": "Data",
+   "label": "Prepared By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "label": "Supervisor",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "supervisor.employee_name",
+   "fieldname": "supervisor_name",
+   "fieldtype": "Data",
+   "label": "Supervisor Name",
+   "read_only": 1
+  },
+  {
+   "default": "12",
+   "fieldname": "review_interval_months",
+   "fieldtype": "Int",
+   "label": "Review Every (Months)",
+   "non_negative": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "next_review_date",
+   "fieldtype": "Date",
+   "in_standard_filter": 1,
+   "label": "Next Review Due",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "section_ppe",
+   "fieldtype": "Section Break",
+   "label": "Required PPE"
+  },
+  {
+   "fieldname": "ppe_safety_glasses",
+   "fieldtype": "Check",
+   "label": "Safety glasses"
+  },
+  {
+   "fieldname": "ppe_face_shield",
+   "fieldtype": "Check",
+   "label": "Face shield / goggles"
+  },
+  {
+   "fieldname": "ppe_hearing",
+   "fieldtype": "Check",
+   "label": "Hearing protection"
+  },
+  {
+   "fieldname": "ppe_gloves",
+   "fieldtype": "Check",
+   "label": "Gloves"
+  },
+  {
+   "fieldname": "column_break_ppe1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ppe_safety_shoes",
+   "fieldtype": "Check",
+   "label": "Safety shoes"
+  },
+  {
+   "fieldname": "ppe_hard_hat",
+   "fieldtype": "Check",
+   "label": "Hard hat"
+  },
+  {
+   "fieldname": "ppe_hi_vis",
+   "fieldtype": "Check",
+   "label": "High-visibility vest"
+  },
+  {
+   "fieldname": "ppe_respirator",
+   "fieldtype": "Check",
+   "label": "Respirator"
+  },
+  {
+   "fieldname": "column_break_ppe2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ppe_fall_protection",
+   "fieldtype": "Check",
+   "label": "Fall protection"
+  },
+  {
+   "fieldname": "ppe_arc_rated",
+   "fieldtype": "Check",
+   "label": "Arc-rated clothing"
+  },
+  {
+   "description": "Glove type, respirator cartridge, etc.",
+   "fieldname": "ppe_other",
+   "fieldtype": "Data",
+   "label": "Other PPE"
+  },
+  {
+   "fieldname": "section_requirements",
+   "fieldtype": "Section Break",
+   "label": "Permits, Procedures and Training"
+  },
+  {
+   "fieldname": "req_loto",
+   "fieldtype": "Check",
+   "label": "Lockout / tagout"
+  },
+  {
+   "fieldname": "req_hot_work",
+   "fieldtype": "Check",
+   "label": "Hot work permit"
+  },
+  {
+   "fieldname": "req_confined_space",
+   "fieldtype": "Check",
+   "label": "Confined space permit"
+  },
+  {
+   "fieldname": "column_break_req",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "req_energized_electrical",
+   "fieldtype": "Check",
+   "label": "Energized electrical work permit"
+  },
+  {
+   "fieldname": "req_lifting_plan",
+   "fieldtype": "Check",
+   "label": "Lifting / rigging plan"
+  },
+  {
+   "fieldname": "req_other",
+   "fieldtype": "Data",
+   "label": "Other Permits / Procedures"
+  },
+  {
+   "fieldname": "column_break_req2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tools_equipment",
+   "fieldtype": "Small Text",
+   "label": "Tools and Equipment"
+  },
+  {
+   "fieldname": "training_required",
+   "fieldtype": "Small Text",
+   "label": "Training / Qualifications Required"
+  },
+  {
+   "fieldname": "section_steps",
+   "fieldtype": "Section Break",
+   "label": "Job Steps, Hazards and Controls"
+  },
+  {
+   "fieldname": "steps",
+   "fieldtype": "Table",
+   "label": "Steps",
+   "options": "Job Hazard Analysis Step",
+   "reqd": 1
+  },
+  {
+   "fieldname": "highest_risk_score",
+   "fieldtype": "Int",
+   "label": "Highest Risk With Controls",
+   "read_only": 1
+  },
+  {
+   "fieldname": "highest_risk_rating",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Highest Rating",
+   "options": "\nLow\nMedium\nHigh\nCritical",
+   "read_only": 1
+  },
+  {
+   "description": "Workers who do the job and have gone through this JHA. Tick Briefed once they have.",
+   "fieldname": "section_workers",
+   "fieldtype": "Section Break",
+   "label": "Reviewed With"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "workers",
+   "fieldtype": "Table",
+   "label": "Workers",
+   "options": "Permit Worker"
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "approved_by.full_name",
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Approver Name",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Date",
+   "label": "Approved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Job Hazard Analysis",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Job Hazard Analysis",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Safety Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "search_fields": "department,location,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "analysis_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "job_title",
+ "track_changes": 1
+}

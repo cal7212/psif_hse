@@ -1,0 +1,706 @@
+{
+ "autoname": "naming_series:",
+ "creation": "2026-11-22 12:00:00.000000",
+ "custom": 0,
+ "default_print_format": "Confined Space Permit",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_permit",
+  "naming_series",
+  "space_name",
+  "location",
+  "asset",
+  "company",
+  "job_hazard_analysis",
+  "column_break_permit",
+  "status",
+  "permit_start",
+  "permit_end",
+  "entry_supervisor",
+  "entry_supervisor_name",
+  "section_purpose",
+  "purpose",
+  "column_break_purpose",
+  "hot_work_permit",
+  "hot_work_permit_no",
+  "other_permit_notes",
+  "section_personnel",
+  "workers",
+  "section_hazards",
+  "hz_oxygen",
+  "hz_flammable",
+  "hz_toxic",
+  "hz_engulfment",
+  "column_break_hz1",
+  "hz_entrapment",
+  "hz_mechanical",
+  "hz_electrical",
+  "hz_pressure",
+  "column_break_hz2",
+  "hz_thermal",
+  "hz_noise",
+  "hz_other",
+  "section_isolation",
+  "iso_lockout",
+  "iso_blanked",
+  "iso_purged",
+  "iso_inerted",
+  "column_break_iso",
+  "iso_ventilated",
+  "ventilation_detail",
+  "iso_barricade",
+  "iso_other",
+  "section_conditions",
+  "oxygen_min",
+  "oxygen_max",
+  "column_break_cond1",
+  "lel_max",
+  "h2s_max",
+  "column_break_cond2",
+  "co_max",
+  "test_frequency",
+  "section_tests",
+  "atmospheric_tests",
+  "section_rescue",
+  "rescue_service",
+  "rescue_contact",
+  "summon_rescue",
+  "column_break_rescue",
+  "communication_method",
+  "communication_detail",
+  "section_equipment",
+  "eq_gas_monitor",
+  "eq_blower",
+  "eq_harness",
+  "column_break_eq1",
+  "eq_retrieval",
+  "eq_radio",
+  "eq_lighting",
+  "column_break_eq2",
+  "eq_ladder",
+  "eq_alarm",
+  "eq_ppe",
+  "eq_other",
+  "section_issue",
+  "issued_by",
+  "column_break_issue",
+  "issued_on",
+  "section_closure",
+  "closure_reason",
+  "closed_by",
+  "closed_on",
+  "column_break_closure",
+  "closure_notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_permit",
+   "fieldtype": "Section Break",
+   "label": "Permit"
+  },
+  {
+   "default": "HSE-CSP-.YYYY.-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Permit No.",
+   "options": "HSE-CSP-.YYYY.-.####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "bold": 1,
+   "description": "The space to be entered, as named on the permit-required confined space inventory.",
+   "fieldname": "space_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Permit Space",
+   "reqd": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Equipment",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "remember_last_selected_value": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "job_hazard_analysis",
+   "fieldtype": "Link",
+   "label": "Job Hazard Analysis",
+   "options": "Job Hazard Analysis"
+  },
+  {
+   "fieldname": "column_break_permit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nIssued\nClosed\nCancelled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "permit_start",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Entry Authorized From",
+   "reqd": 1
+  },
+  {
+   "description": "Entry is authorized only for this period. Close the permit when the work is done.",
+   "fieldname": "permit_end",
+   "fieldtype": "Datetime",
+   "label": "Authorized Until",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entry_supervisor",
+   "fieldtype": "Link",
+   "label": "Entry Supervisor",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "entry_supervisor.employee_name",
+   "fieldname": "entry_supervisor_name",
+   "fieldtype": "Data",
+   "label": "Entry Supervisor Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_purpose",
+   "fieldtype": "Section Break",
+   "label": "Purpose of Entry"
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Small Text",
+   "label": "Purpose of Entry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_purpose",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hot_work_permit",
+   "fieldtype": "Check",
+   "label": "Hot Work Permit Required"
+  },
+  {
+   "depends_on": "hot_work_permit",
+   "fieldname": "hot_work_permit_no",
+   "fieldtype": "Data",
+   "label": "Hot Work Permit No.",
+   "mandatory_depends_on": "hot_work_permit"
+  },
+  {
+   "fieldname": "other_permit_notes",
+   "fieldtype": "Small Text",
+   "label": "Other Permits / Information"
+  },
+  {
+   "description": "List every authorized entrant and attendant. Track entrants in and out with Time In / Time Out.",
+   "fieldname": "section_personnel",
+   "fieldtype": "Section Break",
+   "label": "Authorized Entrants and Attendants"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "workers",
+   "fieldtype": "Table",
+   "label": "Personnel",
+   "options": "Permit Worker"
+  },
+  {
+   "fieldname": "section_hazards",
+   "fieldtype": "Section Break",
+   "label": "Hazards of the Permit Space"
+  },
+  {
+   "fieldname": "hz_oxygen",
+   "fieldtype": "Check",
+   "label": "Oxygen deficiency / enrichment"
+  },
+  {
+   "fieldname": "hz_flammable",
+   "fieldtype": "Check",
+   "label": "Flammable atmosphere"
+  },
+  {
+   "fieldname": "hz_toxic",
+   "fieldtype": "Check",
+   "label": "Toxic atmosphere"
+  },
+  {
+   "fieldname": "hz_engulfment",
+   "fieldtype": "Check",
+   "label": "Engulfment"
+  },
+  {
+   "fieldname": "column_break_hz1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hz_entrapment",
+   "fieldtype": "Check",
+   "label": "Entrapment / converging walls"
+  },
+  {
+   "fieldname": "hz_mechanical",
+   "fieldtype": "Check",
+   "label": "Mechanical / moving parts"
+  },
+  {
+   "fieldname": "hz_electrical",
+   "fieldtype": "Check",
+   "label": "Electrical"
+  },
+  {
+   "fieldname": "hz_pressure",
+   "fieldtype": "Check",
+   "label": "Hydraulic / stored pressure"
+  },
+  {
+   "fieldname": "column_break_hz2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hz_thermal",
+   "fieldtype": "Check",
+   "label": "Heat / cold"
+  },
+  {
+   "fieldname": "hz_noise",
+   "fieldtype": "Check",
+   "label": "Noise"
+  },
+  {
+   "fieldname": "hz_other",
+   "fieldtype": "Small Text",
+   "label": "Other Hazards"
+  },
+  {
+   "fieldname": "section_isolation",
+   "fieldtype": "Section Break",
+   "label": "Isolation and Hazard Control"
+  },
+  {
+   "fieldname": "iso_lockout",
+   "fieldtype": "Check",
+   "label": "Lockout / tagout applied"
+  },
+  {
+   "fieldname": "iso_blanked",
+   "fieldtype": "Check",
+   "label": "Lines blanked, blinded or disconnected"
+  },
+  {
+   "fieldname": "iso_purged",
+   "fieldtype": "Check",
+   "label": "Purged, flushed or cleaned"
+  },
+  {
+   "fieldname": "iso_inerted",
+   "fieldtype": "Check",
+   "label": "Inerted"
+  },
+  {
+   "fieldname": "column_break_iso",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "iso_ventilated",
+   "fieldtype": "Check",
+   "label": "Forced-air ventilation"
+  },
+  {
+   "depends_on": "iso_ventilated",
+   "description": "e.g. 1,000 CFM blower supplying fresh air at the bottom of the space",
+   "fieldname": "ventilation_detail",
+   "fieldtype": "Data",
+   "label": "Ventilation"
+  },
+  {
+   "fieldname": "iso_barricade",
+   "fieldtype": "Check",
+   "label": "Entry area barricaded / openings guarded"
+  },
+  {
+   "fieldname": "iso_other",
+   "fieldtype": "Small Text",
+   "label": "Other Measures"
+  },
+  {
+   "description": "Readings outside these limits are a prohibited condition: entrants leave the space and the permit is closed.",
+   "fieldname": "section_conditions",
+   "fieldtype": "Section Break",
+   "label": "Acceptable Entry Conditions"
+  },
+  {
+   "default": "19.5",
+   "fieldname": "oxygen_min",
+   "fieldtype": "Float",
+   "label": "O₂ Minimum (%)",
+   "precision": "1"
+  },
+  {
+   "default": "23.5",
+   "fieldname": "oxygen_max",
+   "fieldtype": "Float",
+   "label": "O₂ Maximum (%)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "column_break_cond1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "10",
+   "fieldname": "lel_max",
+   "fieldtype": "Float",
+   "label": "LEL Maximum (%)",
+   "precision": "1"
+  },
+  {
+   "default": "10",
+   "fieldname": "h2s_max",
+   "fieldtype": "Float",
+   "label": "H₂S Maximum (ppm)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "column_break_cond2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "35",
+   "fieldname": "co_max",
+   "fieldtype": "Float",
+   "label": "CO Maximum (ppm)",
+   "precision": "0"
+  },
+  {
+   "default": "Continuous monitoring; record readings at least every hour",
+   "fieldname": "test_frequency",
+   "fieldtype": "Data",
+   "label": "Periodic Testing"
+  },
+  {
+   "description": "Test in this order: oxygen, flammable gases, then toxic gases. A Pre-Entry test within the limits is needed to issue the permit.",
+   "fieldname": "section_tests",
+   "fieldtype": "Section Break",
+   "label": "Atmospheric Tests"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "atmospheric_tests",
+   "fieldtype": "Table",
+   "label": "Tests",
+   "options": "Confined Space Atmospheric Test"
+  },
+  {
+   "fieldname": "section_rescue",
+   "fieldtype": "Section Break",
+   "label": "Rescue and Communication"
+  },
+  {
+   "fieldname": "rescue_service",
+   "fieldtype": "Select",
+   "label": "Rescue",
+   "options": "\nNon-Entry Retrieval\nOn-Site Rescue Team\nOff-Site Rescue Service"
+  },
+  {
+   "fieldname": "rescue_contact",
+   "fieldtype": "Data",
+   "label": "Rescue Service / Phone"
+  },
+  {
+   "fieldname": "summon_rescue",
+   "fieldtype": "Small Text",
+   "label": "How to Summon Rescue"
+  },
+  {
+   "fieldname": "column_break_rescue",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "communication_method",
+   "fieldtype": "Select",
+   "label": "Communication",
+   "options": "\nVoice\nRadio\nRope Signals\nVisual\nOther"
+  },
+  {
+   "fieldname": "communication_detail",
+   "fieldtype": "Small Text",
+   "label": "Entrant–Attendant Communication"
+  },
+  {
+   "fieldname": "section_equipment",
+   "fieldtype": "Section Break",
+   "label": "Equipment"
+  },
+  {
+   "fieldname": "eq_gas_monitor",
+   "fieldtype": "Check",
+   "label": "Calibrated gas monitor"
+  },
+  {
+   "fieldname": "eq_blower",
+   "fieldtype": "Check",
+   "label": "Ventilation blower"
+  },
+  {
+   "fieldname": "eq_harness",
+   "fieldtype": "Check",
+   "label": "Full-body harness / wristlets"
+  },
+  {
+   "fieldname": "column_break_eq1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "eq_retrieval",
+   "fieldtype": "Check",
+   "label": "Retrieval line / tripod / winch"
+  },
+  {
+   "fieldname": "eq_radio",
+   "fieldtype": "Check",
+   "label": "Radios / communication equipment"
+  },
+  {
+   "fieldname": "eq_lighting",
+   "fieldtype": "Check",
+   "label": "Approved lighting"
+  },
+  {
+   "fieldname": "column_break_eq2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "eq_ladder",
+   "fieldtype": "Check",
+   "label": "Ladder / safe access"
+  },
+  {
+   "fieldname": "eq_alarm",
+   "fieldtype": "Check",
+   "label": "Evacuation alarm"
+  },
+  {
+   "fieldname": "eq_ppe",
+   "fieldtype": "Small Text",
+   "label": "PPE Required"
+  },
+  {
+   "fieldname": "eq_other",
+   "fieldtype": "Small Text",
+   "label": "Other Equipment"
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "section_issue",
+   "fieldtype": "Section Break",
+   "label": "Issue"
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_issue",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "issued_on",
+   "fieldtype": "Datetime",
+   "label": "Issued On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.docstatus==1",
+   "fieldname": "section_closure",
+   "fieldtype": "Section Break",
+   "label": "Closure"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_reason",
+   "fieldtype": "Select",
+   "label": "Closure Reason",
+   "no_copy": 1,
+   "options": "\nWork Completed\nProhibited Condition\nPermit Expired",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closed_by",
+   "fieldtype": "Link",
+   "label": "Closed By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closed_on",
+   "fieldtype": "Datetime",
+   "label": "Closed On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_closure",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_notes",
+   "fieldtype": "Small Text",
+   "label": "Closure Notes",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Confined Space Permit",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Confined Space Permit",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Safety Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "search_fields": "location,status",
+ "show_title_field_in_link": 1,
+ "sort_field": "permit_start",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "space_name",
+ "track_changes": 1
+}

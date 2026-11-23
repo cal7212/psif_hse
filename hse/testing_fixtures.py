@@ -27,3 +27,25 @@ def ensure_gender() -> str:
 	if gender:
 		return gender
 	return frappe.get_doc({"doctype": "Gender", "gender": TEST_GENDER}).insert(ignore_permissions=True).name
+
+
+def ensure_employee(first_name: str, company: str | None = None) -> str:
+	"""Return an active test Employee named first_name, creating it if needed (no user)."""
+	name = frappe.db.get_value("Employee", {"first_name": first_name, "status": "Active"}, "name")
+	if name:
+		return name
+	return (
+		frappe.get_doc(
+			{
+				"doctype": "Employee",
+				"first_name": first_name,
+				"gender": ensure_gender(),
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2020-01-01",
+				"company": company or ensure_company(),
+				"status": "Active",
+			}
+		)
+		.insert(ignore_permissions=True)
+		.name
+	)
