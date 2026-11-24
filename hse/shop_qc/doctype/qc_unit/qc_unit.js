@@ -9,6 +9,57 @@ const STAGE_COLORS = {
 	"Not Started": "light-gray",
 };
 
+// QM-400 8.6: Project Management / Sales, Operations and Accounting each confirm release.
+function hse_release_confirmation_buttons(frm) {
+	const rows = frm.doc.release_confirmations || [];
+	if (frm.is_new() || !rows.length || ["Shipped", "Cancelled"].includes(frm.doc.status)) return;
+	const missing = rows.filter((r) => !r.confirmed_on).map((r) => r.function);
+	if (missing.length && !frm.doc.qc_flag && frm.doc.status === "Ready for Release") {
+		frm.dashboard.set_headline_alert(
+			__("Waiting on release confirmation from: {0}", [missing.join(", ")]),
+			"orange"
+		);
+	}
+	const call = (method, args) =>
+		frappe
+			.xcall(`hse.shop_qc.release.${method}`, { qc_unit: frm.doc.name, ...args })
+			.then(() => frm.reload_doc());
+	rows.forEach((r) => {
+		if (!r.confirmed_on) {
+			frm.add_custom_button(
+				r.function,
+				() =>
+					frappe.prompt(
+						{ fieldname: "note", fieldtype: "Small Text", label: __("Note") },
+						(v) => call("confirm_release", { function: r.function, note: v.note }),
+						__("Confirm release: {0}", [r.function])
+					),
+				__("Confirm Release")
+			);
+		} else {
+			frm.add_custom_button(
+				r.function,
+				() =>
+					frappe.prompt(
+						{
+							fieldname: "reason",
+							fieldtype: "Small Text",
+							label: __("Reason"),
+							reqd: 1,
+						},
+						(v) =>
+							call("withdraw_release_confirmation", {
+								function: r.function,
+								reason: v.reason,
+							}),
+						__("Withdraw release: {0}", [r.function])
+					),
+				__("Withdraw Release")
+			);
+		}
+	});
+}
+
 // Load a QC Document Template into a document table. Keeps the reference and attachment
 // already entered for any document that is still on the list.
 function hse_load_document_template(frm, link, table) {
@@ -176,6 +227,7 @@ frappe.ui.form.on("QC Unit", {
 				"red"
 			);
 		}
+		hse_release_confirmation_buttons(frm);
 		if (frm.doc.sync_source === "TrulinX") {
 			frm.set_intro(
 				__(

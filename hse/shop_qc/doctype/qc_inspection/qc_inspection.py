@@ -14,7 +14,10 @@ from hse.hse.instruments import (
 	AMPS_TYPES,
 	CLEANLINESS_TYPES,
 	CRIMP_TYPES,
+	FLOW_TYPES,
 	PRESSURE_TYPES,
+	SOUND_TYPES,
+	TEMP_TYPES,
 	add_used_instruments,
 	check_listed_instruments,
 	instrument_types,
@@ -79,6 +82,7 @@ UNIT_TEXT_LABELS = {
 	"proof_test_psi": "Proof Test Pressure (psi)",
 	"pmg_motor_nameplates": "Motor Nameplates (Pump / Motor Groups)",
 	"pmg_pump_nameplates": "Pump Nameplates (Pump / Motor Groups)",
+	"welding_standard": "Welding Standard",
 }
 
 # Pressure & Function Test limits applied to each pump/motor group on a new build. These were
@@ -177,19 +181,20 @@ def evaluate_pmg(row) -> str | None:
 	if pmg_limit_failures(row):
 		return FAIL
 	tol = flt(row.tolerance_psi)
+	comp_tol = flt(row.get("compensator_tolerance_psi")) or tol
 	if not tol:
 		return None
 	pairs = [
-		(flt(row.relief_spec), flt(row.relief_as_set)),
-		(flt(row.compensator_spec), flt(row.compensator_as_set)),
+		(flt(row.relief_spec), flt(row.relief_as_set), tol),
+		(flt(row.compensator_spec), flt(row.compensator_as_set), comp_tol),
 	]
 	if not (row.nameplate_verified and row.rotation_verified):
 		return ""
-	if any(spec and not actual for spec, actual in pairs):
+	if any(spec and not actual for spec, actual, _tol in pairs):
 		return ""
 	if (flt(row.flow_min_gpm) or flt(row.flow_max_gpm)) and not flt(row.actual_flow_gpm):
 		return ""
-	ok = all(abs(actual - spec) <= tol for spec, actual in pairs if spec)
+	ok = all(abs(actual - spec) <= t for spec, actual, t in pairs if spec)
 	return PASS if ok else FAIL
 
 
@@ -324,6 +329,13 @@ class QCInspection(Document):
 		missing_parts.sync_from_inspection(self)
 		if self.docstatus == 0:
 			self.status = "Pending"
+			self.snapshot_revisions()
+
+	def snapshot_revisions(self):
+		"""Record the drawing and checklist revisions the inspection is done to (QM-400 8.5.1,
+		7.5.2); kept as they were at completion."""
+		self.drawing_rev = frappe.db.get_value("QC Unit", self.qc_unit, "drawing_rev")
+		self.template_revision = frappe.db.get_value("QC Inspection Template", self.template, "revision")
 
 	def onload(self):
 		if self.docstatus == 0 and self.qc_unit and self.stage:
@@ -654,12 +666,16 @@ class QCInspection(Document):
 		self.fill_missing_check_stamps()
 		self.check_test_equipment()
 		self.check_hold_points()
+		self.check_build_package()
+		self.check_inspector_skill()
+		self.check_weld_record()
 		missing_parts.check_all_parts_present(self)
 		sub_assemblies.check_sub_assemblies(self)
 		self.check_not_already_accepted()
 		self.status = "Rejected" if self.get_failed_rows() else "Accepted"
 		if self.status == "Accepted" and self.is_final_release():
 			self.check_release_allowed()
+			self.check_customer_property()
 
 	def check_readings_complete(self):
 		errors = []
@@ -745,7 +761,8 @@ class QCInspection(Document):
 				errors.append(_("{0}: enter the relief as-set pressure.").format(tag))
 			if flt(row.compensator_spec) and not flt(row.compensator_as_set):
 				errors.append(_("{0}: enter the compensator as-set pressure.").format(tag))
-			if (flt(row.flow_min_gpm) or flt(row.flow_max_gpm)) and not flt(row.actual_flow_gpm):
+			flow_needed = flt(row.flow_min_gpm) or flt(row.flow_max_gpm) or self.job_type != "Repair"
+			if row.result != NA and flow_needed and not flt(row.actual_flow_gpm):
 				errors.append(_("{0}: enter the actual flow.").format(tag))
 			if not row.result:
 				errors.append(_("{0}: select the result.").format(tag))
@@ -755,12 +772,14 @@ class QCInspection(Document):
 		errors += self.circuit_test_errors()
 		if (
 			self.is_pmg_test_stage()
-			and not (self.pmg_tests or self.device_tests or self.accumulator_tests)
+			and not self.pmg_tests
 			and frappe.db.get_value("QC Unit", self.qc_unit, "product_type") == "Power Unit"
 		):
+			# Flow, temperature rise and sound level are recorded on the PMG rows: a power unit
+			# without them would pass its test stage with none of those readings.
 			errors.append(
 				_(
-					"This stage tests pump/motor groups, circuit devices and accumulators, but the unit has none listed."
+					"This stage tests the unit's pump/motor groups, but none are listed. Add them on the QC Unit and reload."
 				)
 			)
 		if errors:
@@ -863,6 +882,12 @@ class QCInspection(Document):
 				errors.append(_("{0}: select the pressure instrument.").format(g.pmg_tag))
 			if flt(g.motor_amps) and not g.amps_instrument:
 				errors.append(_("{0}: select the instrument used for running amps.").format(g.pmg_tag))
+			if flt(g.actual_flow_gpm) and not g.flow_instrument:
+				errors.append(_("{0}: select the flowmeter.").format(g.pmg_tag))
+			if (flt(g.fluid_temp_begin_f) or flt(g.fluid_temp_end_f)) and not g.temp_instrument:
+				errors.append(_("{0}: select the thermometer.").format(g.pmg_tag))
+			if flt(g.sound_level_db) and not g.sound_instrument:
+				errors.append(_("{0}: select the sound level meter.").format(g.pmg_tag))
 		for a in self.accumulator_tests:
 			if flt(a.precharge_actual) and not a.instrument:
 				errors.append(
@@ -897,6 +922,12 @@ class QCInspection(Document):
 				g.instrument = pick(names, types, PRESSURE_TYPES)
 			if not g.amps_instrument and flt(g.motor_amps):
 				g.amps_instrument = pick(names, types, AMPS_TYPES)
+			if not g.flow_instrument and flt(g.actual_flow_gpm):
+				g.flow_instrument = pick(names, types, FLOW_TYPES)
+			if not g.temp_instrument and (flt(g.fluid_temp_begin_f) or flt(g.fluid_temp_end_f)):
+				g.temp_instrument = pick(names, types, TEMP_TYPES)
+			if not g.sound_instrument and flt(g.sound_level_db):
+				g.sound_instrument = pick(names, types, SOUND_TYPES)
 		for row in self.accumulator_tests:
 			if not row.instrument and flt(row.precharge_actual):
 				row.instrument = pick(names, types, PRESSURE_TYPES)
@@ -907,7 +938,13 @@ class QCInspection(Document):
 		for h in self.hose_tests:
 			used += [h.instrument, h.crimp_instrument, h.particle_counter]
 		for g in self.pmg_tests:
-			used += [g.instrument, g.amps_instrument]
+			used += [
+				g.instrument,
+				g.amps_instrument,
+				g.flow_instrument,
+				g.temp_instrument,
+				g.sound_instrument,
+			]
 		used += [r.instrument for r in self.accumulator_tests] + [r.instrument for r in self.proof_tests]
 		add_used_instruments(self, used)
 
@@ -928,6 +965,126 @@ class QCInspection(Document):
 				_("Hold point: these earlier stages must be Accepted first: {0}").format(", ".join(missing)),
 				title=_("Hold Point"),
 			)
+
+	def check_build_package(self):
+		"""QM-400 8.5.1: no floor build against an unreleased or superseded package."""
+		if not frappe.get_cached_value("QC Stage", self.stage, "requires_build_package"):
+			return
+		unit = frappe.db.get_value(
+			"QC Unit",
+			self.qc_unit,
+			["build_package_released", "build_package_drawing_rev", "drawing_rev", "job_type"],
+			as_dict=True,
+		)
+		if unit.job_type == "Repair":
+			return
+		if not unit.build_package_released:
+			frappe.throw(
+				_(
+					"Operations has not released the build package for {0}. Tick Build Package Released on the unit first."
+				).format(frappe.bold(self.qc_unit)),
+				title=_("Build Package Not Released"),
+			)
+		released, current = cstr(unit.build_package_drawing_rev).strip(), cstr(unit.drawing_rev).strip()
+		if released and current and released != current:
+			frappe.throw(
+				_(
+					"The unit is now at Drawing / Rev {0}, but the build package was released at {1}. Operations must re-release it."
+				).format(frappe.bold(current), frappe.bold(released)),
+				title=_("Superseded Build Package"),
+			)
+
+	def check_inspector_skill(self):
+		"""QM-400 7.2 / 8.5.1 e: the inspector holds the stage's required skill on the inspection date."""
+		skill = frappe.get_cached_value("QC Stage", self.stage, "required_skill")
+		if not skill:
+			return
+		if not active_authorization(self.inspected_by, skill, self.inspection_date):
+			frappe.throw(
+				_("{0} has no active Skill Authorization for {1}, which this stage requires.").format(
+					frappe.bold(self.inspector_name or self.inspected_by), frappe.bold(skill)
+				),
+				title=_("Inspector Not Authorized"),
+			)
+
+	def check_weld_record(self):
+		"""QM-400 7.2 / 8.5.1 f: everyone who welded holds a welding authorization. When design or
+		the customer requires a welding code, 4.2.1 / 8.5.2 also make material and filler-metal
+		traceability and code qualification part of the job. PSIF workmanship (no code) needs
+		only the in-house authorization."""
+		from hse.shop_qc.release import NO_WELDING, code_required, welder_skills
+
+		if not frappe.get_cached_value("QC Stage", self.stage, "weld_record"):
+			return
+		unit = frappe.get_doc("QC Unit", self.qc_unit)
+		if not unit.get("welding_standard"):
+			frappe.throw(
+				_(
+					"Set the Welding Standard on {0} (No Welding, PSIF Workmanship, or a code required by design or the customer) before completing this stage."
+				).format(frappe.bold(self.qc_unit)),
+				title=_("Welding Standard Not Set"),
+			)
+		if unit.welding_standard == NO_WELDING:
+			return
+		coded = code_required(unit)
+		errors = []
+		if coded:
+			materials = unit.get("material_traceability") or []
+			if not materials:
+				errors.append(_("List the material and filler metal used, with heat / lot numbers."))
+			for row in materials:
+				if not row.mtr:
+					errors.append(
+						_("Material {0} (heat {1}): attach the MTR or cert.").format(
+							row.part_number or row.description or row.idx, row.heat_lot_no
+						)
+					)
+		welders = unit.get("welders") or []
+		if not welders:
+			errors.append(_("List the welders who worked on this unit."))
+		skills = welder_skills(unit)
+		for row in welders:
+			if skills and not any(
+				active_authorization(row.employee, skill, self.inspection_date) for skill in skills
+			):
+				errors.append(
+					_("{0} has no active {1} authorization ({2}).").format(
+						row.employee_name or row.employee,
+						_("code welding") if coded else _("welding"),
+						", ".join(skills),
+					)
+				)
+		if errors:
+			frappe.throw(
+				_("Welding record on {0} ({1}):").format(
+					frappe.bold(self.qc_unit),
+					unit.weld_performance_code if coded else _("PSIF workmanship"),
+				)
+				+ "<br>"
+				+ "<br>".join(errors),
+				title=_("Weld Record Incomplete"),
+			)
+
+	def check_customer_property(self):
+		"""QM-400 8.5.3: every item of customer property is incorporated, returned (with its
+		condition at return recorded) or reported lost or damaged before release."""
+		errors = []
+		for row in frappe.get_all(
+			"QC Customer Property",
+			filters={"parenttype": "QC Unit", "parent": self.qc_unit},
+			fields=["idx", "description", "disposition", "returned_condition", "returned_photo", "remarks"],
+		):
+			label = row.description or row.idx
+			if row.disposition in (None, "", "Pending"):
+				errors.append(_("Customer property {0}: record its disposition.").format(label))
+			elif row.disposition == "Returned" and not (row.returned_condition and row.returned_photo):
+				errors.append(
+					_("Customer property {0}: record its condition and a photo at return.").format(label)
+				)
+			elif row.disposition.startswith("Lost") and not cstr(row.remarks).strip():
+				errors.append(_("Customer property {0}: say how the customer was notified.").format(label))
+		if errors:
+			frappe.throw("<br>".join(errors), title=_("Customer Property"))
 
 	def check_not_already_accepted(self):
 		accepted = get_accepted_by_stage(self.qc_unit).get(self.stage)
@@ -1231,6 +1388,22 @@ class QCInspection(Document):
 			)
 
 
+def active_authorization(employee: str | None, skill: str, on_date=None) -> str | None:
+	"""The employee's submitted Skill Authorization for the skill that is valid on the date."""
+	if not employee:
+		return None
+	on = getdate(on_date) if on_date else getdate()
+	for row in frappe.get_all(
+		"Skill Authorization",
+		filters={"employee": employee, "skill": skill, "docstatus": 1, "authorization_date": ("<=", on)},
+		fields=["name", "expires_on"],
+		order_by="authorization_date desc",
+	):
+		if not row.expires_on or getdate(row.expires_on) >= on:
+			return row.name
+	return None
+
+
 # ---------------------------------------------------------------------- API
 def build_hose_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 	"""One test row per tagged hose on the unit, with limits from the hose line."""
@@ -1285,6 +1458,11 @@ def build_pmg_tests(qc_unit: str, only_tags: set | None = None) -> list[dict]:
 		if new_build:
 			if not flt(row["tolerance_psi"]) and flt(g.relief_setting_psi):
 				row["tolerance_psi"] = round(flt(g.relief_setting_psi) * PMG_SETTING_TOLERANCE_PCT / 100)
+				# 3% of the compensator's own setting, not of the relief setting.
+				if flt(g.compensator_setting_psi):
+					row["compensator_tolerance_psi"] = round(
+						flt(g.compensator_setting_psi) * PMG_SETTING_TOLERANCE_PCT / 100
+					)
 			# The group's own flow; a single-group unit falls back to the unit's design flow.
 			flow = flt(g.design_flow_gpm) or (flt(unit.flow_gpm) if single else 0)
 			if flow:
@@ -1304,6 +1482,13 @@ def parse_number(value) -> float:
 
 def unit_text_value(unit, field: str) -> str:
 	"""A unit value as checklist text; the pmg_* keys summarise the Pump / Motor Groups."""
+	if field == "welding_standard":
+		if unit.get("welding_standard") in ("Required by Design", "Required by Customer"):
+			code = cstr(unit.get("weld_performance_code")).strip()
+			return f"{code} ({unit.welding_standard.lower()})" if code else ""
+		if unit.get("welding_standard") == "No Welding":
+			return _("No welding")
+		return "PSIF Welding Workmanship Standard" if unit.get("welding_standard") else ""
 	if field == "pmg_motor_nameplates":
 		parts = [
 			(

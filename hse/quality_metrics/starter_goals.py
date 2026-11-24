@@ -10,6 +10,7 @@ STARTER_GOALS = [
 			("hpu_shipped_before_release", "At most", 0),
 			("hpu_units_released", "Record only", 0),
 			("hpu_stage_rejections", "Record only", 0),
+			("unit_on_time_delivery_pct", "At least", 95),
 		],
 	},
 	{
@@ -20,7 +21,7 @@ STARTER_GOALS = [
 			("repair_failure_causes", "Record only", 0),
 		],
 	},
-	# Rework / NCR / CAPA goals record values only; set targets on each goal before relying on Pass/Fail.
+	# Rework / NCR / CAPA goals mostly record values; the QM-400 Appendix C KPIs carry its targets.
 	{
 		"goal": "Rework Management",
 		"objectives": [
@@ -40,6 +41,8 @@ STARTER_GOALS = [
 			("nc_avg_days_to_resolve", "Record only", 0),
 			("nc_open_critical_over_7_days", "Record only", 0),
 			("nc_open_over_30_days", "Record only", 0),
+			("nc_closed_on_time_pct", "At least", 90),
+			("complaint_ack_on_time_pct", "At least", 100),
 		],
 	},
 	{
@@ -50,7 +53,13 @@ STARTER_GOALS = [
 			("capa_overdue", "Record only", 0),
 			("capa_closed_on_time_pct", "Record only", 0),
 			("capa_avg_days_to_close", "Record only", 0),
-			("capa_effective_pct", "Record only", 0),
+			("capa_effective_pct", "At least", 90),
+		],
+	},
+	{
+		"goal": "Calibration",
+		"objectives": [
+			("calibration_compliance_pct", "At least", 100),
 		],
 	},
 	{

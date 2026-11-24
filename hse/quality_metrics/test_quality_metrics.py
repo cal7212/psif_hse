@@ -27,6 +27,16 @@ GOAL = "_Test NC Metrics Goal"
 
 
 class UnitTestQualityMetrics(UnitTestCase):
+	def test_business_hours_skip_weekends(self):
+		from datetime import datetime
+
+		from hse.quality_metrics.metrics import business_hours_between
+
+		fri, mon = datetime(2026, 11, 20, 9, 0), datetime(2026, 11, 23, 9, 0)
+		self.assertEqual(business_hours_between(fri, mon), 24.0)  # Friday 09:00 to midnight + Monday
+		self.assertEqual(business_hours_between(mon, fri), 0.0)
+		self.assertEqual(business_hours_between(fri, datetime(2026, 11, 24, 9, 0)), 48.0)
+
 	def test_monthly_period_is_previous_month(self):
 		self.assertEqual(get_review_period("Monthly", "2026-10-01"), (date(2026, 9, 1), date(2026, 9, 30)))
 		self.assertEqual(get_review_period(None, "2026-03-15"), (date(2026, 2, 1), date(2026, 2, 28)))
@@ -170,7 +180,13 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 			nc.reload()
 			nc.status = status
 			if status == "Resolved":
-				nc.update({"disposition": "Rework to Specification", "quality_verification": "Accept"})
+				nc.update(
+					{
+						"disposition": "Rework to Specification",
+						"quality_verification": "Accept",
+						"auth_quality_manager": self.employee,
+					}
+				)
 			nc.save()
 		return nc
 
@@ -205,8 +221,20 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 				"quality_verification": "Accept",
 			}
 		)
+		self.assertRaises(frappe.ValidationError, nc.save)  # QM-400 8.7.2 d: no deciding authority
+		nc.reload()
+		nc.update(
+			{
+				"status": "Resolved",
+				"disposition": "Other",
+				"disposition_other": "Return to customer",
+				"quality_verification": "Accept",
+				"auth_quality_manager": self.employee,
+			}
+		)
 		nc.save()
 		self.assertEqual(nc.status, "Resolved")
+		self.assertTrue(nc.ncr_due_date)
 		nc.lot_qty, nc.reject_qty = 2, 3
 		self.assertRaises(frappe.ValidationError, nc.save)
 
@@ -307,13 +335,115 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		nc.reload()
 		nc.update(closing)
 		nc.update({"capa_containment_done": "2026-10-05", "capa_correction_done": "2026-10-18"})
+		self.assertRaises(frappe.ValidationError, nc.save)  # verified before the run-in period
+		nc.reload()
+		nc.update(closing)
+		nc.update(
+			{
+				"capa_containment_done": "2026-10-05",
+				"capa_correction_done": "2026-10-18",
+				"capa_verification_date": "2026-11-20",
+			}
+		)
+		self.assertRaises(frappe.ValidationError, nc.save)  # lessons learned and risk review missing
+		nc.reload()
+		nc.update(closing)
+		nc.update(
+			{
+				"capa_containment_done": "2026-10-05",
+				"capa_correction_done": "2026-10-18",
+				"capa_verification_date": "2026-11-20",
+				"capa_lessons_learned": "<p>Torque steps belong on every traveler</p>",
+				"capa_risk_review_note": "Assembly risk matrix already covers loose terminations",
+			}
+		)
 		nc.save()
+		self.assertEqual(str(nc.capa_effectiveness_due), "2026-11-17")
 		self.assertEqual(nc.capa_status, "Closed")
 		self.assertEqual(nc.capa_root_cause, "Torque step missing from traveler")
 		self.assertTrue(nc.capa_closure_date)
 		# a CAPA cannot list its own NCR as related
 		nc.append("capa_related_ncrs", {"non_conformance": nc.name})
 		self.assertRaises(frappe.ValidationError, nc.save)
+
+	def test_resolved_ncr_is_locked_and_quality_only_fields(self):
+		nc = self.make_nc(severity="High", status="Resolved")
+		user = "test-qms-employee@example.com"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc(
+				{
+					"doctype": "User",
+					"email": user,
+					"first_name": "QMS Employee",
+					"send_welcome_email": 0,
+					"roles": [{"role": "Employee"}],
+				}
+			).insert()
+		frappe.set_user(user)
+		try:
+			doc = frappe.get_doc("Nonconformance Report", nc.name)
+			doc.details = "<p>Edited after closure</p>"
+			self.assertRaises(frappe.ValidationError, doc.save)  # locked while resolved
+			doc.reload()
+			doc.status = "Open"
+			doc.reopen_reason = "Customer reported recurrence"
+			self.assertRaises(frappe.ValidationError, doc.save)  # only Quality reopens
+			other = self.make_nc(severity="Low")
+			other.quality_verification = "Accept"
+			self.assertRaises(frappe.ValidationError, other.save)  # QA verification is Quality's
+		finally:
+			frappe.set_user("Administrator")
+		doc = frappe.get_doc("Nonconformance Report", nc.name)
+		doc.status = "Open"
+		self.assertRaises(frappe.ValidationError, doc.save)  # a reason is required
+		doc.reload()
+		doc.update({"status": "Open", "reopen_reason": "Customer reported recurrence"})
+		doc.save()
+		self.assertEqual(doc.status, "Open")
+		self.assertFalse(frappe.has_permission("Nonconformance Report", "delete", doc, user=user))
+
+	def test_customer_ncr_needs_notification_and_acknowledgment(self):
+		nc = self.make_nc(severity="Medium")
+		nc.update(
+			{
+				"source": "Customer",
+				"status": "Resolved",
+				"disposition": "Rework to Specification",
+				"quality_verification": "Accept",
+				"auth_quality_manager": self.employee,
+			}
+		)
+		self.assertRaises(frappe.ValidationError, nc.save)
+		nc.reload()
+		nc.update(
+			{
+				"source": "Customer",
+				"status": "Resolved",
+				"disposition": "Use As-Is",
+				"auth_customer": "J. Buyer",
+				"quality_verification": "Accept",
+				"auth_quality_manager": self.employee,
+				"complaint_received_on": "2026-11-02 09:00:00",
+				"complaint_acknowledged_on": "2026-11-03 10:00:00",
+				"customer_notified_on": "2026-11-03",
+			}
+		)
+		self.assertRaises(frappe.ValidationError, nc.save)  # concession attachment for Use As-Is
+		nc.reload()
+		nc.update(
+			{
+				"source": "Customer",
+				"status": "Resolved",
+				"disposition": "Rework to Specification",
+				"quality_verification": "Accept",
+				"auth_quality_manager": self.employee,
+				"complaint_received_on": "2026-11-02 09:00:00",
+				"complaint_acknowledged_on": "2026-11-03 10:00:00",
+				"customer_notified_on": "2026-11-03",
+			}
+		)
+		nc.save()
+		self.assertEqual(nc.status, "Resolved")
 
 	def test_scar_numbering_defaults_and_approval(self):
 		nc = self.make_nc(severity="Low")

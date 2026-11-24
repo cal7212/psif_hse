@@ -20,6 +20,8 @@
   "stage_sequence",
   "template",
   "quality_procedure",
+  "drawing_rev",
+  "template_revision",
   "inspection_date",
   "inspected_by",
   "inspector_name",
@@ -168,6 +170,19 @@
    "fieldtype": "Link",
    "label": "Quality Procedure",
    "options": "Quality Procedure",
+   "read_only": 1
+  },
+  {
+   "description": "The unit's Drawing / Rev when this inspection was completed.",
+   "fieldname": "drawing_rev",
+   "fieldtype": "Data",
+   "label": "Drawing / Rev",
+   "read_only": 1
+  },
+  {
+   "fieldname": "template_revision",
+   "fieldtype": "Int",
+   "label": "Template Revision",
    "read_only": 1
   },
   {
@@ -434,7 +449,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-10-29 10:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection",

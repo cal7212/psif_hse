@@ -6,7 +6,8 @@ A CAPA tab on the NCR holds the QM-128 report fields and a 5 Whys root-cause ana
 Ticking CAPA Required needs the CAPA # from the internal log, stamps who and when, and fills blanks from the NCR;
 due dates follow the QM-128 rule (containment 7 days, correction 30, closure 60, unless an
 approved extension moves correction and closure). Closing the CAPA needs a root cause, a
-corrective action and an Effective verification.
+corrective action, an Effective verification made once the action has had time to work
+(QM-400 10.2.1 d), lessons learned (7.1.6) and a risk review (10.2.1 e).
 """
 
 import frappe
@@ -34,6 +35,7 @@ CAPA_SOURCES = (
 	"Other",
 )
 CONTAINMENT_DAYS, CORRECTION_DAYS, CLOSURE_DAYS = 7, 30, 60
+EFFECTIVENESS_DAYS = 30  # after Correction Completed, before effectiveness can be judged
 WHYS = 5
 
 
@@ -46,6 +48,7 @@ def validate(doc, method=None):
 	set_due_dates(doc)
 	validate_dates(doc)
 	apply_completion(doc)
+	set_effectiveness_due(doc)
 	related = [r.non_conformance for r in doc.get("capa_related_ncrs") or []]
 	if doc.name in related:
 		frappe.throw(_("Related NCRs cannot include this NCR."))
@@ -119,6 +122,25 @@ def set_due_dates(doc) -> None:
 		correction, closure = max(correction, extended), max(closure, extended)
 	doc.capa_correction_due = correction
 	doc.capa_closure_due = closure
+
+
+def set_effectiveness_due(doc) -> None:
+	"""Default the effectiveness check to EFFECTIVENESS_DAYS after the correction is done, and
+	refuse a verification dated before it."""
+	if doc.get("capa_correction_done") and not doc.get("capa_effectiveness_due"):
+		doc.capa_effectiveness_due = add_days(doc.capa_correction_done, EFFECTIVENESS_DAYS)
+	if (
+		doc.get("capa_verification_date")
+		and doc.get("capa_effectiveness_due")
+		and doc.get("capa_quality_verification")
+		and getdate(doc.capa_verification_date) < getdate(doc.capa_effectiveness_due)
+	):
+		frappe.throw(
+			_("Effectiveness can be verified from {0}, once the corrective action has run.").format(
+				frappe.format(doc.capa_effectiveness_due, "Date")
+			),
+			title=_("Too Early to Verify"),
+		)
 
 
 def validate_dates(doc) -> None:
@@ -215,6 +237,10 @@ def validate_capa_closure(doc) -> None:
 		missing.append(_("Verification Date"))
 	if not doc.get("capa_closed_by"):
 		missing.append(_("Closed By"))
+	if is_blank(doc.get("capa_lessons_learned")):
+		missing.append(_("Lessons Learned"))
+	if not doc.get("capa_risk_assessment") and not cstr(doc.get("capa_risk_review_note")).strip():
+		missing.append(_("Risk Assessment Updated, or a Risk Review Note saying why none is needed"))
 	if missing:
 		frappe.throw(
 			_("Cannot close this CAPA until these are completed: {0}").format(", ".join(missing)),

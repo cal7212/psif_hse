@@ -29,7 +29,7 @@
    },
    {
     "check_item": "Welds visually inspected",
-    "criteria": "Per drawing weld symbols; no cracks, porosity, undercut or incomplete fusion (AWS D1.1 visual acceptance or company standard)",
+    "criteria": "Per drawing weld symbols; no cracks, porosity, undercut or incomplete fusion (the code's visual acceptance criteria when a code applies, otherwise the PSIF Welding Workmanship Standard)",
     "is_critical": 0,
     "numeric": 0,
     "record_text": 0,
@@ -79,12 +79,13 @@
     "prefill_text_value": 0
    },
    {
-    "check_item": "Welding to code",
-    "criteria": "Welds to the specified code, process, material and inspection method; free of spatter, slag and irregularities",
+    "check_item": "Welding to specified standard",
+    "criteria": "Welds meet the Welding Standard shown: the code's process, material and inspection requirements when a code applies, otherwise the PSIF Welding Workmanship Standard; free of spatter, slag and irregularities",
     "is_critical": 1,
     "numeric": 0,
     "record_text": 0,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "welding_standard"
    },
    {
     "check_item": "Fabrication",
@@ -1628,12 +1629,13 @@
     "requires_photo": 0
    },
    {
-    "check_item": "Welding to code",
-    "criteria": "Welds to the specified code, process, material and inspection method; free of spatter, slag and irregularities",
+    "check_item": "Welding to specified standard",
+    "criteria": "Welds meet the Welding Standard shown: the code's process, material and inspection requirements when a code applies, otherwise the PSIF Welding Workmanship Standard; free of spatter, slag and irregularities",
     "is_critical": 1,
     "numeric": 0,
     "record_text": 0,
-    "requires_photo": 0
+    "requires_photo": 0,
+    "unit_text_field": "welding_standard"
    },
    {
     "check_item": "Fabrication",

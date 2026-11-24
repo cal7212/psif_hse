@@ -11,6 +11,7 @@
   "relief_spec",
   "compensator_spec",
   "tolerance_psi",
+  "compensator_tolerance_psi",
   "motor_fla",
   "theoretical_flow_gpm",
   "flow_min_gpm",
@@ -30,6 +31,9 @@
   "sound_level_db",
   "instrument",
   "amps_instrument",
+  "flow_instrument",
+  "temp_instrument",
+  "sound_instrument",
   "result",
   "finding"
  ],
@@ -70,6 +74,14 @@
    "precision": "0"
   },
   {
+   "description": "Compensator tolerance when it differs from the relief tolerance; blank uses Tolerance ±.",
+   "fieldname": "compensator_tolerance_psi",
+   "fieldtype": "Float",
+   "label": "Compensator Tolerance ± (psi)",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
    "fieldname": "motor_fla",
    "fieldtype": "Float",
    "label": "Motor FLA",
@@ -101,10 +113,10 @@
    "read_only": 1
   },
   {
-   "description": "From the unit's Noise Level Limit, else 85 dB.",
+   "description": "Measured at 1 m, A-weighted. From the unit's Noise Level Limit, else 85 dBA.",
    "fieldname": "sound_limit_db",
    "fieldtype": "Float",
-   "label": "Sound Limit (dB)",
+   "label": "Sound Limit at 1 m (dBA)",
    "precision": "0",
    "read_only": 1
   },
@@ -177,7 +189,7 @@
   {
    "fieldname": "sound_level_db",
    "fieldtype": "Float",
-   "label": "Sound Level (dB)",
+   "label": "Sound Level at 1 m (dBA)",
    "precision": "0"
   },
   {
@@ -192,6 +204,24 @@
    "fieldname": "amps_instrument",
    "fieldtype": "Link",
    "label": "Amps Instrument",
+   "options": "Measuring Instrument"
+  },
+  {
+   "fieldname": "flow_instrument",
+   "fieldtype": "Link",
+   "label": "Flowmeter",
+   "options": "Measuring Instrument"
+  },
+  {
+   "fieldname": "temp_instrument",
+   "fieldtype": "Link",
+   "label": "Thermometer",
+   "options": "Measuring Instrument"
+  },
+  {
+   "fieldname": "sound_instrument",
+   "fieldtype": "Link",
+   "label": "Sound Level Meter",
    "options": "Measuring Instrument"
   },
   {
@@ -213,7 +243,7 @@
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-11-13 12:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC PMG Test",

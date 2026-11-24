@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, now_datetime
 
-from hse.shop_qc import change_control, missing_parts, rfd, sub_assemblies
+from hse.shop_qc import change_control, missing_parts, release, rfd, sub_assemblies
 from hse.shop_qc.multi_unit import (
 	hose_build_name,
 	unit_base,
@@ -124,6 +124,7 @@ class QCUnit(Document):
 		missing_parts.validate_unit(self)
 		rfd.validate_unit(self)  # QM-144: pre-fills its Change Orders row
 		self.validate_change_orders()
+		release.validate_unit(self)  # QM-400 8.5.1 build package, 8.6 release, 8.5.2 weld trace
 
 	def on_update(self):
 		missing_parts.on_update_unit(self)

@@ -156,6 +156,13 @@
   "tab_requirements",
   "section_required_qc",
   "qc_stages",
+  "section_build_package",
+  "build_package_released",
+  "build_package_drawing_rev",
+  "build_package_bom_rev",
+  "cb_build_package",
+  "build_package_released_by",
+  "build_package_released_on",
   "section_cdocs",
   "construction_document_template",
   "construction_documents",
@@ -192,10 +199,14 @@
   "fluid_brand",
   "fluid_viscosity",
   "section_weld_env",
+  "welding_standard",
   "weld_performance_code",
   "weld_procedure_number",
   "weld_inspection_method",
   "weld_certification",
+  "section_weld_trace",
+  "material_traceability",
+  "welders",
   "cb_env",
   "env_noise_level",
   "env_exposure",
@@ -247,6 +258,8 @@
   "tab_qc",
   "section_missing_parts",
   "missing_parts",
+  "section_customer_property",
+  "customer_property",
   "section_qc",
   "stage_progress",
   "section_qc_status",
@@ -257,6 +270,8 @@
   "released_on",
   "qc_flag",
   "print_photos",
+  "section_release_confirmations",
+  "release_confirmations",
   "section_post_ship",
   "post_shipment_reviews",
   "review_date",
@@ -1177,6 +1192,52 @@
    "options": "QC Unit Stage"
   },
   {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.build_package_released",
+   "fieldname": "section_build_package",
+   "fieldtype": "Section Break",
+   "label": "Build Package Release (QM-400 8.5.1)"
+  },
+  {
+   "description": "Operations confirms the design, drawings and bill of material are complete and approved. Stages flagged Requires Build Package Release cannot be completed until this is ticked.",
+   "fieldname": "build_package_released",
+   "fieldtype": "Check",
+   "label": "Build Package Released to Floor",
+   "no_copy": 1
+  },
+  {
+   "description": "Drawing / Rev the floor is building to. A later change to Drawing / Rev blocks inspections until the package is re-released.",
+   "fieldname": "build_package_drawing_rev",
+   "fieldtype": "Data",
+   "label": "Released Drawing / Rev",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "build_package_bom_rev",
+   "fieldtype": "Data",
+   "label": "Released BOM Rev",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "cb_build_package",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "build_package_released_by",
+   "fieldtype": "Link",
+   "label": "Released By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "build_package_released_on",
+   "fieldtype": "Datetime",
+   "label": "Released On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "section_cdocs",
    "fieldtype": "Section Break",
    "label": "Construction Documentation"
@@ -1374,15 +1435,25 @@
    "label": "Welding and Environmental"
   },
   {
-   "description": "e.g. AWS D1.1",
+   "description": "Set at contract review (QM-400 4.2.1). A code required by design or the customer brings full material traceability and code-qualified welders; PSIF Workmanship needs welders with the in-house welding authorization. Must be set before a weld stage can be completed.",
+   "fieldname": "welding_standard",
+   "fieldtype": "Select",
+   "label": "Welding Standard",
+   "options": "\nNo Welding\nPSIF Workmanship (no code)\nRequired by Design\nRequired by Customer"
+  },
+  {
+   "description": "The code invoked, e.g. AWS D1.1 or ASME B31.3.",
    "fieldname": "weld_performance_code",
    "fieldtype": "Data",
-   "label": "Welding Performance Code"
+   "label": "Welding Code",
+   "depends_on": "eval:['Required by Design','Required by Customer'].includes(doc.welding_standard)",
+   "mandatory_depends_on": "eval:['Required by Design','Required by Customer'].includes(doc.welding_standard)"
   },
   {
    "fieldname": "weld_procedure_number",
    "fieldtype": "Data",
-   "label": "Weld Procedure Number"
+   "label": "Weld Procedure Number",
+   "depends_on": "eval:['Required by Design','Required by Customer'].includes(doc.welding_standard)"
   },
   {
    "fieldname": "weld_inspection_method",
@@ -1392,7 +1463,29 @@
   {
    "fieldname": "weld_certification",
    "fieldtype": "Data",
-   "label": "Welder Certification"
+   "label": "Welder Certification",
+   "depends_on": "eval:['Required by Design','Required by Customer'].includes(doc.welding_standard)"
+  },
+  {
+   "depends_on": "eval:doc.welding_standard && doc.welding_standard!='No Welding'",
+   "fieldname": "section_weld_trace",
+   "fieldtype": "Section Break",
+   "label": "Material Traceability and Welders (QM-400 4.2.1, 7.2, 8.5.2)"
+  },
+  {
+   "description": "Required when a welding code applies: each heat or lot used, base and filler metal, with its MTR.",
+   "fieldname": "material_traceability",
+   "fieldtype": "Table",
+   "label": "Material Traceability",
+   "options": "QC Material Trace",
+   "depends_on": "eval:['Required by Design','Required by Customer'].includes(doc.welding_standard)"
+  },
+  {
+   "description": "Everyone who welded on this unit. Code work needs the stage's code welder qualification; PSIF workmanship needs the in-house welding authorization.",
+   "fieldname": "welders",
+   "fieldtype": "Table",
+   "label": "Welders",
+   "options": "QC Unit Welder"
   },
   {
    "fieldname": "cb_env",
@@ -1692,6 +1785,20 @@
    "options": "QC Missing Part"
   },
   {
+   "collapsible": 1,
+   "collapsible_depends_on": "customer_property",
+   "fieldname": "section_customer_property",
+   "fieldtype": "Section Break",
+   "label": "Customer Property (QM-400 8.5.3)"
+  },
+  {
+   "description": "Customer-owned material, tooling, equipment or documents in PSIF's care. Record the condition at receipt and at return; final release needs every row disposed.",
+   "fieldname": "customer_property",
+   "fieldtype": "Table",
+   "label": "Customer Property",
+   "options": "QC Customer Property"
+  },
+  {
    "fieldname": "section_qc",
    "fieldtype": "Section Break",
    "label": "QC Status (Frappe-owned; never overwritten by sync)"
@@ -1757,6 +1864,19 @@
    "fieldname": "print_photos",
    "fieldtype": "Check",
    "label": "Print Photos"
+  },
+  {
+   "depends_on": "release_confirmations",
+   "fieldname": "section_release_confirmations",
+   "fieldtype": "Section Break",
+   "label": "Release Confirmations (QM-400 8.6)"
+  },
+  {
+   "description": "Before an engineered unit is Released, Project Management or Sales, Operations and Accounting each confirm; Quality confirms by accepting the final release inspection. Use the Confirm Release button.",
+   "fieldname": "release_confirmations",
+   "fieldtype": "Table",
+   "label": "Release Confirmations",
+   "options": "QC Release Confirmation"
   },
   {
    "collapsible": 1,
@@ -1826,7 +1946,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-23 12:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Unit",
@@ -1882,6 +2002,24 @@
    "report": 0,
    "role": "HPU Sync",
    "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "role": "Sales User"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "role": "Projects User"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "role": "Accounts User"
   }
  ],
  "search_fields": "model,serial_no,customer_name,rga_number,trulinx_work_order",

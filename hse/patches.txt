@@ -35,3 +35,4 @@ hse.patches.shop_qc_unit_values_on_checklists
 hse.patches.shop_qc_photos_not_required
 hse.patches.injury_corrective_actions_table
 hse.patches.shop_qc_change_order_type
+hse.patches.qms_400_alignment

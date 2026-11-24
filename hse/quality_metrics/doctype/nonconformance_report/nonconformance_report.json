@@ -15,6 +15,7 @@
   "column_break_4",
   "status",
   "resolved_on",
+  "reopen_reason",
   "record_type",
   "escalated_from",
   "ncr_criteria_section",
@@ -26,6 +27,7 @@
   "ncr_section",
   "ncr_date",
   "ncr_no",
+  "ncr_due_date",
   "initiator",
   "initiator_name",
   "contract",
@@ -56,6 +58,15 @@
   "auth_operations_manager",
   "auth_quality_manager",
   "auth_customer",
+  "customer_concession",
+  "customer_contact_section",
+  "complaint_received_on",
+  "complaint_acknowledged_on",
+  "complaint_acknowledged_by",
+  "customer_contact_column",
+  "customer_notified_on",
+  "customer_notified_by",
+  "customer_notification_method",
   "ncr_verification_section",
   "quality_verification",
   "verification_comments",
@@ -155,6 +166,10 @@
   "capa_verified_by",
   "capa_verification_date",
   "capa_follow_up",
+  "capa_effectiveness_due",
+  "capa_lessons_learned",
+  "capa_risk_assessment",
+  "capa_risk_review_note",
   "capa_closure_column",
   "capa_closed_by",
   "capa_closure_date",
@@ -247,6 +262,14 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:!doc.__islocal",
+   "description": "Required to reopen or cancel a resolved record (Quality Manager only, QM-400 7.5.3).",
+   "fieldname": "reopen_reason",
+   "fieldtype": "Small Text",
+   "label": "Reopen Reason",
+   "no_copy": 1
+  },
+  {
    "bold": 1,
    "default": "NCR",
    "description": "NCR or Rework, per the QM-104 in-house NCR criteria.",
@@ -326,6 +349,13 @@
    "search_index": 1
   },
   {
+   "description": "Target date for closing this NCR (QM-400 Appendix C, NCR closure timeliness). Defaults from the severity.",
+   "fieldname": "ncr_due_date",
+   "fieldtype": "Date",
+   "label": "Target Close Date",
+   "no_copy": 1
+  },
+  {
    "default": "__user",
    "fieldname": "initiator",
    "fieldtype": "Link",
@@ -355,7 +385,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Source",
-   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nOther"
+   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nCalibration\nOther"
   },
   {
    "fieldname": "ncr_column_break",
@@ -500,7 +530,8 @@
    "fieldtype": "Link",
    "label": "Quality Manager",
    "options": "Employee",
-   "ignore_user_permissions": 1
+   "ignore_user_permissions": 1,
+   "description": "Required to resolve a product NCR (QM-400 8.7.2 d)."
   },
   {
    "description": "Customer approver name or approval reference.",
@@ -508,6 +539,61 @@
    "fieldtype": "Data",
    "label": "Customer",
    "mandatory_depends_on": "eval:['Use As-Is','Repair'].includes(doc.disposition)"
+  },
+  {
+   "description": "Written customer approval of the concession (QM-400 8.7.1 d).",
+   "fieldname": "customer_concession",
+   "fieldtype": "Attach",
+   "label": "Customer Concession",
+   "mandatory_depends_on": "eval:['Use As-Is','Repair'].includes(doc.disposition) && doc.record_type!='Rework' && !doc.asset_inspection && !doc.housekeeping_inspection"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.source=='Customer' || doc.crit_customer_safety",
+   "depends_on": "eval:doc.record_type!='Rework'",
+   "fieldname": "customer_contact_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Notification and Complaint (QM-400 8.7.1 c, 9.1.2)"
+  },
+  {
+   "description": "When the customer first raised the issue, if they did.",
+   "fieldname": "complaint_received_on",
+   "fieldtype": "Datetime",
+   "label": "Complaint Received On"
+  },
+  {
+   "description": "First contact acknowledging the issue: the 48-business-hour response target is measured to this.",
+   "fieldname": "complaint_acknowledged_on",
+   "fieldtype": "Datetime",
+   "label": "Acknowledged On"
+  },
+  {
+   "fieldname": "complaint_acknowledged_by",
+   "fieldtype": "Link",
+   "label": "Acknowledged By",
+   "options": "User"
+  },
+  {
+   "fieldname": "customer_contact_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Required when the customer raised the NCR or it affects a customer requirement, safety or the ship date.",
+   "fieldname": "customer_notified_on",
+   "fieldtype": "Date",
+   "label": "Customer Notified On"
+  },
+  {
+   "fieldname": "customer_notified_by",
+   "fieldtype": "Link",
+   "label": "Customer Notified By",
+   "options": "User"
+  },
+  {
+   "fieldname": "customer_notification_method",
+   "fieldtype": "Select",
+   "label": "Notification Method",
+   "options": "\nEmail\nPhone\nIn Person\nLetter\nOther"
   },
   {
    "depends_on": "eval:doc.record_type!='Rework'",
@@ -671,7 +757,7 @@
    "fieldname": "rw_source",
    "fieldtype": "Select",
    "label": "Source",
-   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nOther"
+   "options": "\nReceiving Inspection\nIn-Process Inspection\nFinal Inspection\nCustomer\nSupplier\nInternal Audit\nAsset Inspection\nHousekeeping Inspection\nCalibration\nOther"
   },
   {
    "fieldname": "rw_info_column",
@@ -1109,6 +1195,30 @@
    "label": "Follow-Up"
   },
   {
+   "description": "Verification Date must be on or after this. Defaults to 30 days after Correction Completed so the action has run long enough to judge (QM-400 10.2.1 d).",
+   "fieldname": "capa_effectiveness_due",
+   "fieldtype": "Date",
+   "label": "Effectiveness Check Due"
+  },
+  {
+   "description": "Required to close (QM-400 7.1.6).",
+   "fieldname": "capa_lessons_learned",
+   "fieldtype": "Text Editor",
+   "label": "Lessons Learned"
+  },
+  {
+   "description": "Risk Assessment updated with this CAPA (QM-400 10.2.1 e). Or say below why no update is needed.",
+   "fieldname": "capa_risk_assessment",
+   "fieldtype": "Link",
+   "label": "Risk Assessment Updated",
+   "options": "Risk Assessment"
+  },
+  {
+   "fieldname": "capa_risk_review_note",
+   "fieldtype": "Small Text",
+   "label": "Risk Review Note"
+  },
+  {
    "fieldname": "capa_closure_column",
    "fieldtype": "Column Break"
   },
@@ -1345,7 +1455,7 @@
   }
  ],
  "links": [],
- "modified": "2026-11-12 15:00:39.622140",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Quality Metrics",
  "name": "Nonconformance Report",
@@ -1366,7 +1476,7 @@
   },
   {
    "create": 1,
-   "delete": 1,
+   "delete": 0,
    "email": 1,
    "export": 1,
    "print": 1,

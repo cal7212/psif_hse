@@ -437,9 +437,14 @@ function evaluate_pmg_row(cdt, cdn) {
 	if (r.nameplate_verified === "No" || r.rotation_verified === "No" || pmg_limit_failed(r)) {
 		result = "Fail";
 	} else if (flt(r.tolerance_psi)) {
+		const tol = flt(r.tolerance_psi);
 		const pairs = [
-			[flt(r.relief_spec), flt(r.relief_as_set)],
-			[flt(r.compensator_spec), flt(r.compensator_as_set)],
+			[flt(r.relief_spec), flt(r.relief_as_set), tol],
+			[
+				flt(r.compensator_spec),
+				flt(r.compensator_as_set),
+				flt(r.compensator_tolerance_psi) || tol,
+			],
 		];
 		const needs_flow = flt(r.flow_min_gpm) || flt(r.flow_max_gpm);
 		const complete =
@@ -448,7 +453,7 @@ function evaluate_pmg_row(cdt, cdn) {
 			pairs.every(([s, a]) => !s || a) &&
 			(!needs_flow || flt(r.actual_flow_gpm));
 		result = complete
-			? pairs.every(([s, a]) => !s || Math.abs(a - s) <= flt(r.tolerance_psi))
+			? pairs.every(([s, a, t]) => !s || Math.abs(a - s) <= t)
 				? "Pass"
 				: "Fail"
 			: "";

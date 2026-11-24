@@ -8,7 +8,7 @@ and the stage's job type is the unit's job type (or "Both").
 
 import frappe
 from frappe import _
-from frappe.utils import cstr, flt
+from frappe.utils import cstr, flt, get_datetime
 
 LOCKED_STATUSES = ("Shipped", "Cancelled")  # set by the TrulinX sync; QC does not override
 STAGE_FIELDS = [
@@ -98,7 +98,7 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 	if not qc_unit or not frappe.db.exists("QC Unit", qc_unit):
 		return None
 
-	from hse.shop_qc import sub_assemblies
+	from hse.shop_qc import release, sub_assemblies
 
 	unit = frappe.db.get_value(
 		"QC Unit", qc_unit, ["status", "open_non_conformances", "released_on", "installed_in"], as_dict=True
@@ -118,10 +118,13 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 			required_build = [s for s in required_build if not sub_assemblies.tested_with_host(s)]
 		has_any = frappe.db.exists("QC Inspection", {"qc_unit": qc_unit, "docstatus": 1})
 
+		confirmed, _missing, last_confirmed = release.confirmations_complete(qc_unit)
 		if open_ncs:
 			new_status = "QC Hold"
-		elif final and final.name in accepted:
+		elif final and final.name in accepted and confirmed:
 			new_status = "Released"
+		elif final and final.name in accepted:
+			new_status = "Ready for Release"  # QM-400 8.6: waiting on release confirmations
 		elif required_build and all(s in accepted for s in required_build):
 			new_status = "Ready for Release"
 		elif has_any:
@@ -131,8 +134,14 @@ def update_unit_status(qc_unit: str, update_modified: bool = True) -> str | None
 
 		if new_status == "Released":
 			rel = accepted[final.name]
-			values["released_on"] = rel.inspection_date
-			values["released_by"] = rel.modified_by  # user who submitted the release inspection
+			released_on = rel.inspection_date
+			if last_confirmed and (not released_on or last_confirmed > get_datetime(released_on)):
+				released_on = last_confirmed
+			values["released_on"] = released_on
+			# The inspector who accepted the final release, not whoever last edited the record.
+			values["released_by"] = (
+				frappe.db.get_value("Employee", rel.inspected_by, "user_id") if rel.inspected_by else None
+			) or rel.modified_by
 		elif unit.released_on:
 			values["released_on"] = None
 			values["released_by"] = None

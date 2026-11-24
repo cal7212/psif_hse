@@ -13,6 +13,10 @@
   "cb1",
   "quality_procedure",
   "disabled",
+  "revision",
+  "approved_by",
+  "approved_on",
+  "change_summary",
   "section_items",
   "items",
   "section_notes",
@@ -71,6 +75,37 @@
    "label": "Disabled"
   },
   {
+   "default": "1",
+   "description": "Goes up by one each time the checklist lines change.",
+   "fieldname": "revision",
+   "fieldtype": "Int",
+   "label": "Revision",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "no_copy": 1,
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Required whenever the checklist lines change (QM-400 6.3, 7.5.2). Only a Quality Manager can change them.",
+   "fieldname": "change_summary",
+   "fieldtype": "Small Text",
+   "label": "Change Summary",
+   "no_copy": 1
+  },
+  {
    "fieldname": "section_items",
    "fieldtype": "Section Break",
    "label": "Checklist"
@@ -94,7 +129,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-27 18:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Inspection Template",
@@ -125,7 +160,7 @@
    "write": 1
   },
   {
-   "create": 1,
+   "create": 0,
    "email": 1,
    "export": 1,
    "print": 1,
@@ -133,7 +168,7 @@
    "report": 1,
    "role": "Manufacturing Manager",
    "share": 1,
-   "write": 1
+   "write": 0
   },
   {
    "read": 1,
