@@ -22,7 +22,7 @@ from hse.hse.instruments import (
 	needs_instrument,
 	pick,
 )
-from hse.shop_qc import missing_parts, sub_assemblies
+from hse.shop_qc import change_control, missing_parts, sub_assemblies
 from hse.shop_qc.doctype.qc_unit.qc_unit import format_iso_code, hose_spec, iso_within
 from hse.shop_qc.unit_stages import get_unit_stage_selection
 from hse.shop_qc.utils import (
@@ -963,6 +963,7 @@ class QCInspection(Document):
 					),
 					title=_("Release Blocked"),
 				)
+		change_control.check_release(self.qc_unit)  # ISO 9001 8.3.6 / 8.5.6: changes closed out
 		open_ncs = count_open_ncs(self.qc_unit)
 		if open_ncs:
 			frappe.throw(

@@ -1306,8 +1306,15 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		self.assertIn("_T Assembly", get_accepted_by_stage(WO))
 
 		unit.change_orders[0].status = "Approved"
+		with self.assertRaisesRegex(frappe.ValidationError, "change review"):
+			unit.save()  # ISO 9001 8.3.6: no approval without review results
+		unit.reload()
+		unit.change_orders[0].review_results = "Filter moved 6 in.; same element, no flow or pressure impact."
+		unit.change_orders[0].status = "Approved"
 		unit.save()
 		co = unit.change_orders[0]
+		self.assertEqual(co.change_type, "Design")
+		self.assertEqual(co.reviewed_by, frappe.session.user)
 		self.assertEqual(co.superseded_inspections, first.name)
 		self.assertTrue(co.approved_on)
 		self.assertNotIn("_T Assembly", get_accepted_by_stage(WO))
@@ -1330,6 +1337,106 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		)
 		with self.assertRaises(frappe.ValidationError):
 			unit.save()
+
+	def test_change_review_rules(self):
+		"""ISO 9001 8.3.6 / 8.5.6: impacts need actions, customer changes need sign-off, and the
+		review record is frozen once approved."""
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.append(
+			"change_orders",
+			{
+				"co_no": "CO-R1",
+				"source": "Customer",
+				"description": "Customer wants a larger reservoir",
+				"impact_function": 1,
+				"review_results": "Reservoir 40 to 60 gal; frame and lifting lugs re-checked.",
+				"status": "Approved",
+			},
+		)
+		with self.assertRaisesRegex(frappe.ValidationError, "Actions Required.*Approval Reference"):
+			unit.save()
+		unit.reload()
+		unit.append(
+			"change_orders",
+			{
+				"co_no": "CO-R1",
+				"source": "Customer",
+				"description": "Customer wants a larger reservoir",
+				"impact_function": 1,
+				"review_results": "Reservoir 40 to 60 gal; frame and lifting lugs re-checked.",
+				"actions_required": "Update drawing to Rev C; revise BOM; re-run level switch check.",
+				"approval_reference": "Signed CO from customer 2026-11-20",
+				"status": "Approved",
+			},
+		)
+		unit.save()
+		co = unit.change_orders[0]
+		self.assertTrue(co.approved_by and co.reviewed_by)
+		self.assertFalse(co.actions_complete)
+
+		unit.reload()
+		unit.change_orders[0].review_results = "Rewritten after approval"
+		with self.assertRaises(frappe.ValidationError):
+			unit.save()  # approved: the review record is locked
+		unit.reload()
+
+		unit.change_orders[0].actions_complete = 1
+		unit.save()
+		self.assertEqual(unit.change_orders[0].actions_verified_by, frappe.session.user)
+
+		unit.change_orders[0].status = "Pending"  # withdrawing approval reopens the actions
+		unit.save()
+		self.assertFalse(unit.change_orders[0].actions_complete)
+		self.assertFalse(unit.change_orders[0].actions_verified_by)
+
+	def test_production_change_type_from_source(self):
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.append(
+			"change_orders",
+			{"co_no": "CO-P1", "source": "Production", "description": "Substitute equivalent fitting"},
+		)
+		unit.save()
+		self.assertEqual(unit.change_orders[0].change_type, "Production")
+
+	def test_open_change_order_blocks_release(self):
+		from hse.shop_qc.change_control import open_change_orders
+
+		self.make("_T Assembly")
+		self.make("_T Test", reading=3000)
+		unit = frappe.get_doc("QC Unit", WO)
+		unit.append(
+			"change_orders",
+			{
+				"co_no": "CO-B1",
+				"source": "Engineering & Design",
+				"description": "Change relief cartridge",
+				"impact_safety": 1,
+			},
+		)
+		unit.save()
+		self.assertEqual(open_change_orders(WO), ["CO-B1 (pending approval)"])
+		release = self.make("_T Release", submit=False)
+		with self.assertRaisesRegex(frappe.ValidationError, "open change orders"):
+			release.submit()
+
+		unit.reload()
+		row = unit.change_orders[0]
+		row.review_results = "Same cartridge family, setting unchanged at 3000 psi."
+		row.actions_required = "Update valve settings sheet; record new part on BOM."
+		row.status = "Approved"
+		unit.save()
+		self.assertEqual(open_change_orders(WO), ["CO-B1 (actions not complete)"])
+		release.reload()
+		with self.assertRaisesRegex(frappe.ValidationError, "open change orders"):
+			release.submit()
+
+		unit.reload()
+		unit.change_orders[0].actions_complete = 1
+		unit.save()
+		self.assertEqual(open_change_orders(WO), [])
+		release.reload()
+		release.submit()
+		self.assertEqual(self.status(), "Released")
 
 	def test_unit_order_documents_and_theoretical_flow(self):
 		unit = self.set_pmgs([{"displacement": 80, "displacement_uom": "cc/rev", "motor_rpm": 1780}])

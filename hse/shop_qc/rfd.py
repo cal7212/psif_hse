@@ -16,6 +16,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, flt, fmt_money, getdate, today
 
+from hse.shop_qc import change_control
+
 PENDING = "Pending"
 CUSTOMER = "Customer"
 # Rows of the QM-144 Cost Breakdown table, loaded once when the RFD is started.
@@ -135,7 +137,10 @@ def sync_change_order(doc):
 			row = previous
 	values = change_order_values(doc)
 	if not row:
-		row = doc.append("change_orders", {"status": PENDING, **values})
+		row = doc.append(
+			"change_orders",
+			{"status": PENDING, "change_type": change_control.default_change_type(doc.rfd_source), **values},
+		)
 		frappe.msgprint(
 			_(
 				"Change order {0} added from the RFD. Set its affected stages on the Construction Requirements tab."
