@@ -8,7 +8,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, now_datetime
 
-from hse.shop_qc import missing_parts, rfd, sub_assemblies
+from hse.shop_qc import change_control, missing_parts, rfd, sub_assemblies
 from hse.shop_qc.multi_unit import (
 	hose_build_name,
 	unit_base,
@@ -22,8 +22,8 @@ from hse.shop_qc.utils import LOCKED_STATUSES, update_unit_status
 
 REPAIR = "Repair"
 CO_APPROVED = "Approved"
-CO_APPROVER_ROLES = ("Quality Manager", "Manufacturing Manager", "System Manager")
-CO_LOCKED_FIELDS = ("co_no", "affected_stages")
+CO_APPROVER_ROLES = change_control.APPROVER_ROLES
+CO_LOCKED_FIELDS = ("co_no", "affected_stages", *change_control.REVIEW_LOCKED_FIELDS)
 PMG_TAG = re.compile(r"^PMG-?\d+$")
 MAX_PMG = 10
 PUMP_TYPES = ("Gear", "Vane", "Fixed Piston", "Variable Piston", "Screw", "Other")
@@ -413,7 +413,8 @@ class QCUnit(Document):
 				)
 
 	def validate_change_orders(self):
-		"""Change orders from the customer or engineering / design. Approving one sets aside the
+		"""Change orders from the customer, engineering / design or production. Each one is reviewed
+		before approval (ISO 9001 8.3.6 / 8.5.6, see change_control). Approving one sets aside the
 		accepted inspections of the stages it affects, so those stages must be inspected again."""
 		before = self.get_doc_before_save()
 		old = {r.name: r for r in (before.get("change_orders") if before else [])}
@@ -457,6 +458,7 @@ class QCUnit(Document):
 							" / ".join(_(r) for r in CO_APPROVER_ROLES), frappe.bold(row.co_no)
 						)
 					)
+			change_control.validate_row(row, prev, approving=row.status == CO_APPROVED and not was_approved)
 			if row.status != CO_APPROVED:
 				row.approved_by = row.approved_on = row.superseded_inspections = None
 			elif not was_approved:
@@ -479,6 +481,7 @@ class QCUnit(Document):
 				else []
 			)
 			row.superseded_inspections = "\n".join(done) or None
+			change_control.after_approval(self, row)
 			if done:
 				self.flags.change_orders_approved = True
 				frappe.msgprint(
