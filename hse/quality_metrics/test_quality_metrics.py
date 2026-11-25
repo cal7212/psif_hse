@@ -379,18 +379,24 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 					"roles": [{"role": "Employee"}],
 				}
 			).insert()
+		other = self.make_nc(severity="Low")
+		# The rules are role checks in validate, so permission checks are bypassed here: the
+		# test user only needs the Employee role, not an employee record behind it.
 		frappe.set_user(user)
 		try:
 			doc = frappe.get_doc("Nonconformance Report", nc.name)
 			doc.details = "<p>Edited after closure</p>"
-			self.assertRaises(frappe.ValidationError, doc.save)  # locked while resolved
+			with self.assertRaises(frappe.ValidationError):
+				doc.save(ignore_permissions=True)  # locked while resolved
 			doc.reload()
 			doc.status = "Open"
 			doc.reopen_reason = "Customer reported recurrence"
-			self.assertRaises(frappe.ValidationError, doc.save)  # only Quality reopens
-			other = self.make_nc(severity="Low")
+			with self.assertRaises(frappe.ValidationError):
+				doc.save(ignore_permissions=True)  # only Quality reopens
+			other = frappe.get_doc("Nonconformance Report", other.name)
 			other.quality_verification = "Accept"
-			self.assertRaises(frappe.ValidationError, other.save)  # QA verification is Quality's
+			with self.assertRaises(frappe.ValidationError):
+				other.save(ignore_permissions=True)  # QA verification is Quality's
 		finally:
 			frappe.set_user("Administrator")
 		doc = frappe.get_doc("Nonconformance Report", nc.name)
@@ -547,6 +553,7 @@ class IntegrationTestQualityMetrics(IntegrationTestCase):
 		nc = self.make_nc(severity="Low", status="Resolved")
 		self.assertTrue(nc.resolved_on)
 		nc.status = "Open"
+		nc.reopen_reason = "Recurred at the customer"  # QM-400 7.5.3: reopening needs a reason
 		nc.save()
 		self.assertFalse(nc.resolved_on)
 

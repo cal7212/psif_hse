@@ -1178,6 +1178,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			self.make("_T Assembly")
 			doc = self.make("_T Test", reading=3000, submit=False, instruments=PMG_INSTRUMENTS)
 			self.set_item_instrument(doc)
+			doc.save()
 			self.assertEqual([g.pmg_tag for g in doc.pmg_tests], ["PMG-1", "PMG-2"])
 			self.assertEqual(doc.pmg_tests[0].compensator_spec, 2800)
 			with self.assertRaises(frappe.ValidationError):

@@ -7,6 +7,8 @@ from frappe.model import no_value_fields
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, now_datetime
 
+NUMERIC_TYPES = ("Float", "Currency", "Percent", "Int")
+
 # QM-400 6.3: authority to change controlled QMS documents rests with the Quality Manager.
 TEMPLATE_AUTHORS = ("Quality Manager", "System Manager")
 SYSTEM_CHANGE_SUMMARY = "Updated by a system patch or the sample-template installer."
@@ -17,8 +19,18 @@ def item_signature(items) -> list[tuple]:
 	if not items:
 		return []
 	meta = frappe.get_meta("QC Inspection Template Item")
-	fields = [df.fieldname for df in meta.fields if df.fieldtype not in no_value_fields]
-	return [tuple(cstr(row.get(f)) for f in fields) for row in items]
+	fields = [df for df in meta.fields if df.fieldtype not in no_value_fields]
+
+	def value(row, df):
+		# A row read back from the database holds 0 where an unsaved row holds None.
+		v = row.get(df.fieldname)
+		if df.fieldtype in NUMERIC_TYPES:
+			return flt(v)
+		if df.fieldtype == "Check":
+			return cint(v)
+		return cstr(v).strip()
+
+	return [tuple(value(row, df) for df in fields) for row in items]
 
 
 class QCInspectionTemplate(Document):
@@ -61,11 +73,13 @@ class QCInspectionTemplate(Document):
 			)
 		summary_changed = cstr(self.change_summary).strip() and self.has_value_changed("change_summary")
 		if not summary_changed:
-			if not system:
+			# Code that changes a template (installer, patches) supplies its own summary.
+			if self.flags.change_summary or system:
+				self.change_summary = self.flags.change_summary or SYSTEM_CHANGE_SUMMARY
+			else:
 				frappe.throw(
 					_("Enter a Change Summary describing this revision."), title=_("Change Summary Required")
 				)
-			self.change_summary = self.flags.change_summary or SYSTEM_CHANGE_SUMMARY
 		self.revision = cint(before.revision) + 1
 		self.stamp_approval()
 		self.add_comment(

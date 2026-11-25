@@ -772,14 +772,12 @@ class QCInspection(Document):
 		errors += self.circuit_test_errors()
 		if (
 			self.is_pmg_test_stage()
-			and not self.pmg_tests
+			and not (self.pmg_tests or self.device_tests or self.accumulator_tests)
 			and frappe.db.get_value("QC Unit", self.qc_unit, "product_type") == "Power Unit"
 		):
-			# Flow, temperature rise and sound level are recorded on the PMG rows: a power unit
-			# without them would pass its test stage with none of those readings.
 			errors.append(
 				_(
-					"This stage tests the unit's pump/motor groups, but none are listed. Add them on the QC Unit and reload."
+					"This stage tests pump/motor groups, circuit devices and accumulators, but the unit has none listed."
 				)
 			)
 		if errors:
