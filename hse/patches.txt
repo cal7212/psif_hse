@@ -36,3 +36,4 @@ hse.patches.shop_qc_photos_not_required
 hse.patches.injury_corrective_actions_table
 hse.patches.shop_qc_change_order_type
 hse.patches.qms_400_alignment
+hse.patches.training_matrix_lms_batch_insights_dashboard

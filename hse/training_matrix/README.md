@@ -193,3 +193,21 @@ active employee for a course linked to a Training Requirement, then creates one 
 certificate: dated its issue date, with its expiry, marked "Imported from LMS certificate" and
 revision "unknown (imported)". Certificates whose quiz scores are below the pass mark are listed
 but not imported, and nothing is imported twice, so it can be re-run safely.
+
+### Insights dashboard: Learning batches
+
+With Frappe Insights installed, the migrate creates the **LMS Batch Training Progress** workbook
+(`insights_dashboard.py`) with a **Batch Course Completion** dashboard: progress for every member
+of a Learning batch on each of the batch's courses, by Training Role, Department and member, with
+Batch, Course, Department and Training Role filters.
+
+- Two queries on the Site DB: *Batch Course Progress* (one row per member per course) and
+  *Batch Progress by Training Role* (one row per member per course per role).
+- Training Roles come from the Training Role mappings (Designation, Department, Employee Group),
+  as the matrix sync assigns them. Role charts count only courses the role requires (R / C).
+- **LMS Completion Rate** is 100% progress in Learning; **Qualified Rate** is the matrix row's
+  qualification. They differ until quizzes pass and the TRN-702 record exists, and after a
+  refresher reopens the course.
+- The workbook is created once and never overwritten, so edits in Insights are kept. Share it
+  with the Training Coordinator from Insights. To rebuild it, delete or rename it and run
+  `bench --site <site> execute hse.training_matrix.insights_dashboard.setup`.
