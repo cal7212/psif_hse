@@ -61,6 +61,8 @@ COSTING_DEFAULTS = {
 }
 STAGES = [("_T Assembly", 10, 0), ("_T Test", 20, 0), ("_T Release", 30, 1)]
 HOSE_STAGES = [("_T Hose Test", 10, 0, 1), ("_T Hose Release", 20, 1, 0)]
+# Pressure gauge plus the flow, temperature and sound instruments a PMG test run needs.
+PMG_INSTRUMENTS = ["_T-G1", "_T-FM", "_T-TH", "_T-SL"]
 
 
 CRITERIA = ("crit_scrap", "crit_cannot_rework", "crit_customer_safety", "crit_supplier")
@@ -263,6 +265,9 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			("_T-G2", "Pressure Gauge", "2099-12-31"),
 			("_T-CAL", "Caliper / Micrometer", "2099-12-31"),
 			("_T-EXP", "Pressure Gauge", "2000-01-01"),
+			("_T-FM", "Flowmeter", "2099-12-31"),
+			("_T-TH", "Thermometer", "2099-12-31"),
+			("_T-SL", "Sound Level Meter", "2099-12-31"),
 		):
 			if not frappe.db.exists("Measuring Instrument", iid):
 				frappe.get_doc(
@@ -413,6 +418,12 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 
 	def default_instruments(self, unit):
 		return ["_T-G1", "_T-CAL"] if unit == HOSE_WO else ["_T-G1"]
+
+	def set_item_instrument(self, doc, instrument="_T-G1"):
+		"""With several instruments listed, checklist readings name theirs by hand."""
+		for row in doc.items:
+			if row.numeric:
+				row.instrument = instrument
 
 	def make(
 		self,
@@ -853,6 +864,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 				"corrective_action": "Reset relief valve",
 				"disposition": "Rework to Specification",
 				"quality_verification": "Accept",
+				"auth_quality_manager": self.employee,
 				"verified_by": self.employee,
 				"verification_date": frappe.utils.nowdate(),
 				**EVAL_NO,
@@ -1164,19 +1176,25 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		frappe.db.set_value("QC Stage", "_T Test", "pmg_test", 1)
 		try:
 			self.make("_T Assembly")
-			doc = self.make("_T Test", reading=3000, submit=False)
+			doc = self.make("_T Test", reading=3000, submit=False, instruments=PMG_INSTRUMENTS)
+			self.set_item_instrument(doc)
+			doc.save()
 			self.assertEqual([g.pmg_tag for g in doc.pmg_tests], ["PMG-1", "PMG-2"])
 			self.assertEqual(doc.pmg_tests[0].compensator_spec, 2800)
 			with self.assertRaises(frappe.ValidationError):
 				doc.submit()  # PMG entries missing
 			doc.reload()
-			for g, relief, comp in ((doc.pmg_tests[0], 3010, 2790), (doc.pmg_tests[1], 2600, 0)):
+			for g, relief, comp, flow in (
+				(doc.pmg_tests[0], 3010, 2790, 40),
+				(doc.pmg_tests[1], 2600, 0, 20),
+			):
 				g.update(
 					{
 						"nameplate_verified": "Yes",
 						"rotation_verified": "Yes",
 						"relief_as_set": relief,
 						"compensator_as_set": comp,
+						"actual_flow_gpm": flow,
 					}
 				)
 			doc.pmg_tests[1].finding = "Relief set high"
@@ -1188,6 +1206,11 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			doc.pmg_tests[0].update({"fluid_temp_begin_f": 80, "fluid_temp_end_f": 110, "sound_level_db": 78})
 			doc.save()
 			self.assertEqual(doc.pmg_tests[0].instrument, "_T-G1")
+			# QM-400 7.1.5: each test-run reading names its own instrument
+			g = doc.pmg_tests[0]
+			self.assertEqual(
+				(g.flow_instrument, g.temp_instrument, g.sound_instrument), ("_T-FM", "_T-TH", "_T-SL")
+			)
 			doc.submit()
 			self.assertEqual(doc.status, "Rejected")
 			self.assertEqual(
@@ -1438,6 +1461,211 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 		release.submit()
 		self.assertEqual(self.status(), "Released")
 
+	def test_compensator_judged_on_its_own_tolerance(self):
+		self.set_pmgs([{"relief_setting_psi": 3000, "compensator_setting_psi": 2000}])
+		row = build_pmg_tests(WO)[0]
+		self.assertEqual((row["tolerance_psi"], row["compensator_tolerance_psi"]), (90, 60))
+		g = frappe._dict(
+			row,
+			nameplate_verified="Yes",
+			rotation_verified="Yes",
+			relief_as_set=3000,
+			compensator_as_set=2070,
+			actual_flow_gpm=1,
+		)
+		g.flow_min_gpm = g.flow_max_gpm = 0
+		self.assertEqual(evaluate_pmg(g), FAIL)  # 70 psi off: inside 90, outside 60
+		self.assertEqual(evaluate_pmg(frappe._dict(g, compensator_as_set=2050)), PASS)
+
+	def test_build_package_gate(self):
+		frappe.db.set_value("QC Unit", WO, "drawing_rev", "D-100 Rev A")
+		for stage in ("_T Assembly", "_T Test"):
+			frappe.db.set_value("QC Stage", stage, "requires_build_package", 1)
+		try:
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Assembly")  # not released to the floor
+			unit = frappe.get_doc("QC Unit", WO)
+			unit.build_package_released = 1
+			unit.save()
+			self.assertEqual(unit.build_package_drawing_rev, "D-100 Rev A")
+			self.assertEqual(unit.build_package_released_by, frappe.session.user)
+			first = frappe.get_all("QC Inspection", {"qc_unit": WO, "docstatus": 0}, pluck="name")
+			for name in first:
+				frappe.delete_doc("QC Inspection", name, force=1)
+			done = self.make("_T Assembly")
+			self.assertEqual(done.drawing_rev, "D-100 Rev A")
+			frappe.db.set_value("QC Unit", WO, "drawing_rev", "D-100 Rev B")
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Test", reading=3000)  # package superseded by Rev B
+		finally:
+			for stage in ("_T Assembly", "_T Test"):
+				frappe.db.set_value("QC Stage", stage, "requires_build_package", 0)
+
+	def test_cross_functional_release(self):
+		from hse.shop_qc.release import RELEASE_FUNCTIONS, confirm_release
+
+		frappe.db.set_value("Build Shop", SHOP, "cross_functional_release", 1)
+		frappe.clear_document_cache("Build Shop", SHOP)
+		try:
+			unit = frappe.get_doc("QC Unit", WO)
+			unit.save()
+			self.assertEqual([r.function for r in unit.release_confirmations], list(RELEASE_FUNCTIONS))
+			unit.release_confirmations[0].confirmed_on = frappe.utils.now_datetime()
+			with self.assertRaises(frappe.ValidationError):
+				unit.save()  # rows change through confirm_release only
+			self.make("_T Assembly")
+			self.make("_T Test", reading=3000)
+			self.make("_T Release")
+			self.assertEqual(self.status(), "Ready for Release")  # Quality alone is not release
+			for function in RELEASE_FUNCTIONS[:-1]:
+				confirm_release(WO, function)
+			self.assertEqual(self.status(), "Ready for Release")
+			confirm_release(WO, RELEASE_FUNCTIONS[-1], note="No billing hold")
+			self.assertEqual(self.status(), "Released")
+		finally:
+			frappe.db.set_value("Build Shop", SHOP, "cross_functional_release", 0)
+			frappe.clear_document_cache("Build Shop", SHOP)
+
+	def test_welding_two_tiers(self):
+		from hse.shop_qc.doctype.qc_inspection.qc_inspection import unit_text_value
+
+		frappe.db.set_value("QC Stage", "_T Assembly", "weld_record", 1)
+		frappe.db.set_value("QC Stage", "_T Test", "weld_record", 1)
+		try:
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Assembly")  # Welding Standard must be decided
+			self.drop_drafts()
+			unit = frappe.get_doc("QC Unit", WO)
+			unit.welding_standard = "PSIF Workmanship (no code)"
+			unit.weld_performance_code = "AWS D1.1"
+			with self.assertRaises(frappe.ValidationError):
+				unit.save()  # a code with no one requiring it
+			unit.reload()
+			unit.welding_standard = "PSIF Workmanship (no code)"
+			unit.save()
+			self.assertEqual(unit_text_value(unit, "welding_standard"), "PSIF Welding Workmanship Standard")
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Assembly")  # no welders listed
+			self.drop_drafts()
+			unit.reload()
+			unit.append("welders", {"employee": self.employee})
+			unit.save()
+			self.assertTrue(unit.welders[0].employee_name)
+			self.make("_T Assembly")  # workmanship: no heat numbers or MTRs needed
+
+			unit.reload()
+			unit.welding_standard = "Required by Customer"
+			with self.assertRaises(frappe.ValidationError):
+				unit.save()  # the code itself is required
+			unit.reload()
+			unit.update({"welding_standard": "Required by Customer", "weld_performance_code": "AWS D1.1"})
+			unit.save()
+			self.assertEqual(unit_text_value(unit, "welding_standard"), "AWS D1.1 (required by customer)")
+			mtr = next(r for r in unit.quality_documents if r.document == "Material Test Reports")
+			self.assertEqual(mtr.required, "Yes")
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Test", reading=3000)  # code work: traceable material required
+			self.drop_drafts()
+			unit.reload()
+			unit.append("material_traceability", {"part_number": "A36 plate", "heat_lot_no": "h123"})
+			unit.save()
+			self.assertEqual(unit.material_traceability[0].heat_lot_no, "H123")
+			with self.assertRaises(frappe.ValidationError):
+				self.make("_T Test", reading=3000)  # MTR not attached
+			self.drop_drafts()
+			unit.reload()
+			unit.material_traceability[0].mtr = "/files/_t_mtr.pdf"
+			unit.save()
+			self.make("_T Test", reading=3000)
+		finally:
+			for stage in ("_T Assembly", "_T Test"):
+				frappe.db.set_value("QC Stage", stage, "weld_record", 0)
+
+	def drop_drafts(self):
+		for name in frappe.get_all("QC Inspection", {"qc_unit": WO, "docstatus": 0}, pluck="name"):
+			frappe.delete_doc("QC Inspection", name, force=1)
+
+	def test_template_revision_control(self):
+		tname = "_T Revision Template"
+		if frappe.db.exists("QC Inspection Template", tname):
+			frappe.delete_doc("QC Inspection Template", tname, force=1)
+		doc = frappe.get_doc(
+			{
+				"doctype": "QC Inspection Template",
+				"template_name": tname,
+				"stage": "_T Assembly",
+				"quality_procedure": PROC,
+				"disabled": 1,
+				"items": [{"check_item": "Visual", "criteria": "OK"}],
+			}
+		).insert()
+		try:
+			self.assertEqual(doc.revision, 1)
+			doc.instructions = "Wording only"
+			doc.save()
+			self.assertEqual(doc.revision, 1)  # no checklist change, no new revision
+			doc.items[0].criteria = "No damage"
+			with self.assertRaises(frappe.ValidationError):
+				doc.save()  # needs a change summary
+			doc.reload()
+			doc.items[0].criteria = "No damage"
+			doc.change_summary = "Tightened visual criteria"
+			doc.save()
+			self.assertEqual(doc.revision, 2)
+			self.assertEqual(doc.approved_by, frappe.session.user)
+		finally:
+			frappe.delete_doc("QC Inspection Template", tname, force=1)
+
+	def test_out_of_tolerance_calibration_opens_ncr(self):
+		iid = "_T-OOT"
+		if frappe.db.exists("Measuring Instrument", iid):
+			frappe.delete_doc("Measuring Instrument", iid, force=1)
+		inst = frappe.get_doc(
+			{
+				"doctype": "Measuring Instrument",
+				"instrument_id": iid,
+				"instrument_type": "Pressure Gauge",
+				"calibration_required": 1,
+				"calibration_interval_months": 12,
+				"calibrations": [
+					{
+						"calibration_date": "2026-01-05",
+						"as_found": "In Tolerance",
+						"as_left": "In Tolerance",
+						"certificate_location": " \\\\psif-fs\\Quality\\Calibration\\_T-OOT\\2026-01-05.pdf ",
+					}
+				],
+			}
+		).insert()
+		ncr = None
+		try:
+			self.assertEqual(str(inst.last_calibrated), "2026-01-05")
+			self.assertEqual(str(inst.calibration_due), "2027-01-05")
+			self.assertTrue(inst.calibration_certificate_location.endswith("2026-01-05.pdf"))
+			used = self.make("_T Assembly", instruments=[iid])
+			inst.append(
+				"calibrations",
+				{
+					"calibration_date": frappe.utils.nowdate(),
+					"as_found": "Out of Tolerance",
+					"as_left": "Adjusted to Tolerance",
+				},
+			)
+			inst.save()
+			ncr = frappe.db.get_value(
+				"Measuring Instrument Calibration",
+				{"parent": iid, "as_found": "Out of Tolerance"},
+				"impact_ncr",
+			)
+			self.assertTrue(ncr)
+			self.assertIn(used.name, frappe.db.get_value("Nonconformance Report", ncr, "details"))
+			self.assertEqual(frappe.db.get_value("Nonconformance Report", ncr, "source"), "Calibration")
+		finally:
+			self.clear_unit(WO)
+			if ncr:
+				frappe.delete_doc("Nonconformance Report", ncr, force=1)
+			frappe.delete_doc("Measuring Instrument", iid, force=1)
+
 	def test_unit_order_documents_and_theoretical_flow(self):
 		unit = self.set_pmgs([{"displacement": 80, "displacement_uom": "cc/rev", "motor_rpm": 1780}])
 		self.assertEqual(len(unit.construction_documents), 18)
@@ -1459,7 +1687,8 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 			frappe.db.set_value("QC Stage", "_T Test", flag, 1)
 		try:
 			self.make("_T Assembly")
-			doc = self.make("_T Test", reading=3000, submit=False)
+			doc = self.make("_T Test", reading=3000, submit=False, instruments=PMG_INSTRUMENTS)
+			self.set_item_instrument(doc)
 			self.assertEqual([r.description for r in doc.device_tests], ["PRV-1"])
 			self.assertEqual(doc.accumulator_tests[0].precharge_spec, 1000)
 			self.assertEqual(doc.proof_tests[0].p1_spec, 4500)
@@ -1468,6 +1697,7 @@ class IntegrationTestQCInspection(IntegrationTestCase):
 					"nameplate_verified": "Yes",
 					"rotation_verified": "Yes",
 					"relief_as_set": 3000,
+					"actual_flow_gpm": 40,
 					"fluid_temp_begin_f": 80,
 					"fluid_temp_end_f": 100,
 					"sound_level_db": 80,

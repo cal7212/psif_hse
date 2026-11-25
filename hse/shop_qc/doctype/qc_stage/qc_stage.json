@@ -20,6 +20,11 @@
   "proof_test",
   "coating_record",
   "requires_all_parts",
+  "requires_build_package",
+  "weld_record",
+  "welder_skill",
+  "workmanship_welder_skill",
+  "required_skill",
   "disabled",
   "sb_desc",
   "description"
@@ -119,6 +124,43 @@
   },
   {
    "default": "0",
+   "description": "The unit's build package must be released (and still match the unit's Drawing / Rev) before this stage can be completed (QM-400 8.5.1).",
+   "fieldname": "requires_build_package",
+   "fieldtype": "Check",
+   "label": "Requires Build Package Release"
+  },
+  {
+   "default": "0",
+   "description": "Welders must be listed and authorized before this stage can be completed. When the unit's Welding Standard requires a code, traceable material (heat/lot and MTR) is required too.",
+   "fieldname": "weld_record",
+   "fieldtype": "Check",
+   "label": "Weld Traceability Record"
+  },
+  {
+   "depends_on": "weld_record",
+   "description": "Qualification a welder needs for work under a welding code (AWS / ASME).",
+   "fieldname": "welder_skill",
+   "fieldtype": "Link",
+   "label": "Code Welder Skill",
+   "options": "Skill Definition"
+  },
+  {
+   "depends_on": "weld_record",
+   "description": "In-house welding authorization for PSIF workmanship work (no code). A code-qualified welder also counts.",
+   "fieldname": "workmanship_welder_skill",
+   "fieldtype": "Link",
+   "label": "Workmanship Welder Skill",
+   "options": "Skill Definition"
+  },
+  {
+   "description": "The inspector must hold an active Skill Authorization for this skill to complete the stage (QM-400 7.2, 8.5.1 e).",
+   "fieldname": "required_skill",
+   "fieldtype": "Link",
+   "label": "Inspector Skill Required",
+   "options": "Skill Definition"
+  },
+  {
+   "default": "0",
    "fieldname": "disabled",
    "fieldtype": "Check",
    "label": "Disabled"
@@ -134,7 +176,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-21 10:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "QC Stage",

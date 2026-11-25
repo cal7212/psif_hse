@@ -16,6 +16,12 @@ PRESSURE_TYPES = ("Pressure Gauge", "Pressure Transducer")
 CRIMP_TYPES = ("Caliper / Micrometer",)
 CLEANLINESS_TYPES = ("Particle Counter",)
 AMPS_TYPES = ("Clamp Meter", "Multimeter", "Power Quality Analyzer")
+FLOW_TYPES = ("Flowmeter",)
+TEMP_TYPES = ("Thermometer",)
+SOUND_TYPES = ("Sound Level Meter",)
+# Calibration Overdue is still usable for a reading dated before the due date; the date check
+# below decides.
+USABLE_STATUSES = ("Active", "Calibration Overdue")
 
 
 def needs_instrument(row) -> bool:
@@ -94,7 +100,7 @@ def check_listed_instruments(doc, on_date) -> list[str]:
 				"measuring_range": inst.measuring_range,
 			}
 		)
-		if inst.status != "Active":
+		if inst.status not in USABLE_STATUSES:
 			errors.append(_("Instrument {0} is {1}.").format(frappe.bold(row.instrument), _(inst.status)))
 		elif not cint(inst.calibration_required):
 			continue

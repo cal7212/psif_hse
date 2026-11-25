@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "creation": "2026-11-24 12:00:00.000000",
+ "custom": 0,
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "calibration_date",
+  "as_found",
+  "as_left",
+  "calibrated_by",
+  "column_break_a",
+  "traceable_to",
+  "certificate",
+  "certificate_location",
+  "next_due",
+  "impact_ncr",
+  "notes"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "calibration_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Calibrated On",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "description": "Condition before any adjustment. Out of Tolerance opens an NCR to evaluate the measurements taken since the last good calibration (QM-400 7.1.5.2).",
+   "fieldname": "as_found",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "As Found",
+   "options": "\nIn Tolerance\nOut of Tolerance\nNot Recorded",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "as_left",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "As Left",
+   "options": "\nIn Tolerance\nAdjusted to Tolerance\nFailed - Removed from Service",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "calibrated_by",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Calibrated By"
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Reference standard and its traceability, e.g. NIST-traceable cert no.",
+   "fieldname": "traceable_to",
+   "fieldtype": "Data",
+   "label": "Traceable To"
+  },
+  {
+   "columns": 2,
+   "fieldname": "certificate",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Certificate",
+   "description": "Upload the certificate, or give its location on the shared drive below."
+  },
+  {
+   "columns": 2,
+   "description": "Path to the certificate in the controlled shared location named in QM-005, e.g. \\\\psif-fs\\Quality\\Calibration\\PG-014\\2026-11-03.pdf.",
+   "fieldname": "certificate_location",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Certificate Location"
+  },
+  {
+   "fieldname": "next_due",
+   "fieldtype": "Date",
+   "label": "Next Due",
+   "read_only": 1
+  },
+  {
+   "fieldname": "impact_ncr",
+   "fieldtype": "Link",
+   "label": "Impact NCR",
+   "no_copy": 1,
+   "options": "Nonconformance Report",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-11-24 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HSE",
+ "name": "Measuring Instrument Calibration",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

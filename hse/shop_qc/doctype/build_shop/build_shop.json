@@ -13,6 +13,7 @@
   "is_repair_shop",
   "column_break_shop",
   "quality_procedure",
+  "cross_functional_release",
   "section_cert",
   "certificate_title",
   "certificate_statement",
@@ -67,6 +68,13 @@
    "fieldtype": "Link",
    "label": "Default Quality Procedure",
    "options": "Quality Procedure"
+  },
+  {
+   "default": "0",
+   "description": "New-build Power Units, Manifolds and Valve Stands need Project Management / Sales, Operations and Accounting release confirmations before Released (QM-400 8.6).",
+   "fieldname": "cross_functional_release",
+   "fieldtype": "Check",
+   "label": "Cross-Functional Release"
   },
   {
    "fieldname": "section_cert",
@@ -151,7 +159,7 @@
   }
  ],
  "links": [],
- "modified": "2026-10-13 09:00:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Shop QC",
  "name": "Build Shop",

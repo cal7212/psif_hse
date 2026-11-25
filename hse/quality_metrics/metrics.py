@@ -546,6 +546,111 @@ def capa_effective_pct(start, end):
 	return _pct(len(rows) - len(not_eff), len(rows)), detail
 
 
+# ---------------------------------------------------------------- QM-400 Appendix C
+def nc_closed_on_time_pct(start, end):
+	"""NCRs resolved in the period by their Target Close Date."""
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"status": "Resolved", "resolved_on": ["between", [s, e]], **NOT_REWORK},
+		fields=["name", "ncr_no", "resolved_on", "ncr_due_date"],
+	)
+	rows = [r for r in rows if r.ncr_due_date]
+	if not rows:
+		return None, _("No NCRs with a target date resolved in the period.")
+	late = [r for r in rows if getdate(r.resolved_on) > getdate(r.ncr_due_date)]
+	detail = _("{0} of {1} NCRs closed by their target date.").format(len(rows) - len(late), len(rows))
+	if late:
+		detail += " " + _("Late: {0}").format(_names([r.ncr_no or r.name for r in late]))
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def business_hours_between(a: datetime, b: datetime) -> float:
+	"""Hours from a to b, not counting Saturdays and Sundays."""
+	if not a or not b or b <= a:
+		return 0.0
+	total, cursor = 0.0, a
+	while cursor < b:
+		next_midnight = datetime.combine(cursor.date() + timedelta(days=1), time())
+		stop = min(next_midnight, b)
+		if cursor.weekday() < 5:
+			total += (stop - cursor).total_seconds() / 3600
+		cursor = stop
+	return total
+
+
+COMPLAINT_RESPONSE_HOURS = 48
+
+
+def complaint_ack_on_time_pct(start, end):
+	"""Customer complaints acknowledged within 48 business hours of receipt (QM-400 Appendix C)."""
+	s, e = _bounds(start, end)
+	rows = frappe.get_all(
+		"Nonconformance Report",
+		filters={"complaint_received_on": ["between", [s, e]], "status": ["!=", "Cancelled"]},
+		fields=["name", "ncr_no", "complaint_received_on", "complaint_acknowledged_on"],
+	)
+	if not rows:
+		return None, _("No customer complaints received in the period.")
+	late = [
+		r
+		for r in rows
+		if not r.complaint_acknowledged_on
+		or business_hours_between(r.complaint_received_on, r.complaint_acknowledged_on)
+		> COMPLAINT_RESPONSE_HOURS
+	]
+	detail = _("{0} of {1} complaints acknowledged within {2} business hours.").format(
+		len(rows) - len(late), len(rows), COMPLAINT_RESPONSE_HOURS
+	)
+	if late:
+		detail += " " + _("Late or not yet acknowledged: {0}").format(
+			_names([r.ncr_no or r.name for r in late])
+		)
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
+def calibration_compliance_pct(start, end):
+	"""Instruments needing calibration that are within calibration today (QM-400 Appendix C)."""
+	rows = frappe.get_all(
+		"Measuring Instrument",
+		filters={"calibration_required": 1, "status": ["not in", ["Retired", "Lost"]]},
+		fields=["name", "calibration_due", "status"],
+	)
+	if not rows:
+		return None, _("No instruments require calibration.")
+	today = getdate()
+	out = [
+		r.name
+		for r in rows
+		if r.status == "Out for Calibration" or not r.calibration_due or getdate(r.calibration_due) < today
+	]
+	detail = _("{0} of {1} instruments in calibration.").format(len(rows) - len(out), len(rows))
+	if out:
+		detail += " " + _("Out of calibration or away: {0}").format(_names(out))
+	return _pct(len(rows) - len(out), len(rows)), detail
+
+
+def unit_on_time_delivery_pct(start, end):
+	"""Built units shipped on or before the promised date (QC Unit / TrulinX dates). Distribution
+	orders are not in this app."""
+	rows = frappe.get_all(
+		"QC Unit",
+		filters={
+			"trulinx_ship_date": ["between", [getdate(start), getdate(end)]],
+			"promised_date": ["is", "set"],
+			"status": ["!=", "Cancelled"],
+		},
+		fields=["name", "promised_date", "trulinx_ship_date"],
+	)
+	if not rows:
+		return None, _("No units with a promised date shipped in the period.")
+	late = [r.name for r in rows if getdate(r.trulinx_ship_date) > getdate(r.promised_date)]
+	detail = _("{0} of {1} units shipped on time.").format(len(rows) - len(late), len(rows))
+	if late:
+		detail += " " + _("Late: {0}").format(_names(late))
+	return _pct(len(rows) - len(late), len(rows)), detail
+
+
 # ---------------------------------------------------------------- Incidents (Injury_Illness Report)
 INJURY = "Injury_Illness Report"
 INJURY_ACTION = "Incident Corrective Action"
@@ -1085,6 +1190,34 @@ METRICS = {
 		"Percent",
 		False,
 		"Nonconformance Report",
+	),
+	"nc_closed_on_time_pct": (
+		"NCRs closed by their target date (%)",
+		nc_closed_on_time_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"complaint_ack_on_time_pct": (
+		"Customer complaints acknowledged within 48 business hours (%)",
+		complaint_ack_on_time_pct,
+		"Percent",
+		False,
+		"Nonconformance Report",
+	),
+	"calibration_compliance_pct": (
+		"Instruments within calibration (%) (now)",
+		calibration_compliance_pct,
+		"Percent",
+		True,
+		"Measuring Instrument",
+	),
+	"unit_on_time_delivery_pct": (
+		"Built units shipped by the promised date (%)",
+		unit_on_time_delivery_pct,
+		"Percent",
+		False,
+		"QC Unit",
 	),
 	"incidents_reported": ("Incident reports (all types)", incidents_reported, "Nos", False, INJURY),
 	"recordable_cases": ("OSHA recordable cases", recordable_cases, "Nos", False, INJURY),

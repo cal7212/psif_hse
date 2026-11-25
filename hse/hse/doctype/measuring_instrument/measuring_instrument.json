@@ -28,7 +28,10 @@
   "column_break_c",
   "calibrated_by",
   "calibration_certificate",
-  "calibration_notes"
+  "calibration_certificate_location",
+  "calibration_notes",
+  "section_cal_history",
+  "calibrations"
  ],
  "fields": [
   {
@@ -61,8 +64,9 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Active\nOut for Calibration\nRetired\nLost",
-   "reqd": 1
+   "options": "Active\nCalibration Overdue\nOut for Calibration\nRetired\nLost",
+   "reqd": 1,
+   "description": "Calibration Overdue is set each night when the due date has passed; recording a calibration returns it to Active."
   },
   {
    "fieldname": "column_break_a",
@@ -90,7 +94,7 @@
    "label": "Range"
   },
   {
-   "description": "e.g. \u00b10.25% FS",
+   "description": "e.g. ±0.25% FS",
    "fieldname": "accuracy",
    "fieldtype": "Data",
    "label": "Accuracy"
@@ -123,7 +127,8 @@
    "depends_on": "calibration_required",
    "fieldname": "last_calibrated",
    "fieldtype": "Date",
-   "label": "Last Calibrated"
+   "label": "Last Calibrated",
+   "description": "Taken from the latest row of Calibration History when it has rows."
   },
   {
    "depends_on": "calibration_required",
@@ -146,7 +151,7 @@
   },
   {
    "depends_on": "calibration_required",
-   "description": "Lab or person",
+   "description": "Taken from the latest row of Calibration History when it has rows.",
    "fieldname": "calibrated_by",
    "fieldtype": "Data",
    "label": "Calibrated By"
@@ -155,16 +160,36 @@
    "depends_on": "calibration_required",
    "fieldname": "calibration_certificate",
    "fieldtype": "Attach",
-   "label": "Calibration Certificate"
+   "label": "Calibration Certificate",
+   "description": "Taken from the latest row of Calibration History when it has rows."
+  },
+  {
+   "depends_on": "calibration_required",
+   "description": "Taken from the latest row of Calibration History when it has rows.",
+   "fieldname": "calibration_certificate_location",
+   "fieldtype": "Data",
+   "label": "Certificate Location"
   },
   {
    "fieldname": "calibration_notes",
    "fieldtype": "Small Text",
    "label": "Notes"
+  },
+  {
+   "depends_on": "calibration_required",
+   "fieldname": "section_cal_history",
+   "fieldtype": "Section Break",
+   "label": "Calibration History (QM-400 7.1.5)"
+  },
+  {
+   "fieldname": "calibrations",
+   "fieldtype": "Table",
+   "label": "Calibration History",
+   "options": "Measuring Instrument Calibration"
   }
  ],
  "links": [],
- "modified": "2026-10-02 23:45:00.000000",
+ "modified": "2026-11-24 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "HSE",
  "name": "Measuring Instrument",

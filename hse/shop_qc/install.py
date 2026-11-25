@@ -186,6 +186,7 @@ def create_sample_templates(quality_procedure: str = "QC Inspection", update_unu
 				doc = frappe.get_doc("QC Inspection Template", t["template_name"])
 				doc.set("items", t["items"])
 				doc.product_type = t.get("product_type")
+				doc.flags.change_summary = "Updated to the current sample checklist."
 				doc.save(ignore_permissions=True)
 				created.append(doc.name)
 			continue

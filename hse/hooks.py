@@ -380,6 +380,8 @@ scheduler_events = {
 		"hse.training_matrix.training_requests.remind_overdue_certificates",
 		# Risk Assessment and Job Hazard Analysis: ToDo when a review falls due
 		"hse.hse.doctype.risk_assessment.risk_assessment.assign_due_reviews",
+		# QM-400 7.1.5: instruments past their calibration due date are flagged
+		"hse.hse.doctype.measuring_instrument.measuring_instrument.flag_overdue_calibrations",
 	],
 	"cron": {
 		"0 2 1 * *": [
